@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ menu tài khoản. *@
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -26,6 +27,21 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="TaiKhoan" asp-action="ThongTin">@User.Identity.Name</a></li>
+                            <li class="nav-item">
+                                <form asp-controller="TaiKhoan" asp-action="DangXuat" method="post">
+                                    <button type="submit" class="btn btn-link nav-link">Đăng xuất</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="TaiKhoan" asp-action="DangNhap">Đăng nhập</a></li>
+                        }
                     </ul>
                 </div>
             </div>
