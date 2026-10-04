@@ -1,0 +1,11 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ thông tin đăng nhập. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.Services.ITaiKhoanHienTai
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@{ ViewData["Title"] = "Tài khoản hiện tại"; }
+<h1 class="h3">Tài khoản hiện tại</h1>
+<dl class="row">
+    <dt class="col-sm-3">Mã tài khoản</dt><dd class="col-sm-9">@Model.MaTaiKhoan</dd>
+    <dt class="col-sm-3">Họ tên</dt><dd class="col-sm-9">@Model.HoTen</dd>
+    <dt class="col-sm-3">Vai trò</dt>
+    <dd class="col-sm-9">@(Model.VaiTro switch { VaiTro.Admin => "Quản trị viên", VaiTro.NhanVien => "Nhân viên", VaiTro.KhachHang => "Khách hàng", _ => "" })</dd>
+</dl>
