@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ menu tài khoản. *@
+@* M3: Nguyễn Văn Quý; MSSV: [MSSV]. Nội dung: liên kết đăng ký, hồ sơ và thông báo TempData. *@
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -31,6 +32,10 @@
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            @if (User.IsInRole("KhachHang"))
+                            {
+                                <li class="nav-item"><a class="nav-link" asp-controller="HoSo" asp-action="Index">Hồ sơ</a></li>
+                            }
                             <li class="nav-item"><a class="nav-link" asp-controller="TaiKhoan" asp-action="ThongTin">@User.Identity.Name</a></li>
                             <li class="nav-item">
                                 <form asp-controller="TaiKhoan" asp-action="DangXuat" method="post">
@@ -40,6 +45,7 @@
                         }
                         else
                         {
+                            <li class="nav-item"><a class="nav-link" asp-controller="KhachHang" asp-action="DangKy">Đăng ký</a></li>
                             <li class="nav-item"><a class="nav-link" asp-controller="TaiKhoan" asp-action="DangNhap">Đăng nhập</a></li>
                         }
                     </ul>
@@ -49,6 +55,14 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            @if (TempData["ThanhCong"] is string thanhCong)
+            {
+                <div class="alert alert-success" role="alert">@thanhCong</div>
+            }
+            @if (TempData["ThatBai"] is string thatBai)
+            {
+                <div class="alert alert-danger" role="alert">@thatBai</div>
+            }
             @RenderBody()
         </main>
     </div>

@@ -1,0 +1,35 @@
+@* M3: Nguyễn Văn Quý; MSSV: [MSSV]. Nội dung: các trường hồ sơ khách hàng dùng chung cho đăng ký và sửa hồ sơ. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ThongTinKhachViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+<div class="mb-3">
+    <label asp-for="HoTen" class="form-label"></label> <span aria-hidden="true">*</span>
+    <input asp-for="HoTen" class="form-control" autocomplete="name" maxlength="100" required />
+    <span asp-validation-for="HoTen" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Email" class="form-label"></label> <span aria-hidden="true">*</span>
+    <input asp-for="Email" type="email" class="form-control" autocomplete="email" maxlength="254" required />
+    <span asp-validation-for="Email" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="SoDienThoai" class="form-label"></label> <span aria-hidden="true">*</span>
+    <input asp-for="SoDienThoai" type="tel" class="form-control" autocomplete="tel" maxlength="20" required />
+    <span asp-validation-for="SoDienThoai" class="text-danger"></span>
+</div>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="NgaySinh" class="form-label"></label>
+        <input asp-for="NgaySinh" class="form-control" autocomplete="bday" />
+        <span asp-validation-for="NgaySinh" class="text-danger"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="GioiTinh" class="form-label"></label>
+        <select asp-for="GioiTinh" asp-items="Html.GetEnumSelectList<GioiTinh>()" class="form-select"></select>
+        <span asp-validation-for="GioiTinh" class="text-danger"></span>
+    </div>
+</div>
+<div class="mb-3">
+    <label asp-for="DiaChi" class="form-label"></label>
+    <input asp-for="DiaChi" class="form-control" autocomplete="street-address" maxlength="255" />
+    <span asp-validation-for="DiaChi" class="text-danger"></span>
+</div>
