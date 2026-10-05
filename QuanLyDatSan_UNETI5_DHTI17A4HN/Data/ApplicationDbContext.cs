@@ -1,5 +1,6 @@
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ soạn mã.
 // Nội dung: ánh xạ dữ liệu M1, ràng buộc SQL Server và loại sân mẫu.
+// M3: Nguyễn Văn Quý; MSSV: [MSSV]. Nội dung: ánh xạ, ràng buộc và chuẩn hóa dữ liệu KhachHang.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
@@ -13,6 +14,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<TaiKhoan> TaiKhoans => Set<TaiKhoan>();
     public DbSet<LoaiSan> LoaiSans => Set<LoaiSan>();
+    public DbSet<KhachHang> KhachHangs => Set<KhachHang>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +58,30 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 new LoaiSan { MaLoaiSan = 4, TenLoai = "Bóng rổ", SoNguoiToiDa = 10, DonGiaTheoGio = 150000m },
                 new LoaiSan { MaLoaiSan = 5, TenLoai = "Quần vợt", SoNguoiToiDa = 4, DonGiaTheoGio = 120000m });
         });
+
+        modelBuilder.Entity<KhachHang>(entity =>
+        {
+            entity.ToTable("KhachHang", table =>
+            {
+                table.HasCheckConstraint("CK_KhachHang_TrangThai", "[TrangThai] IN (0, 1)");
+                table.HasCheckConstraint("CK_KhachHang_GioiTinh", "[GioiTinh] IS NULL OR [GioiTinh] IN (0, 1, 2, 3)");
+                table.HasCheckConstraint("CK_KhachHang_DiemTichLuy", "[DiemTichLuy] >= 0");
+                table.HasCheckConstraint("CK_KhachHang_HoTen", "LEN(LTRIM(RTRIM([HoTen]))) > 0");
+                table.HasCheckConstraint("CK_KhachHang_SoDienThoai", "LEN(LTRIM(RTRIM([SoDienThoai]))) > 0");
+                table.HasCheckConstraint("CK_KhachHang_Email", "LEN(LTRIM(RTRIM([Email]))) > 0");
+            });
+            entity.HasKey(x => x.MaKhachHang);
+            entity.Property(x => x.HoTen).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.SoDienThoai).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.Email).HasMaxLength(254).IsRequired();
+            entity.Property(x => x.DiaChi).HasMaxLength(255);
+            entity.Property(x => x.GhiChu).HasMaxLength(1000);
+            entity.HasIndex(x => x.MaTaiKhoan).IsUnique();
+            entity.HasOne(x => x.TaiKhoan)
+                .WithOne(x => x.KhachHang)
+                .HasForeignKey<KhachHang>(x => x.MaTaiKhoan)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 
     private void ChuanHoaDuLieu()
@@ -74,6 +100,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             entry.Entity.TenLoai = entry.Entity.TenLoai.Trim();
             entry.Entity.MoTa = entry.Entity.MoTa?.Trim();
+        }
+
+        foreach (var entry in ChangeTracker.Entries<KhachHang>()
+                     .Where(x => x.State is EntityState.Added or EntityState.Modified))
+        {
+            entry.Entity.HoTen = entry.Entity.HoTen.Trim();
+            entry.Entity.Email = entry.Entity.Email.Trim();
+            entry.Entity.SoDienThoai = entry.Entity.SoDienThoai.Trim();
+            entry.Entity.DiaChi = entry.Entity.DiaChi?.Trim();
+            entry.Entity.GhiChu = entry.Entity.GhiChu?.Trim();
         }
     }
 
