@@ -1,0 +1,20 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ hiển thị thông báo TempData dùng chung. *@
+@{
+    // Các key giao diện chung; controller hiện tại chưa ghi TempData.
+    var thongBao = new[]
+    {
+        (Key: "Success", Css: "success", Nhan: "Thành công"),
+        (Key: "Error", Css: "danger", Nhan: "Lỗi"),
+        (Key: "Warning", Css: "warning", Nhan: "Lưu ý"),
+        (Key: "Info", Css: "info", Nhan: "Thông tin")
+    };
+}
+@foreach (var muc in thongBao)
+{
+    if (TempData[muc.Key] is string noiDung && !string.IsNullOrWhiteSpace(noiDung))
+    {
+        <div class="alert alert-@muc.Css ql-notice" role="@(muc.Key == "Error" ? "alert" : "status")">
+            <strong>@muc.Nhan:</strong> @noiDung
+        </div>
+    }
+}

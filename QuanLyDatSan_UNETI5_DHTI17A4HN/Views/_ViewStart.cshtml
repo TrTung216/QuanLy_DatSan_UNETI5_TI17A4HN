@@ -1,3 +1,7 @@
-﻿@{
-    Layout = "_Layout";
+﻿@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ chọn layout theo vai trò đã xác thực. *@
+@{
+    var laQuanTri = User.Identity?.IsAuthenticated == true
+        && (User.IsInRole(nameof(QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.VaiTro.Admin))
+            || User.IsInRole(nameof(QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.VaiTro.NhanVien)));
+    Layout = laQuanTri ? "_AdminLayout" : "_Layout";
 }
