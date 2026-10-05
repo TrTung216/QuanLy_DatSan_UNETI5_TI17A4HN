@@ -1,66 +1,34 @@
-﻿<!DOCTYPE html>
-@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ menu tài khoản. *@
+﻿@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ khung HTML, tài nguyên, nội dung và footer chung. *@
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - QuanLyDatSan_UNETI5_DHTI17A4HN</title>
+    <title>@(ViewData["Title"] ?? "Trang chủ") | Quản lý đặt sân</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/QuanLyDatSan_UNETI5_DHTI17A4HN.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">QuanLyDatSan_UNETI5_DHTI17A4HN</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-controller="TaiKhoan" asp-action="ThongTin">@User.Identity.Name</a></li>
-                            <li class="nav-item">
-                                <form asp-controller="TaiKhoan" asp-action="DangXuat" method="post">
-                                    <button type="submit" class="btn btn-link nav-link">Đăng xuất</button>
-                                </form>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-controller="TaiKhoan" asp-action="DangNhap">Đăng nhập</a></li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - QuanLyDatSan_UNETI5_DHTI17A4HN - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+<body class="ql-app">
+    <a class="ql-skip-link" href="#noi-dung-chinh">Chuyển đến nội dung chính</a>
+    <partial name="_Header" />
+    <main id="noi-dung-chinh" class="container ql-main" tabindex="-1">
+        <partial name="_ThongBao" />
+        @RenderBody()
+    </main>
+    <footer class="ql-footer">
+        <div class="container d-flex flex-wrap justify-content-between gap-2">
+            <span>Quản lý đặt sân <span aria-hidden="true">·</span> UNETI</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Quyền riêng tư</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/layout.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,0 +1,12 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ layout quản trị dùng lại khung và tài nguyên chung. *@
+@{
+    Layout = "_Layout";
+    ViewData["KhuVucQuanTri"] = true;
+}
+@RenderBody()
+@section Styles {
+    @await RenderSectionAsync("Styles", required: false)
+}
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

@@ -1,0 +1,80 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ header, menu và thao tác tài khoản dùng chung. *@
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@inject QuanLyDatSan_UNETI5_DHTI17A4HN.Services.ITaiKhoanHienTai TaiKhoanHienTai
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    bool LaTrang(string tenController, string tenAction) =>
+        string.Equals(controller, tenController, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(action, tenAction, StringComparison.OrdinalIgnoreCase);
+    var daDangNhap = User.Identity?.IsAuthenticated == true;
+    var laKhuVucQuanTri = ViewData["KhuVucQuanTri"] is true;
+    var tenVaiTro = TaiKhoanHienTai.VaiTro switch
+    {
+        VaiTro.Admin => "Quản trị viên",
+        VaiTro.NhanVien => "Nhân viên",
+        VaiTro.KhachHang => "Khách hàng",
+        _ => "Tài khoản"
+    };
+    // Chỉ thêm menu nghiệp vụ khi action và quyền phía server đã tồn tại.
+    // ThongTin dùng [Authorize], cho phép cả ba vai trò hiện có.
+    var menu = new List<(string Ten, string Controller, string Action)>
+    {
+        ("Trang chủ", "Home", "Index"),
+        ("Quyền riêng tư", "Home", "Privacy")
+    };
+    if (daDangNhap)
+    {
+        menu.Add(("Thông tin tài khoản", "TaiKhoan", "ThongTin"));
+    }
+}
+<header class="ql-header">
+    <nav class="navbar navbar-expand-lg navbar-light" aria-label="Điều hướng chính">
+        <div class="container">
+            <a class="navbar-brand ql-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <span class="ql-brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <rect x="4" y="3" width="24" height="26" rx="3" />
+                        <path d="M4 16h24M11 3v6h10V3M11 29v-6h10v6" />
+                        <circle cx="16" cy="16" r="4" />
+                    </svg>
+                </span>
+                <span>Quản lý đặt sân<small>@(laKhuVucQuanTri ? "Khu vực quản trị" : "Thể thao · UNETI")</small></span>
+            </a>
+            <button class="navbar-toggler ql-menu-toggle" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#menu-chinh" aria-controls="menu-chinh" aria-expanded="false" aria-label="Mở hoặc thu gọn menu">
+                <span class="navbar-toggler-icon" aria-hidden="true"></span>
+                <span class="ql-menu-label">Menu</span>
+            </button>
+            <div class="collapse navbar-collapse" id="menu-chinh">
+                <ul class="navbar-nav me-auto ql-nav">
+                    @foreach (var muc in menu)
+                    {
+                        var hienTai = LaTrang(muc.Controller, muc.Action);
+                        <li class="nav-item">
+                            <a class="nav-link @(hienTai ? "active" : "")" aria-current="@(hienTai ? "page" : null)"
+                               asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">@muc.Ten</a>
+                        </li>
+                    }
+                </ul>
+                <div class="ql-account">
+                    @if (daDangNhap)
+                    {
+                        <div class="ql-account-info">
+                            <span class="ql-account-name">@TaiKhoanHienTai.HoTen</span>
+                            <span class="ql-account-role">@tenVaiTro</span>
+                        </div>
+                        <form id="dang-xuat" asp-area="" asp-controller="TaiKhoan" asp-action="DangXuat" method="post" asp-antiforgery="true">
+                            <button type="submit" class="btn btn-outline-primary">Đăng xuất</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="btn btn-primary" asp-area="" asp-controller="TaiKhoan" asp-action="DangNhap"
+                           aria-current="@(LaTrang("TaiKhoan", "DangNhap") ? "page" : null)">Đăng nhập</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>

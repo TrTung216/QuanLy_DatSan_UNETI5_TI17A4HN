@@ -1,0 +1,116 @@
+/* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ kiểu khung và thành phần chung.
+   Bootstrap 5.3; scope ql-app / ql-* cho phần dùng chung. */
+.ql-app {
+    --ql-primary: #1756a9;
+    --ql-primary-dark: #103f80;
+    --ql-text: #1e3048;
+    --ql-muted: #52647a;
+    --ql-border: #dce4ee;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: #f3f6fb;
+    color: var(--ql-text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.6;
+}
+
+.ql-app :where(a:not(.btn):not(.page-link)) { color: var(--ql-primary); }
+.ql-app :where(a:not(.btn):not(.page-link)):hover { color: var(--ql-primary-dark); }
+.ql-app :focus-visible { outline: 3px solid #1756a9; outline-offset: 3px; }
+.ql-app .btn { border-radius: .5rem; font-weight: 600; padding: .6rem 1rem; }
+.ql-app .btn-primary {
+    --bs-btn-bg: var(--ql-primary);
+    --bs-btn-border-color: var(--ql-primary);
+    --bs-btn-hover-bg: var(--ql-primary-dark);
+    --bs-btn-hover-border-color: var(--ql-primary-dark);
+    --bs-btn-active-bg: var(--ql-primary-dark);
+    --bs-btn-active-border-color: var(--ql-primary-dark);
+    color: #fff;
+}
+.ql-app .btn-outline-primary {
+    --bs-btn-color: var(--ql-primary);
+    --bs-btn-border-color: var(--ql-primary);
+    --bs-btn-hover-bg: var(--ql-primary);
+    --bs-btn-hover-border-color: var(--ql-primary);
+    --bs-btn-active-bg: var(--ql-primary-dark);
+    --bs-btn-active-border-color: var(--ql-primary-dark);
+}
+.ql-app a.btn-outline-primary:hover, .ql-app a.btn-outline-primary:active { color: #fff; }
+.ql-app .form-label { font-weight: 600; }
+.ql-app .form-control, .ql-app .form-select { min-height: 2.75rem; border-color: #8c9db2; border-radius: .5rem; }
+.ql-app .form-control:focus, .ql-app .form-select:focus { border-color: var(--ql-primary); box-shadow: 0 0 0 .2rem #1756a926; }
+.ql-app .input-validation-error { border-color: #b42318; }
+.ql-app .validation-summary-valid { display: none; }
+.ql-app .validation-summary-errors { padding: .75rem; margin-bottom: 1rem; border-left: 4px solid #b42318; background: #fff1f0; }
+.ql-app .validation-summary-errors ul { margin: 0; padding-left: 1.25rem; }
+.ql-app .text-danger { color: #b42318 !important; }
+
+.ql-skip-link { position: absolute; top: .5rem; left: 1rem; z-index: 1100; padding: .7rem 1rem; background: #fff; border: 2px solid; transform: translateY(-160%); }
+.ql-skip-link:focus { transform: translateY(0); }
+.ql-header { background: #fff; border-top: 4px solid var(--ql-primary); border-bottom: 1px solid var(--ql-border); }
+.ql-header .navbar { padding: 1rem 0; }
+.ql-brand { display: flex; align-items: center; gap: .7rem; margin-right: 2rem; font-size: 1.15rem; font-weight: 750; white-space: normal; line-height: 1.3; }
+.ql-brand small { display: block; color: var(--ql-muted); font-size: .75rem; font-weight: 500; margin-top: .25rem; }
+.ql-brand-mark { display: grid; place-items: center; flex-shrink: 0; width: 2.8rem; height: 2.8rem; color: #fff; background: var(--ql-primary); border-radius: .7rem; }
+.ql-nav { gap: .25rem; }
+.ql-header .ql-nav .nav-link { padding: .65rem .75rem; color: var(--ql-muted); border-radius: .5rem; font-size: .9rem; font-weight: 600; }
+.ql-header .ql-nav .nav-link:hover { background: #f0f5fc; color: var(--ql-primary); }
+.ql-header .ql-nav .nav-link.active { color: var(--ql-primary-dark); background: #e8f0fc; box-shadow: inset 0 -3px var(--ql-primary); }
+.ql-account { display: flex; align-items: center; gap: 1rem; margin-left: 1rem; }
+.ql-account-info { max-width: 12rem; line-height: 1.4; overflow-wrap: anywhere; }
+.ql-account-name { display: block; font-weight: 650; font-size: .9rem; }
+.ql-account-role { color: var(--ql-muted); font-size: .8rem; }
+.ql-account form { flex-shrink: 0; }
+.ql-menu-toggle { min-height: 44px; padding: .4rem .6rem; }
+.ql-menu-label { font-size: .85rem; vertical-align: middle; }
+.ql-main { flex: 1 0 auto; padding-top: 2.5rem; padding-bottom: 3rem; min-width: 0; overflow-wrap: anywhere; }
+.ql-footer { padding: 1.25rem 0; border-top: 1px solid var(--ql-border); color: var(--ql-muted); background: #fff; font-size: .875rem; }
+.ql-page-header { margin-bottom: 1.5rem; }
+.ql-page-header h1, .ql-panel h1 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 750; line-height: 1.3; }
+.ql-subtitle { color: var(--ql-muted); margin-bottom: 0; }
+.ql-eyebrow { color: var(--ql-primary); font-weight: 700; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; }
+.ql-panel { padding: 1.75rem; border: 1px solid var(--ql-border); border-radius: 1rem; background: #fff; box-shadow: 0 4px 20px #203e6705; }
+.ql-welcome { border-left: 5px solid var(--ql-primary); padding: clamp(1.5rem, 5vw, 3.5rem); }
+.ql-welcome p { max-width: 44rem; }
+.ql-auth { max-width: 30rem; margin: 0 auto; }
+.ql-details { max-width: 52rem; }
+.ql-details dd { overflow-wrap: anywhere; }
+.ql-notice { border-radius: .65rem; overflow-wrap: anywhere; }
+.ql-empty { padding: 2.5rem 1.25rem; text-align: center; color: var(--ql-muted); border: 1px dashed #8c9db2; border-radius: .75rem; background: #fff; }
+.ql-table { margin-bottom: 0; --bs-table-color: var(--ql-text); --bs-table-border-color: var(--ql-border); }
+.ql-table > :not(caption) > * > * { padding: .9rem 1rem; }
+.ql-table thead th { background: #edf3fb; font-weight: 650; white-space: nowrap; }
+.ql-table caption { color: var(--ql-muted); }
+.ql-pagination { flex-wrap: wrap; gap: .35rem; }
+.ql-pagination .page-link { border-radius: .4rem; min-width: 2.75rem; min-height: 2.75rem; display: grid; place-items: center; }
+.ql-pagination .active .page-link { background: var(--ql-primary); border-color: var(--ql-primary); color: #fff; }
+.ql-status { display: inline-block; padding: .25rem .65rem; border: 1px solid; border-radius: 2rem; font-size: .85rem; font-weight: 650; white-space: nowrap; }
+.ql-status--waiting { background: #fff3cd; color: #705400; border-color: #e7c65e; }
+.ql-status--confirmed { background: #e7f0ff; color: #174a91; border-color: #a6c3ed; }
+.ql-status--completed { background: #e1f4e9; color: #17613b; border-color: #93cfac; }
+.ql-status--cancelled { background: #edf0f3; color: #495564; border-color: #bdc6d0; }
+.ql-status--rejected { background: #ffebe9; color: #a32424; border-color: #ecaaa5; }
+
+@media (max-width: 1199.98px) and (min-width: 992px) {
+    .ql-brand { margin-right: .75rem; }
+    .ql-account { gap: .5rem; margin-left: .5rem; }
+    .ql-account-info { max-width: 8rem; }
+}
+@media (max-width: 991.98px) {
+    .ql-header .navbar-collapse { padding-top: 1rem; }
+    .ql-account { margin: 1rem 0 0; padding-top: 1rem; border-top: 1px solid var(--ql-border); justify-content: space-between; }
+    .ql-account-info { max-width: none; }
+    .ql-main { padding-top: 1.5rem; }
+}
+@media (max-width: 575.98px) {
+    .ql-brand { margin-right: .4rem; font-size: 1rem; gap: .5rem; }
+    .ql-brand-mark { width: 2.3rem; height: 2.3rem; }
+    .ql-menu-label { display: none; }
+    .ql-panel { padding: 1.25rem; }
+    .ql-main { padding-bottom: 2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ql-header .collapsing { transition: none; }
+}
