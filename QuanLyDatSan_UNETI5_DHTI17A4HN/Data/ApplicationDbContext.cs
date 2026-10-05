@@ -1,5 +1,7 @@
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ soạn mã.
 // Nội dung: ánh xạ dữ liệu M1, ràng buộc SQL Server và loại sân mẫu.
+// M2: Phan Giang Tâm; MSSV: 23103100196.
+// Nội dung: đăng ký sân, cấu hình bảng, quan hệ loại sân và chuẩn hóa dữ liệu.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
@@ -13,7 +15,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<TaiKhoan> TaiKhoans => Set<TaiKhoan>();
     public DbSet<LoaiSan> LoaiSans => Set<LoaiSan>();
-
+    public DbSet<SanTheThao> SanTheThaos => Set<SanTheThao>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -32,6 +34,52 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(x => x.MatKhau).HasMaxLength(255).IsRequired();
             entity.Property(x => x.HoTen).HasMaxLength(100).IsRequired();
             entity.Property(x => x.Email).HasMaxLength(254).IsRequired();
+        });
+        modelBuilder.Entity<SanTheThao>(entity =>
+        {
+            entity.ToTable("SanTheThao", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_SanTheThao_TenSan",
+                    "LEN(LTRIM(RTRIM([TenSan]))) > 0");
+
+                table.HasCheckConstraint(
+                    "CK_SanTheThao_DonGia",
+                    "[DonGia] >= 0");
+
+                table.HasCheckConstraint(
+                    "CK_SanTheThao_TrangThai",
+                    "[TrangThai] IN (1, 2, 3)");
+
+                table.HasCheckConstraint(
+                    "CK_SanTheThao_Gio",
+                    "[GioDongCua] > [GioMoCua]");
+            });
+
+            entity.HasKey(x => x.MaSan);
+
+            entity.Property(x => x.TenSan)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(x => x.DiaChi)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(x => x.TienIch).HasMaxLength(1000);
+            entity.Property(x => x.GhiChu).HasMaxLength(1000);
+            entity.Property(x => x.DonGia).HasPrecision(18, 2);
+            entity.Property(x => x.TrangThai).HasConversion<byte>();
+            entity.Property(x => x.GioMoCua).HasColumnType("time(0)");
+            entity.Property(x => x.GioDongCua).HasColumnType("time(0)");
+            entity.Property(x => x.NgayBaoTri).HasColumnType("date");
+
+            entity.HasIndex(x => x.MaLoaiSan);
+
+            entity.HasOne(x => x.LoaiSan)
+                .WithMany(x => x.DanhSachSan)
+                .HasForeignKey(x => x.MaLoaiSan)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<LoaiSan>(entity =>
@@ -74,6 +122,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             entry.Entity.TenLoai = entry.Entity.TenLoai.Trim();
             entry.Entity.MoTa = entry.Entity.MoTa?.Trim();
+        }
+        foreach (var entry in ChangeTracker.Entries<SanTheThao>()
+             .Where(x => x.State is EntityState.Added
+                 or EntityState.Modified))
+        {
+            entry.Entity.TenSan = entry.Entity.TenSan.Trim();
+            entry.Entity.DiaChi = entry.Entity.DiaChi.Trim();
+            entry.Entity.TienIch = entry.Entity.TienIch?.Trim();
+            entry.Entity.GhiChu = entry.Entity.GhiChu?.Trim();
         }
     }
 
