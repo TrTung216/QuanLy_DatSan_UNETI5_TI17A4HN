@@ -1,0 +1,120 @@
+@* M5: Nguyễn Hữu Quang; MSSV: 23103100184; Nội dung: danh sách, tìm kiếm, lọc, sắp xếp dịch vụ. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DichVuDanhSachViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using System.Globalization
+@{
+    ViewData["Title"] = "Quản lý dịch vụ";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+}
+<div class="ql-page-header">
+    <h1>@ViewData["Title"]</h1>
+    <p class="ql-subtitle">Danh mục dịch vụ đi kèm đơn đặt sân.</p>
+</div>
+<section class="ql-panel" aria-label="Danh sách dịch vụ">
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <label for="tuKhoa" class="visually-hidden">Tên dịch vụ</label>
+            <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control" placeholder="Tìm theo tên dịch vụ" />
+        </div>
+        <div class="col-md-3">
+            <label for="trangThai" class="visually-hidden">Trạng thái</label>
+            <select id="trangThai" name="trangThai" class="form-select">
+                <option value="" selected="@(Model.TrangThai == null ? "selected" : null)">Tất cả trạng thái</option>
+                <option value="1" selected="@(Model.TrangThai == TrangThaiDichVu.HoatDong ? "selected" : null)">Hoạt động</option>
+                <option value="0" selected="@(Model.TrangThai == TrangThaiDichVu.NgungHoatDong ? "selected" : null)">Ngừng hoạt động</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="sapXep" class="visually-hidden">Sắp xếp</label>
+            <select id="sapXep" name="sapXep" class="form-select">
+                <option value="" selected="@(string.IsNullOrEmpty(Model.SapXep) ? "selected" : null)">Tên A → Z</option>
+                <option value="ten_giam" selected="@(Model.SapXep == "ten_giam" ? "selected" : null)">Tên Z → A</option>
+                <option value="gia_tang" selected="@(Model.SapXep == "gia_tang" ? "selected" : null)">Giá tăng dần</option>
+                <option value="gia_giam" selected="@(Model.SapXep == "gia_giam" ? "selected" : null)">Giá giảm dần</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid"><button type="submit" class="btn btn-outline-primary">Lọc</button></div>
+    </form>
+
+    <div class="mb-3"><a class="btn btn-primary" asp-action="Tao">Thêm dịch vụ</a></div>
+
+    @if (Model.DanhSach.Count == 0)
+    {
+        <div class="ql-empty">
+            <h2 class="h5">Chưa có dữ liệu</h2>
+            <p class="mb-0">Chưa có dịch vụ phù hợp với điều kiện tìm kiếm.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive" role="region" aria-label="Danh sách dịch vụ" tabindex="0">
+            <table class="table table-hover align-middle ql-table">
+                <caption>Danh sách dịch vụ</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Tên dịch vụ</th>
+                        <th scope="col">Đơn vị tính</th>
+                        <th scope="col" class="text-end">Đơn giá</th>
+                        <th scope="col">Trạng thái</th>
+                        <th scope="col">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var dv in Model.DanhSach)
+                {
+                    var hoatDong = dv.TrangThai == TrangThaiDichVu.HoatDong;
+                    <tr>
+                        <td>@dv.TenDichVu</td>
+                        <td>@dv.DonViTinh</td>
+                        <td class="text-end">@dv.DonGia.ToString("N0", vi) ₫</td>
+                        <td><span class="badge @(hoatDong ? "text-bg-success" : "text-bg-secondary")">@(hoatDong ? "Hoạt động" : "Ngừng hoạt động")</span></td>
+                        <td class="text-nowrap">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Sua" asp-route-id="@dv.MaDichVu">Sửa</a>
+                            <form asp-action="DoiTrangThai" asp-route-id="@dv.MaDichVu" method="post" class="d-inline"
+                                  onsubmit="return confirm('@(hoatDong ? "Ngừng hoạt động dịch vụ này?" : "Kích hoạt lại dịch vụ này?")');">
+                                <button type="submit" class="btn btn-sm @(hoatDong ? "btn-danger" : "btn-outline-primary")">
+                                    @(hoatDong ? "Ngừng hoạt động" : "Kích hoạt")
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (Model.TongTrang > 1)
+    {
+        <nav aria-label="Phân trang dịch vụ">
+            <ul class="pagination ql-pagination">
+                @if (Model.Trang > 1)
+                {
+                    <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-route-trang="@(Model.Trang - 1)"
+                        asp-route-tuKhoa="@Model.TuKhoa" asp-route-trangThai="@Model.TrangThai" asp-route-sapXep="@Model.SapXep">Trước</a></li>
+                }
+                else { <li class="page-item disabled"><span class="page-link">Trước</span></li> }
+
+                @for (var i = 1; i <= Model.TongTrang; i++)
+                {
+                    if (i == Model.Trang)
+                    {
+                        <li class="page-item active"><span class="page-link" aria-current="page">@i</span></li>
+                    }
+                    else
+                    {
+                        <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-route-trang="@i"
+                            asp-route-tuKhoa="@Model.TuKhoa" asp-route-trangThai="@Model.TrangThai" asp-route-sapXep="@Model.SapXep">@i</a></li>
+                    }
+                }
+
+                @if (Model.Trang < Model.TongTrang)
+                {
+                    <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-route-trang="@(Model.Trang + 1)"
+                        asp-route-tuKhoa="@Model.TuKhoa" asp-route-trangThai="@Model.TrangThai" asp-route-sapXep="@Model.SapXep">Sau</a></li>
+                }
+                else { <li class="page-item disabled"><span class="page-link">Sau</span></li> }
+            </ul>
+        </nav>
+    }
+</section>
