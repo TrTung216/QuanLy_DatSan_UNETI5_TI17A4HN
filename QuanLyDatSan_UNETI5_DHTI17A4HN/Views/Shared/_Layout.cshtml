@@ -1,15 +1,18 @@
-﻿<!DOCTYPE html>
+﻿@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ khung HTML, tài nguyên, nội dung và footer chung. *@
+<!DOCTYPE html>
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ menu tài khoản. *@
 @* M3: Nguyễn Văn Quý; MSSV: [MSSV]. Nội dung: liên kết đăng ký, hồ sơ và thông báo TempData. *@
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - QuanLyDatSan_UNETI5_DHTI17A4HN</title>
+    <title>@(ViewData["Title"] ?? "Trang chủ") | Quản lý đặt sân</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/QuanLyDatSan_UNETI5_DHTI17A4HN.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header>
@@ -66,15 +69,28 @@
             @RenderBody()
         </main>
     </div>
-
+</body>
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2026 - QuanLyDatSan_UNETI5_DHTI17A4HN - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+
+<body class="ql-app">
+    <a class="ql-skip-link" href="#noi-dung-chinh">Chuyển đến nội dung chính</a>
+    <partial name="_Header" />
+    <main id="noi-dung-chinh" class="container ql-main" tabindex="-1">
+        <partial name="_ThongBao" />
+        @RenderBody()
+    </main>
+    <footer class="ql-footer">
+        <div class="container d-flex flex-wrap justify-content-between gap-2">
+            <span>Quản lý đặt sân <span aria-hidden="true">·</span> UNETI</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Quyền riêng tư</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/layout.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

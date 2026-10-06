@@ -1,11 +1,17 @@
-@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ thông tin đăng nhập. *@
+﻿@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ thông tin đăng nhập. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.Services.ITaiKhoanHienTai
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @{ ViewData["Title"] = "Tài khoản hiện tại"; }
-<h1 class="h3">Tài khoản hiện tại</h1>
-<dl class="row">
-    <dt class="col-sm-3">Mã tài khoản</dt><dd class="col-sm-9">@Model.MaTaiKhoan</dd>
-    <dt class="col-sm-3">Họ tên</dt><dd class="col-sm-9">@Model.HoTen</dd>
-    <dt class="col-sm-3">Vai trò</dt>
-    <dd class="col-sm-9">@(Model.VaiTro switch { VaiTro.Admin => "Quản trị viên", VaiTro.NhanVien => "Nhân viên", VaiTro.KhachHang => "Khách hàng", _ => "" })</dd>
-</dl>
+<section class="ql-panel ql-details" aria-labelledby="tieu-de-tai-khoan">
+    <div class="ql-page-header">
+        <p class="ql-eyebrow">Tài khoản</p>
+        <h1 id="tieu-de-tai-khoan">Tài khoản hiện tại</h1>
+        <p class="ql-subtitle">Thông tin của tài khoản đang đăng nhập.</p>
+    </div>
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Mã tài khoản</dt><dd class="col-sm-9">@Model.MaTaiKhoan</dd>
+        <dt class="col-sm-3">Họ tên</dt><dd class="col-sm-9">@Model.HoTen</dd>
+        <dt class="col-sm-3">Vai trò</dt>
+        <dd class="col-sm-9">@(Model.VaiTro switch { VaiTro.Admin => "Quản trị viên", VaiTro.NhanVien => "Nhân viên", VaiTro.KhachHang => "Khách hàng", _ => "" })</dd>
+    </dl>
+</section>

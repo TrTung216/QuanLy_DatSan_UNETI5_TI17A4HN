@@ -1,4 +1,4 @@
-// M3: Nguyễn Văn Quý; MSSV: [MSSV]. Nội dung: đăng ký tài khoản khách hàng kèm hồ sơ trong cùng giao dịch.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. đăng ký tài khoản khách hàng kèm hồ sơ trong cùng giao dịch.
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

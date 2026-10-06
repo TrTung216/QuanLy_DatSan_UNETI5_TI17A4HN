@@ -1,5 +1,8 @@
-@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ trang từ chối truy cập. *@
+﻿@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ trang từ chối truy cập. *@
 @{ ViewData["Title"] = "Không có quyền truy cập"; }
-<h1 class="h3">Không có quyền truy cập</h1>
-<p>Tài khoản hiện tại không được phép sử dụng chức năng này.</p>
-<a asp-controller="Home" asp-action="Index" class="btn btn-primary">Về trang chủ</a>
+<section class="ql-panel ql-details" aria-labelledby="tieu-de-tu-choi">
+    <p class="ql-eyebrow">Lỗi 403</p>
+    <h1 id="tieu-de-tu-choi">Không có quyền truy cập</h1>
+    <p>Tài khoản hiện tại không được phép sử dụng chức năng này.</p>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Về trang chủ</a>
+</section>

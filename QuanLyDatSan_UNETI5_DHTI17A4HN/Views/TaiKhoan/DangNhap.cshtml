@@ -1,25 +1,27 @@
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ giao diện đăng nhập. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DangNhapViewModel
 @{ ViewData["Title"] = "Đăng nhập"; }
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <h1 class="h3 mb-3">Đăng nhập</h1>
+<div class="ql-auth">
+    <section class="ql-panel" aria-labelledby="tieu-de-dang-nhap">
+        <p class="ql-eyebrow">Quản lý đặt sân</p>
+        <h1 id="tieu-de-dang-nhap" class="mb-2">Đăng nhập</h1>
+        <p class="ql-subtitle mb-4">Sử dụng tài khoản được cấp. Các trường có dấu * là bắt buộc.</p>
         <form asp-action="DangNhap" method="post" id="dang-nhap">
             <input asp-for="ReturnUrl" type="hidden" />
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="mb-3">
                 <label asp-for="TenDangNhap" class="form-label"></label> <span aria-hidden="true">*</span>
-                <input asp-for="TenDangNhap" class="form-control" autocomplete="username" maxlength="50" required />
-                <span asp-validation-for="TenDangNhap" class="text-danger"></span>
+                <input asp-for="TenDangNhap" class="form-control" autocomplete="username" maxlength="50" required aria-describedby="loi-ten-dang-nhap" />
+                <span asp-validation-for="TenDangNhap" id="loi-ten-dang-nhap" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="MatKhau" class="form-label"></label> <span aria-hidden="true">*</span>
-                <input asp-for="MatKhau" class="form-control" autocomplete="current-password" maxlength="128" required />
-                <span asp-validation-for="MatKhau" class="text-danger"></span>
+                <input asp-for="MatKhau" class="form-control" autocomplete="current-password" maxlength="128" required aria-describedby="loi-mat-khau" />
+                <span asp-validation-for="MatKhau" id="loi-mat-khau" class="text-danger"></span>
             </div>
             <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
         </form>
-    </div>
+    </section>
 </div>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

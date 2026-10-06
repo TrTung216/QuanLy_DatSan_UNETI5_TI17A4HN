@@ -1,4 +1,4 @@
-// M3: Nguyễn Văn Quý; MSSV: [MSSV]. Nội dung: đồng hồ chung theo giờ Việt Nam cho các module.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. đồng hồ chung theo giờ Việt Nam cho các module.
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
 public interface IDongHo

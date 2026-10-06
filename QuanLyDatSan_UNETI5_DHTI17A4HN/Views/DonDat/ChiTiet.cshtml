@@ -1,0 +1,40 @@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. giao diện chi tiết đơn đặt sân của khách hàng. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ChiTietDonViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@{ ViewData["Title"] = "Đơn đặt sân #" + Model.MaDatSan; }
+<h1 class="h3 mb-3">Đơn đặt sân #@Model.MaDatSan
+    <span class="badge @HienThiDatSan.LopMau(Model.TrangThai)">@HienThiDatSan.TenTrangThai(Model.TrangThai)</span>
+</h1>
+<dl class="row">
+    <dt class="col-sm-3">Sân</dt><dd class="col-sm-9">@Model.TenSan (@Model.TenLoai)</dd>
+    <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9">@Model.DiaChi</dd>
+    <dt class="col-sm-3">Thời gian sử dụng</dt>
+    <dd class="col-sm-9">@Model.GioBatDau.ToString("dd/MM/yyyy") @Model.GioBatDau.ToString("HH:mm") - @Model.GioKetThuc.ToString("HH:mm")</dd>
+    <dt class="col-sm-3">Ngày đặt</dt><dd class="col-sm-9">@Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</dd>
+    <dt class="col-sm-3">Đơn giá</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.DonGia)/giờ</dd>
+    <dt class="col-sm-3">Tiền cọc</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCoc)</dd>
+    @if (Model.TongTien.HasValue)
+    {
+        <dt class="col-sm-3">Tiền sân</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSan ?? 0m)</dd>
+        <dt class="col-sm-3">Tiền dịch vụ</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienDichVu ?? 0m)</dd>
+        <dt class="col-sm-3">Tổng tiền</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TongTien.Value)</dd>
+    }
+    else
+    {
+        <dt class="col-sm-3">Tiền sân dự kiến</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
+    }
+    @if (Model.NgayXacNhan.HasValue)
+    {
+        <dt class="col-sm-3">Ngày xác nhận</dt><dd class="col-sm-9">@Model.NgayXacNhan.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+    }
+    @if (Model.NgayHoanThanh.HasValue)
+    {
+        <dt class="col-sm-3">Ngày hoàn thành</dt><dd class="col-sm-9">@Model.NgayHoanThanh.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+    }
+    @if (Model.NgayHuy.HasValue)
+    {
+        <dt class="col-sm-3">Ngày hủy/từ chối</dt><dd class="col-sm-9">@Model.NgayHuy.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+        <dt class="col-sm-3">Lý do</dt><dd class="col-sm-9">@Model.LyDoHuy</dd>
+    }
+</dl>
+<a asp-action="Index" class="btn btn-outline-secondary">Quay lại lịch của tôi</a>

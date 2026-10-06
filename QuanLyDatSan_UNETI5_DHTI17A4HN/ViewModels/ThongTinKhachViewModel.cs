@@ -1,4 +1,4 @@
-// M3: Nguyễn Văn Quý; MSSV: [MSSV]. Nội dung: các trường hồ sơ khách hàng được phép nhận từ form.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. các trường hồ sơ khách hàng được phép nhận từ form.
 using System.ComponentModel.DataAnnotations;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;

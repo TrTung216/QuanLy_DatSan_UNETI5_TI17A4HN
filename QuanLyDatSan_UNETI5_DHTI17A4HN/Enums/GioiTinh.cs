@@ -1,4 +1,4 @@
-// M3: Nguyễn Văn Quý; MSSV: [MSSV]. Nội dung: giới tính khách hàng.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. giới tính khách hàng.
 using System.ComponentModel.DataAnnotations;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;

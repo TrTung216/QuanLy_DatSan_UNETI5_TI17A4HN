@@ -1,4 +1,4 @@
-// M3: Nguyễn Văn Quý; MSSV: [MSSV]. Nội dung: xem và sửa hồ sơ cá nhân của khách hàng đang đăng nhập.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. xem và sửa hồ sơ cá nhân của khách hàng đang đăng nhập.
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
