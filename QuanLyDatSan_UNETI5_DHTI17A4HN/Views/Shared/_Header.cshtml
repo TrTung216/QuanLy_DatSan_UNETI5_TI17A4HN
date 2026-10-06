@@ -1,4 +1,5 @@
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ header, menu và thao tác tài khoản dùng chung. *@
+@* M2: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Thêm menu danh sách sân và thêm sân. *@
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @inject QuanLyDatSan_UNETI5_DHTI17A4HN.Services.ITaiKhoanHienTai TaiKhoanHienTai
 @{
@@ -21,18 +22,22 @@
     var menu = new List<(string Ten, string Controller, string Action)>
     {
         ("Trang chủ", "Home", "Index"),
-        ("Quyền riêng tư", "Home", "Privacy")
+        ("Danh sách sân", "SanTheThao", "Index")
     };
- if (daDangNhap)
-{
-    menu.Add(("Thông tin tài khoản", "TaiKhoan", "ThongTin"));
-
-    // Chỉ Admin mới thấy menu Dịch vụ
-    if (User.IsInRole(nameof(VaiTro.Admin)))
+    if (daDangNhap && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien))))
     {
-        menu.Add(("Dịch vụ", "DichVu", "DanhSach"));
+        menu.Add(("Thêm sân", "SanTheThao", "Create"));
     }
-}
+    menu.Add(("Quyền riêng tư", "Home", "Privacy"));
+    if (daDangNhap)
+    {
+        menu.Add(("Thông tin tài khoản", "TaiKhoan", "ThongTin"));
+        // Chỉ Admin mới thấy menu Dịch vụ.
+        if (User.IsInRole(nameof(VaiTro.Admin)))
+        {
+            menu.Add(("Dịch vụ", "DichVu", "DanhSach"));
+        }
+    }
 }
 <header class="ql-header">
     <nav class="navbar navbar-expand-lg navbar-light" aria-label="Điều hướng chính">

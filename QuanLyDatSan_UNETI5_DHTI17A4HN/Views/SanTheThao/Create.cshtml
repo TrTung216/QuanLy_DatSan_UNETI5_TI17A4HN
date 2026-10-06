@@ -1,0 +1,98 @@
+@* Họ tên: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Form thêm sân. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ThemSanViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using System.Globalization
+@{
+    ViewData["Title"] = "Thêm sân";
+}
+<div class="ql-page-header">
+    <h1>Thêm sân</h1>
+    <p class="ql-subtitle">Nhập thông tin sân. Các trường có dấu * là bắt buộc.</p>
+</div>
+<section class="ql-panel" aria-label="Thông tin sân mới">
+    @if (Model.CacLoaiSan.Count == 0)
+    {
+        <div class="alert alert-warning" role="alert">Chưa có loại sân đang hoạt động. Cần bổ sung loại sân trước khi thêm sân.</div>
+    }
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="TenSan" class="form-label"></label> <span aria-hidden="true">*</span>
+                <input asp-for="TenSan" class="form-control" maxlength="100" required />
+                <span asp-validation-for="TenSan" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="MaLoaiSan" class="form-label"></label> <span aria-hidden="true">*</span>
+                <select asp-for="MaLoaiSan" class="form-select" required aria-describedby="goi-y-gia">
+                    <option value="">-- Chọn loại sân --</option>
+                    @foreach (var loai in Model.CacLoaiSan)
+                    {
+                        <option value="@loai.MaLoaiSan" data-gia="@loai.DonGiaTheoGio.ToString("0", CultureInfo.InvariantCulture)">@loai.TenLoai</option>
+                    }
+                </select>
+                <span asp-validation-for="MaLoaiSan" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="DiaChi" class="form-label"></label> <span aria-hidden="true">*</span>
+                <input asp-for="DiaChi" class="form-control" maxlength="255" required />
+                <span asp-validation-for="DiaChi" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="DonGia" class="form-label"></label> <span aria-hidden="true">*</span>
+                <input asp-for="DonGia" type="number" asp-format="{0:0}" class="form-control" min="0" step="1" required aria-describedby="goi-y-gia" />
+                <div id="goi-y-gia" class="form-text">Nhập tiền nguyên theo đồng, ví dụ 200000. Chọn loại sân để điền giá mặc định; có thể điều chỉnh.</div>
+                <span asp-validation-for="DonGia" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="TrangThai" class="form-label"></label> <span aria-hidden="true">*</span>
+                <select asp-for="TrangThai" class="form-select" required>
+                    <option value="1">Hoạt động</option>
+                    <option value="2">Bảo trì</option>
+                    <option value="3">Ngừng hoạt động</option>
+                </select>
+                <span asp-validation-for="TrangThai" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="GioMoCua" class="form-label"></label> <span aria-hidden="true">*</span>
+                <input asp-for="GioMoCua" type="time" asp-format="{0:HH:mm}" class="form-control" step="60" required />
+                <span asp-validation-for="GioMoCua" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="GioDongCua" class="form-label"></label> <span aria-hidden="true">*</span>
+                <input asp-for="GioDongCua" type="time" asp-format="{0:HH:mm}" class="form-control" step="60" required />
+                <div class="form-text">Giờ đóng cửa phải sau giờ mở cửa trong cùng ngày.</div>
+                <span asp-validation-for="GioDongCua" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="NgayBaoTri" class="form-label"></label>
+                <input asp-for="NgayBaoTri" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" />
+                <div class="form-text">Để trống nếu chưa có lịch bảo trì. Ngày này là lịch bảo trì cả ngày.</div>
+                <span asp-validation-for="NgayBaoTri" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="TienIch" class="form-label"></label>
+                <textarea asp-for="TienIch" class="form-control" rows="3" maxlength="1000"></textarea>
+                <span asp-validation-for="TienIch" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="GhiChu" class="form-label"></label>
+                <textarea asp-for="GhiChu" class="form-control" rows="3" maxlength="1000"></textarea>
+                <span asp-validation-for="GhiChu" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary" disabled="@(Model.CacLoaiSan.Count == 0)">Lưu sân</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+        </div>
+    </form>
+</section>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('MaLoaiSan').addEventListener('change', function () {
+            const gia = this.selectedOptions[0]?.dataset.gia;
+            if (gia !== undefined) document.getElementById('DonGia').value = gia;
+        });
+    </script>
+}

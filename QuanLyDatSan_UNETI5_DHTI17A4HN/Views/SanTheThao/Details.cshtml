@@ -1,0 +1,37 @@
+@* Họ tên: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Trang chi tiết sân. *@
+@model SanTheThao
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using System.Globalization
+@{
+    ViewData["Title"] = "Chi tiết sân";
+    var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
+    var trangThai = Model.TrangThai switch
+    {
+        TrangThaiSan.HoatDong => "Hoạt động",
+        TrangThaiSan.BaoTri => "Bảo trì",
+        _ => "Ngừng hoạt động"
+    };
+}
+<div class="ql-page-header">
+    <h1>@Model.TenSan</h1>
+    <p class="ql-subtitle">@Model.LoaiSan.TenLoai · @trangThai</p>
+</div>
+<section class="ql-panel" aria-label="Thông tin sân">
+    <h2 class="h5 mb-4">Thông tin sân</h2>
+    <dl class="row">
+        <dt class="col-sm-3">Loại sân</dt><dd class="col-sm-9">@Model.LoaiSan.TenLoai</dd>
+        <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9 text-break">@Model.DiaChi</dd>
+        <dt class="col-sm-3">Tiện ích</dt>
+        <dd class="col-sm-9 text-break">@(string.IsNullOrWhiteSpace(Model.TienIch) ? "Chưa cập nhật" : Model.TienIch)</dd>
+        <dt class="col-sm-3">Giá theo giờ</dt><dd class="col-sm-9">@Model.DonGia.ToString("N0", vanHoa) ₫</dd>
+        <dt class="col-sm-3">Giờ phục vụ</dt>
+        <dd class="col-sm-9">@Model.GioMoCua.ToString("HH:mm") – @Model.GioDongCua.ToString("HH:mm")</dd>
+        <dt class="col-sm-3">Trạng thái</dt><dd class="col-sm-9">@trangThai</dd>
+        <dt class="col-sm-3">Ngày bảo trì</dt>
+        <dd class="col-sm-9">@(Model.NgayBaoTri?.ToString("dd/MM/yyyy") ?? "Chưa có lịch")</dd>
+        <dt class="col-sm-3">Ghi chú</dt>
+        <dd class="col-sm-9 text-break">@(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có" : Model.GhiChu)</dd>
+    </dl>
+    <p class="text-muted">Sân hoạt động có thể đã được đặt trong giờ bạn muốn sử dụng.</p>
+    <a asp-action="Index" class="btn btn-outline-secondary">Về danh sách sân</a>
+</section>

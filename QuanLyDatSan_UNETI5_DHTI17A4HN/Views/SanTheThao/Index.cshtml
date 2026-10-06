@@ -1,0 +1,99 @@
+@* Họ tên: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Trang danh sách sân. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DanhSachSanViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using System.Globalization
+@{
+    ViewData["Title"] = "Danh sách sân";
+    var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
+}
+<div class="ql-page-header">
+    <h1>Danh sách sân</h1>
+    <p class="ql-subtitle">Xem thông tin, giá thuê và giờ phục vụ của các sân thể thao.</p>
+</div>
+<section class="ql-panel" aria-label="Danh sách sân thể thao">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Sân thể thao <span class="badge text-bg-primary">@Model.TongSoSan</span></h2>
+        <div class="d-flex gap-2">
+            @if (User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien))))
+            {
+                <a asp-action="Create" class="btn btn-primary btn-sm">Thêm sân</a>
+            }
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm">Về trang chủ</a>
+        </div>
+    </div>
+    @if (Model.DanhSachSan.Count == 0)
+    {
+        <div class="ql-empty">
+            <h2 class="h5">Chưa có sân để hiển thị</h2>
+            <p class="mb-0">Danh sách sẽ xuất hiện khi có sân được cập nhật.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive" role="region" aria-label="Bảng sân" tabindex="0">
+            <table class="table table-hover align-middle ql-table">
+                <caption>Trang @Model.TrangHienTai / @Model.TongSoTrang</caption>
+                <thead><tr>
+                    <th scope="col">Tên sân</th><th scope="col">Loại sân</th>
+                    <th scope="col">Địa chỉ</th><th scope="col">Giá/giờ</th>
+                    <th scope="col">Giờ phục vụ</th><th scope="col">Trạng thái</th>
+                    <th scope="col">Chi tiết</th>
+                </tr></thead>
+                <tbody>
+                    @foreach (var san in Model.DanhSachSan)
+                    {
+                        var trangThai = san.TrangThai switch
+                        {
+                            TrangThaiSan.HoatDong => "Hoạt động",
+                            TrangThaiSan.BaoTri => "Bảo trì",
+                            _ => "Ngừng hoạt động"
+                        };
+                        var mau = san.TrangThai switch
+                        {
+                            TrangThaiSan.HoatDong => "text-bg-success",
+                            TrangThaiSan.BaoTri => "text-bg-warning",
+                            _ => "text-bg-secondary"
+                        };
+                        <tr>
+                            <th scope="row">@san.TenSan</th>
+                            <td>@san.LoaiSan.TenLoai</td><td>@san.DiaChi</td>
+                            <td class="text-nowrap">@san.DonGia.ToString("N0", vanHoa) ₫</td>
+                            <td class="text-nowrap">@san.GioMoCua.ToString("HH:mm") – @san.GioDongCua.ToString("HH:mm")</td>
+                            <td><span class="badge @mau">@trangThai</span></td>
+                            <td><a asp-action="Details" asp-route-id="@san.MaSan" class="btn btn-outline-primary btn-sm"
+                                   aria-label="Chi tiết @san.TenSan">Xem</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (Model.TongSoTrang > 1)
+        {
+            <nav aria-label="Phân trang danh sách sân">
+                <ul class="pagination flex-wrap">
+                    @if (Model.TrangHienTai > 1)
+                    {
+                        <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="1">Đầu</a></li>
+                        <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="@(Model.TrangHienTai - 1)">Trước</a></li>
+                    }
+                    @for (var trang = Math.Max(1, Model.TrangHienTai - 2); trang <= Math.Min(Model.TongSoTrang, Model.TrangHienTai + 2); trang++)
+                    {
+                        if (trang == Model.TrangHienTai)
+                        {
+                            <li class="page-item active"><span class="page-link" aria-current="page">@trang</span></li>
+                        }
+                        else
+                        {
+                            <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="@trang">@trang</a></li>
+                        }
+                    }
+                    @if (Model.TrangHienTai < Model.TongSoTrang)
+                    {
+                        <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="@(Model.TrangHienTai + 1)">Sau</a></li>
+                        <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="@Model.TongSoTrang">Cuối</a></li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+</section>
