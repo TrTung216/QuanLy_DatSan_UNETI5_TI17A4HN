@@ -1,0 +1,22 @@
+@* M5: Nguyễn Hữu Quang; MSSV: 23103100184; Nội dung: các trường nhập dịch vụ dùng chung (Tao và Sua). *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DichVuTaoViewModel
+<div class="mb-3">
+    <label asp-for="TenDichVu" class="form-label"></label> <span aria-hidden="true">*</span>
+    <input asp-for="TenDichVu" class="form-control" maxlength="100" required aria-describedby="loi-ten-dich-vu" />
+    <span asp-validation-for="TenDichVu" id="loi-ten-dich-vu" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="DonViTinh" class="form-label"></label> <span aria-hidden="true">*</span>
+    <input asp-for="DonViTinh" class="form-control" maxlength="30" required aria-describedby="loi-don-vi-tinh" />
+    <span asp-validation-for="DonViTinh" id="loi-don-vi-tinh" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="DonGia" class="form-label"></label> <span aria-hidden="true">*</span>
+    <input asp-for="DonGia" type="number" min="0" step="1" class="form-control" required aria-describedby="loi-don-gia" />
+    <span asp-validation-for="DonGia" id="loi-don-gia" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="MoTa" class="form-label"></label>
+    <textarea asp-for="MoTa" class="form-control" rows="3" maxlength="1000" aria-describedby="loi-mo-ta"></textarea>
+    <span asp-validation-for="MoTa" id="loi-mo-ta" class="text-danger"></span>
+</div>

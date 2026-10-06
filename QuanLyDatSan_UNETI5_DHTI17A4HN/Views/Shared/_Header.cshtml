@@ -23,10 +23,16 @@
         ("Trang chủ", "Home", "Index"),
         ("Quyền riêng tư", "Home", "Privacy")
     };
-    if (daDangNhap)
+ if (daDangNhap)
+{
+    menu.Add(("Thông tin tài khoản", "TaiKhoan", "ThongTin"));
+
+    // Chỉ Admin mới thấy menu Dịch vụ
+    if (User.IsInRole(nameof(VaiTro.Admin)))
     {
-        menu.Add(("Thông tin tài khoản", "TaiKhoan", "ThongTin"));
+        menu.Add(("Dịch vụ", "DichVu", "DanhSach"));
     }
+}
 }
 <header class="ql-header">
     <nav class="navbar navbar-expand-lg navbar-light" aria-label="Điều hướng chính">
