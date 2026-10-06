@@ -1,0 +1,25 @@
+@* M5: Nguyễn Hữu Quang; MSSV: 23103100184; Nội dung: form thêm dịch vụ. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DichVuTaoViewModel
+@{ ViewData["Title"] = "Thêm dịch vụ"; }
+<div class="ql-page-header">
+    <h1>@ViewData["Title"]</h1>
+    <p class="ql-subtitle">Các trường có dấu * là bắt buộc.</p>
+</div>
+<section class="ql-panel" aria-label="Biểu mẫu thêm dịch vụ">
+    <form asp-action="Tao" method="post" id="form-dich-vu">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <partial name="_Form" model="Model" />
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a class="btn btn-outline-secondary" asp-action="DanhSach">Quay lại</a>
+        </div>
+    </form>
+</section>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('form-dich-vu').addEventListener('submit', function () {
+            if ($(this).valid()) this.querySelector('button[type="submit"]').disabled = true;
+        });
+    </script>
+}
