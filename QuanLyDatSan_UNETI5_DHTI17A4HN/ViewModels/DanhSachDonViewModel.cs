@@ -7,7 +7,7 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 
 public class DanhSachDonViewModel
 {
-    public IReadOnlyList<DonDatSan> DanhSach { get; init; } = [];
+    public IReadOnlyList<DatSan> DanhSach { get; init; } = [];
     public int Trang { get; init; } = 1;
     public bool ConTrangSau { get; init; }
 }

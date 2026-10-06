@@ -3,7 +3,7 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 
-public class DonDatSan
+public class DatSan
 {
     public int MaDon { get; set; }
     public int MaSan { get; set; }
