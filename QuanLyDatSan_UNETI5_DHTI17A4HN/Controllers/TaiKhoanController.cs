@@ -16,7 +16,7 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 [Authorize]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public class TaiKhoanController(ApplicationDbContext db, IPasswordHasher<TaiKhoan> hasher,
-    ITaiKhoanHienTai taiKhoanHienTai) : Controller
+    ITaiKhoanHienTai taiKhoanHienTai, PhienBanQuyenTaiKhoan phienBanQuyen) : Controller
 {
     [AllowAnonymous, HttpGet]
     public IActionResult DangNhap(string? returnUrl = null)
@@ -54,7 +54,8 @@ public class TaiKhoanController(ApplicationDbContext db, IPasswordHasher<TaiKhoa
         HttpContext.Session.SetString("MaPhien", maPhien);
         PhienDangNhap.LuuSession(HttpContext.Session, taiKhoan);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-            PhienDangNhap.TaoPrincipal(taiKhoan, maPhien), new AuthenticationProperties { IsPersistent = false });
+            PhienDangNhap.TaoPrincipal(taiKhoan, maPhien, phienBanQuyen.Lay(taiKhoan.MaTaiKhoan)),
+            new AuthenticationProperties { IsPersistent = false });
         return VeTrangSauDangNhap(model.ReturnUrl);
     }
 

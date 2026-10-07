@@ -1,0 +1,22 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ trường tài khoản dùng chung. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TaiKhoanThongTinViewModel
+<div class="mb-3">
+    <label asp-for="HoTen" class="form-label"></label> <span aria-hidden="true">*</span>
+    <input asp-for="HoTen" class="form-control" maxlength="100" required aria-describedby="loi-ho-ten" />
+    <span asp-validation-for="HoTen" class="text-danger" id="loi-ho-ten"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Email" class="form-label"></label> <span aria-hidden="true">*</span>
+    <input asp-for="Email" class="form-control" maxlength="254" type="email" required aria-describedby="loi-email" />
+    <span asp-validation-for="Email" class="text-danger" id="loi-email"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="VaiTro" class="form-label"></label> <span aria-hidden="true">*</span>
+    <select asp-for="VaiTro" class="form-select" required aria-describedby="loi-vai-tro">
+        <option value="">Chọn vai trò</option>
+        <option value="1">Quản trị viên</option>
+        <option value="2">Nhân viên</option>
+        <option value="3">Khách hàng</option>
+    </select>
+    <span asp-validation-for="VaiTro" class="text-danger" id="loi-vai-tro"></span>
+</div>

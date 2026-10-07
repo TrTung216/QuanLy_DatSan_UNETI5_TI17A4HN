@@ -5,7 +5,7 @@
     const toggle = document.querySelector('[aria-controls="menu-chinh"]');
     if (menu && toggle && window.bootstrap) menu.addEventListener("keydown", (event) => {
         if (event.key !== "Escape" || !menu.classList.contains("show") ||
-            !window.matchMedia("(max-width: 991.98px)").matches) return;
+            !window.matchMedia("(max-width: 1199.98px)").matches) return;
         event.preventDefault();
         bootstrap.Collapse.getOrCreateInstance(menu, { toggle: false }).hide();
         toggle.focus();

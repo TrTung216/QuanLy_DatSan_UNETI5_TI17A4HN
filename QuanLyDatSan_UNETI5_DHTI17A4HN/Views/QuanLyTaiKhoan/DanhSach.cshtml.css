@@ -1,0 +1,3 @@
+/* M1: Trần Trọng Tùng; MSSV: 23103100202. Kiểu riêng cho bảng tài khoản. */
+.ql-account-table { min-width: 64rem; }
+.ql-account-table td, .ql-account-table th { max-width: 20rem; }

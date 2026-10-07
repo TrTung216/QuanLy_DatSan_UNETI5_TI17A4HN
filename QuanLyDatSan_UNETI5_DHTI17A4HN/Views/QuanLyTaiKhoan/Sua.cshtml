@@ -1,0 +1,38 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ sửa thông tin, vai trò và khóa/mở khóa. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TaiKhoanSuaViewModel
+@{ ViewData["Title"] = "Cập nhật tài khoản"; }
+<div class="ql-page-header">
+    <h1>@ViewData["Title"]</h1>
+    <p class="ql-subtitle">Tên đăng nhập: <strong>@ViewData["TenDangNhap"]</strong></p>
+</div>
+<section class="ql-panel ql-details" aria-label="Biểu mẫu cập nhật tài khoản">
+    <div class="alert alert-info ql-notice" role="status">
+        <strong>Lưu ý:</strong> Đổi vai trò hoặc trạng thái sẽ kết thúc các phiên đăng nhập cũ của tài khoản.
+        Tên đăng nhập và mật khẩu được giữ nguyên. Các trường có dấu * là bắt buộc.
+    </div>
+    @if (ViewData["LaTaiKhoanHienTai"] is true)
+    {
+        <p class="fw-semibold">Đây là tài khoản của bạn. Bạn có thể sửa họ tên và email, không thể tự khóa hoặc hạ quyền.</p>
+    }
+    <form id="form-quan-ly-tai-khoan" asp-action="Sua" asp-route-id="@ViewData["MaTaiKhoan"]" method="post" asp-antiforgery="true">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <partial name="_ThongTinForm" model="Model" />
+        <div class="mb-4">
+            <label asp-for="TrangThai" class="form-label"></label> <span aria-hidden="true">*</span>
+            <select asp-for="TrangThai" class="form-select" required aria-describedby="loi-trang-thai">
+                <option value="">Chọn trạng thái</option>
+                <option value="1">Hoạt động</option>
+                <option value="0">Bị khóa</option>
+            </select>
+            <span asp-validation-for="TrangThai" class="text-danger" id="loi-trang-thai"></span>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            <a asp-action="DanhSach" class="btn btn-outline-secondary">Về danh sách</a>
+        </div>
+    </form>
+</section>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/quan-ly-tai-khoan.js" asp-append-version="true"></script>
+}
