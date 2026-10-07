@@ -1,0 +1,54 @@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. trang điều hành của Admin và Nhân viên: số liệu thật và lối vào chức năng theo nhóm. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TrangDieuHanhViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@inject ITaiKhoanHienTai TaiKhoanHienTai
+@{
+    ViewData["Title"] = "Trang điều hành";
+    var nhomChucNang = MenuQuanTri.Lay(User).Skip(1).ToList();
+}
+<div class="ql-page-header">
+    <p class="ql-eyebrow">Khu vực quản trị</p>
+    <h1>Trang điều hành</h1>
+    <p class="ql-subtitle">Xin chào @TaiKhoanHienTai.HoTen. Số liệu bên dưới lấy trực tiếp từ hệ thống.</p>
+</div>
+<section aria-labelledby="so-lieu-he-thong">
+    <h2 id="so-lieu-he-thong" class="ql-section-title">Số liệu hiện tại</h2>
+    <div class="ql-stat-grid">
+        <div class="ql-stat">
+            <p class="ql-stat-label">Đơn chờ xác nhận</p>
+            <p class="ql-stat-value">@Model.SoDonChoXacNhan</p>
+            <p class="ql-stat-note">Chưa quá giờ kết thúc</p>
+        </div>
+        <div class="ql-stat">
+            <p class="ql-stat-label">Khách hàng hoạt động</p>
+            <p class="ql-stat-value">@Model.SoKhachHangHoatDong</p>
+        </div>
+        <div class="ql-stat">
+            <p class="ql-stat-label">Sân đang hoạt động</p>
+            <p class="ql-stat-value">@Model.SoSanHoatDong</p>
+        </div>
+        @if (Model.SoDichVuHoatDong.HasValue)
+        {
+            <div class="ql-stat">
+                <p class="ql-stat-label">Dịch vụ đang hoạt động</p>
+                <p class="ql-stat-value">@Model.SoDichVuHoatDong.Value</p>
+            </div>
+        }
+    </div>
+</section>
+<section aria-labelledby="chuc-nang-quan-tri">
+    <h2 id="chuc-nang-quan-tri" class="ql-section-title">Chức năng</h2>
+    @foreach (var nhom in nhomChucNang)
+    {
+        <h3 class="ql-group-title">@nhom.Ten</h3>
+        <div class="ql-tile-grid mb-4">
+            @foreach (var muc in nhom.DanhSachMuc)
+            {
+                <a class="ql-tile" asp-controller="@muc.Controller" asp-action="@muc.Action">
+                    <p class="ql-tile-title">@muc.Ten</p>
+                    <p class="ql-tile-text">@muc.MoTa</p>
+                </a>
+            }
+        </div>
+    }
+</section>

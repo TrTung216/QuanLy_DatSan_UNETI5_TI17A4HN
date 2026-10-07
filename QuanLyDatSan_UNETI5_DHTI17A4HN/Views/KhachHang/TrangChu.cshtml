@@ -1,0 +1,84 @@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. trang chủ riêng của khách hàng sau khi đăng nhập: số liệu cá nhân, thao tác nhanh, đơn sắp tới. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TrangChuKhachViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@{ ViewData["Title"] = "Trang của tôi"; }
+<div class="ql-page-header">
+    <p class="ql-eyebrow">Khách hàng</p>
+    <h1>Xin chào, @Model.HoTen</h1>
+    <p class="ql-subtitle">Đặt sân mới hoặc theo dõi các đơn của bạn tại đây.</p>
+</div>
+@if (Model.HoSoBiKhoa)
+{
+    <div class="alert alert-warning ql-notice" role="status">
+        <strong>Lưu ý:</strong> Hồ sơ của bạn đang bị khóa nên chưa thể đặt sân hoặc sửa hồ sơ. Vui lòng liên hệ nhân viên để được hỗ trợ.
+    </div>
+}
+<section aria-labelledby="so-lieu-ca-nhan">
+    <h2 id="so-lieu-ca-nhan" class="ql-section-title">Tình hình của bạn</h2>
+    <div class="ql-stat-grid">
+        <div class="ql-stat">
+            <p class="ql-stat-label">Đơn chờ xác nhận</p>
+            <p class="ql-stat-value">@Model.SoDonChoXacNhan</p>
+            <p class="ql-stat-note">Nhân viên chưa xử lý</p>
+        </div>
+        <div class="ql-stat">
+            <p class="ql-stat-label">Đơn đã xác nhận sắp tới</p>
+            <p class="ql-stat-value">@Model.SoDonDaXacNhanSapToi</p>
+            <p class="ql-stat-note">Chưa quá giờ kết thúc</p>
+        </div>
+        <div class="ql-stat">
+            <p class="ql-stat-label">Điểm tích lũy</p>
+            <p class="ql-stat-value">@Model.DiemTichLuy</p>
+        </div>
+    </div>
+</section>
+<section class="mb-4" aria-labelledby="thao-tac-nhanh">
+    <h2 id="thao-tac-nhanh" class="ql-section-title">Thao tác nhanh</h2>
+    <div class="ql-tile-grid">
+        <a class="ql-tile" asp-controller="DonDat" asp-action="Tao">
+            <p class="ql-tile-title">Đặt sân</p>
+            <p class="ql-tile-text">Chọn sân, ngày và khung giờ để tạo đơn mới.</p>
+        </a>
+        <a class="ql-tile" asp-controller="DonDat" asp-action="Index">
+            <p class="ql-tile-title">Lịch của tôi</p>
+            <p class="ql-tile-text">Xem, lọc các đơn đã đặt và trạng thái xử lý.</p>
+        </a>
+        <a class="ql-tile" asp-controller="HoSo" asp-action="Index">
+            <p class="ql-tile-title">Hồ sơ cá nhân</p>
+            <p class="ql-tile-text">Xem và cập nhật thông tin liên hệ của bạn.</p>
+        </a>
+    </div>
+</section>
+<section class="ql-panel" aria-labelledby="don-sap-toi">
+    <h2 id="don-sap-toi" class="ql-section-title">Đơn sắp tới</h2>
+    @if (Model.DonSapToi.Count == 0)
+    {
+        <div class="ql-empty">
+            <p class="mb-3">Bạn chưa có đơn nào sắp diễn ra.</p>
+            <a class="btn btn-primary" asp-controller="DonDat" asp-action="Tao">Đặt sân ngay</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive" role="region" aria-label="Danh sách đơn sắp tới" tabindex="0">
+            <table class="table table-hover align-middle ql-table">
+                <caption>Tối đa 3 đơn gần nhất sắp diễn ra</caption>
+                <thead>
+                    <tr><th scope="col">Mã đơn</th><th scope="col">Sân</th><th scope="col">Thời gian</th><th scope="col">Trạng thái</th><th scope="col"><span class="visually-hidden">Thao tác</span></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var don in Model.DonSapToi)
+                    {
+                        <tr>
+                            <td>@don.MaDatSan</td>
+                            <td>@don.TenSan <span class="text-muted">(@don.TenLoai)</span></td>
+                            <td>@don.GioBatDau.ToString("dd/MM/yyyy") @don.GioBatDau.ToString("HH:mm") - @don.GioKetThuc.ToString("HH:mm")</td>
+                            <td><span class="@HienThiDatSan.LopMau(don.TrangThai)">@HienThiDatSan.TenTrangThai(don.TrangThai)</span></td>
+                            <td><a asp-controller="DonDat" asp-action="ChiTiet" asp-route-id="@don.MaDatSan">Chi tiết</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

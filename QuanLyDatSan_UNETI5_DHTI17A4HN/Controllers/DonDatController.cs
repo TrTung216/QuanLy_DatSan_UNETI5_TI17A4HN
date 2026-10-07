@@ -110,7 +110,7 @@ public class DonDatController(ApplicationDbContext db, ITaiKhoanHienTai taiKhoan
             return View(model);
         }
 
-        TempData["ThanhCong"] = "Đặt sân thành công. Đơn đang chờ nhân viên xác nhận.";
+        TempData["Success"] = "Đặt sân thành công. Đơn đang chờ nhân viên xác nhận.";
         return RedirectToAction(nameof(ChiTiet), new { id = ketQua.MaDatSan });
     }
 

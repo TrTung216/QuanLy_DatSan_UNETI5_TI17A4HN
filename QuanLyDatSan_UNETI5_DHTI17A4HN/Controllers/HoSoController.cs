@@ -57,7 +57,7 @@ public class HoSoController(ApplicationDbContext db, ITaiKhoanHienTai taiKhoanHi
         khachHang.TaiKhoan.Email = email;
         await db.SaveChangesAsync(cancellationToken);
 
-        TempData["ThanhCong"] = "Đã cập nhật hồ sơ.";
+        TempData["Success"] = "Đã cập nhật hồ sơ.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -83,13 +83,13 @@ public class HoSoController(ApplicationDbContext db, ITaiKhoanHienTai taiKhoanHi
 
     private RedirectToActionResult KhongCoHoSo()
     {
-        TempData["ThatBai"] = "Không tìm thấy hồ sơ khách hàng của tài khoản này.";
+        TempData["Error"] = "Không tìm thấy hồ sơ khách hàng của tài khoản này.";
         return RedirectToAction("ThongTin", "TaiKhoan");
     }
 
     private RedirectToActionResult HoSoBiKhoa()
     {
-        TempData["ThatBai"] = "Hồ sơ đang bị khóa, không thể chỉnh sửa.";
+        TempData["Error"] = "Hồ sơ đang bị khóa, không thể chỉnh sửa.";
         return RedirectToAction(nameof(Index));
     }
 }

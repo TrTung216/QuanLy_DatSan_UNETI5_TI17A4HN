@@ -6,13 +6,16 @@
     ViewData["Title"] = "Đặt sân";
     var inv = CultureInfo.InvariantCulture;
 }
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <h1 class="h3 mb-3">Đặt sân</h1>
-        <p class="text-muted">Đơn mới ở trạng thái "Chờ xác nhận" và giữ chỗ cho đến khi nhân viên xử lý. Giá lấy theo bảng giá hiện tại của sân.</p>
+<div class="ql-form-page">
+    <div class="ql-page-header">
+        <p class="ql-eyebrow">Khách hàng</p>
+        <h1>Đặt sân</h1>
+        <p class="ql-subtitle">Đơn mới ở trạng thái "Chờ xác nhận" và giữ chỗ cho đến khi nhân viên xử lý. Giá lấy theo bảng giá hiện tại của sân. Các trường có dấu * là bắt buộc.</p>
+    </div>
+    <section class="ql-panel" aria-label="Biểu mẫu đặt sân">
         @if (Model.DanhSachSan.Count == 0)
         {
-            <div class="alert alert-info" role="alert">Hiện chưa có sân nào nhận đặt.</div>
+            <div class="ql-empty mb-3">Hiện chưa có sân nào nhận đặt.</div>
         }
         <form asp-action="Tao" method="post" id="dat-san">
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
@@ -52,7 +55,7 @@
             <button type="submit" class="btn btn-primary" disabled="@(Model.DanhSachSan.Count == 0)">Đặt sân</button>
             <a asp-action="Index" class="btn btn-link">Lịch của tôi</a>
         </form>
-    </div>
+    </section>
 </div>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

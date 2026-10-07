@@ -11,21 +11,66 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
-[AllowAnonymous]
+[Authorize(Roles = nameof(VaiTro.KhachHang))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class KhachHangController(ApplicationDbContext db, IPasswordHasher<TaiKhoan> hasher, IDongHo dongHo) : Controller
+public class KhachHangController(ApplicationDbContext db, IPasswordHasher<TaiKhoan> hasher, IDongHo dongHo,
+    ITaiKhoanHienTai taiKhoanHienTai) : Controller
 {
     [HttpGet]
+    public async Task<IActionResult> TrangChu(CancellationToken cancellationToken)
+    {
+        if (taiKhoanHienTai.MaTaiKhoan is not { } maTaiKhoan) return Challenge();
+
+        var khachHang = await db.KhachHangs.AsNoTracking()
+            .Where(x => x.MaTaiKhoan == maTaiKhoan)
+            .Select(x => new { x.HoTen, x.DiemTichLuy, x.TrangThai })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (khachHang is null)
+        {
+            TempData["Error"] = "Không tìm thấy hồ sơ khách hàng của tài khoản này.";
+            return RedirectToAction("ThongTin", "TaiKhoan");
+        }
+
+        var bayGio = dongHo.BayGio;
+        var donSapToi = db.DatSans.AsNoTracking()
+            .Where(x => x.KhachHang.MaTaiKhoan == maTaiKhoan && x.GioKetThuc > bayGio
+                && (x.TrangThai == TrangThaiDatSan.ChoXuLy || x.TrangThai == TrangThaiDatSan.DangXuLy));
+
+        var model = new TrangChuKhachViewModel
+        {
+            HoTen = khachHang.HoTen,
+            DiemTichLuy = khachHang.DiemTichLuy,
+            HoSoBiKhoa = khachHang.TrangThai != TrangThaiKhachHang.HoatDong,
+            SoDonChoXacNhan = await donSapToi.CountAsync(x => x.TrangThai == TrangThaiDatSan.ChoXuLy, cancellationToken),
+            SoDonDaXacNhanSapToi = await donSapToi.CountAsync(x => x.TrangThai == TrangThaiDatSan.DangXuLy, cancellationToken),
+            DonSapToi = await donSapToi
+                .OrderBy(x => x.GioBatDau).ThenBy(x => x.MaDatSan).Take(3)
+                .Select(x => new DonDatDongViewModel
+                {
+                    MaDatSan = x.MaDatSan,
+                    TenSan = x.SanTheThao.TenSan,
+                    TenLoai = x.SanTheThao.LoaiSan.TenLoai,
+                    GioBatDau = x.GioBatDau,
+                    GioKetThuc = x.GioKetThuc,
+                    DonGia = x.DonGia,
+                    TrangThai = x.TrangThai
+                })
+                .ToListAsync(cancellationToken)
+        };
+        return View(model);
+    }
+
+    [AllowAnonymous, HttpGet]
     public IActionResult DangKy()
     {
-        if (User.Identity?.IsAuthenticated == true) return RedirectToAction("Index", "HoSo");
+        if (User.Identity?.IsAuthenticated == true) return VeTrangChuKhiDaDangNhap();
         return View(new DangKyKhachViewModel());
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [AllowAnonymous, HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DangKy(DangKyKhachViewModel model, CancellationToken cancellationToken)
     {
-        if (User.Identity?.IsAuthenticated == true) return RedirectToAction("Index", "HoSo");
+        if (User.Identity?.IsAuthenticated == true) return VeTrangChuKhiDaDangNhap();
         if (!ModelState.IsValid) return View(model);
 
         var tenDangNhap = model.TenDangNhap.Trim();
@@ -68,9 +113,13 @@ public class KhachHangController(ApplicationDbContext db, IPasswordHasher<TaiKho
             return TenDangNhapDaDung(model);
         }
 
-        TempData["ThanhCong"] = "Đăng ký thành công. Vui lòng đăng nhập.";
+        TempData["Success"] = "Đăng ký thành công. Vui lòng đăng nhập.";
         return RedirectToAction("DangNhap", "TaiKhoan");
     }
+
+    private IActionResult VeTrangChuKhiDaDangNhap() => User.IsInRole(nameof(VaiTro.KhachHang))
+        ? RedirectToAction(nameof(TrangChu))
+        : RedirectToAction("Index", "Home");
 
     private ViewResult TenDangNhapDaDung(DangKyKhachViewModel model)
     {

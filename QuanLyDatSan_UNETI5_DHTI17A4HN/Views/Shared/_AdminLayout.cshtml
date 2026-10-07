@@ -1,12 +1,103 @@
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ layout quản trị dùng lại khung và tài nguyên chung. *@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. viết lại thành layout quản trị độc lập: thanh bên theo nhóm chức năng, thanh tiêu đề, responsive. *@
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@inject ITaiKhoanHienTai TaiKhoanHienTai
 @{
-    Layout = "_Layout";
-    ViewData["KhuVucQuanTri"] = true;
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var tenVaiTro = TaiKhoanHienTai.VaiTro switch
+    {
+        VaiTro.Admin => "Quản trị viên",
+        VaiTro.NhanVien => "Nhân viên",
+        _ => "Tài khoản"
+    };
+    var nhomMenu = MenuQuanTri.Lay(User);
 }
-@RenderBody()
-@section Styles {
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] ?? "Quản trị") | Quản trị Quản lý đặt sân</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/QuanLyDatSan_UNETI5_DHTI17A4HN.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/thanh-phan.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/quan-tri.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
-}
-@section Scripts {
+</head>
+<body class="ql-app ql-admin">
+    <a class="ql-skip-link" href="#noi-dung-chinh">Chuyển đến nội dung chính</a>
+    <div class="ql-admin-shell">
+        <div class="ql-sidebar-col">
+            <aside class="offcanvas-lg offcanvas-start ql-sidebar" tabindex="-1" id="thanh-ben" aria-labelledby="tieu-de-thanh-ben">
+                <div class="offcanvas-header">
+                    <h2 class="offcanvas-title h6" id="tieu-de-thanh-ben">Menu quản trị</h2>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#thanh-ben" aria-label="Đóng menu"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <a class="ql-side-brand" asp-area="" asp-controller="QuanTri" asp-action="Index">
+                        <span class="ql-brand-mark" aria-hidden="true">
+                            <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <rect x="4" y="3" width="24" height="26" rx="3" />
+                                <path d="M4 16h24M11 3v6h10V3M11 29v-6h10v6" />
+                                <circle cx="16" cy="16" r="4" />
+                            </svg>
+                        </span>
+                        <span>Quản lý đặt sân<small>Khu vực quản trị</small></span>
+                    </a>
+                    <nav aria-label="Menu quản trị">
+                        @foreach (var nhom in nhomMenu)
+                        {
+                            <p class="ql-side-title">@nhom.Ten</p>
+                            <ul class="ql-side-list">
+                                @foreach (var muc in nhom.DanhSachMuc)
+                                {
+                                    var hienTai = muc.KhopTrang(controller, action);
+                                    <li>
+                                        <a class="ql-side-link @(hienTai ? "active" : "")" aria-current="@(hienTai ? "page" : null)"
+                                           asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">@muc.Ten</a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </nav>
+                </div>
+            </aside>
+        </div>
+        <div class="ql-admin-main">
+            <header class="ql-topbar">
+                <button class="btn btn-outline-primary d-lg-none ql-menu-toggle" type="button" data-bs-toggle="offcanvas"
+                        data-bs-target="#thanh-ben" aria-controls="thanh-ben">Menu</button>
+                <p class="ql-topbar-area">Khu vực quản trị</p>
+                <div class="ql-topbar-account">
+                    <div class="ql-topbar-info">
+                        <span class="ql-topbar-name">@TaiKhoanHienTai.HoTen</span>
+                        <span class="ql-topbar-role">@tenVaiTro</span>
+                    </div>
+                    <form id="dang-xuat" asp-area="" asp-controller="TaiKhoan" asp-action="DangXuat" method="post" asp-antiforgery="true">
+                        <button type="submit" class="btn btn-outline-primary">Đăng xuất</button>
+                    </form>
+                </div>
+            </header>
+            <main id="noi-dung-chinh" class="ql-admin-content" tabindex="-1">
+                <partial name="_ThongBao" />
+                @RenderBody()
+            </main>
+            <footer class="ql-footer">
+                <div class="container-fluid d-flex flex-wrap justify-content-between gap-2 px-3">
+                    <span>Quản lý đặt sân <span aria-hidden="true">·</span> UNETI</span>
+                    <a asp-area="" asp-controller="Home" asp-action="Privacy">Quyền riêng tư</a>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/layout.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
-}
+</body>
+</html>
