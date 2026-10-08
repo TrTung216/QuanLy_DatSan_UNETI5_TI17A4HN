@@ -12,8 +12,8 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261006005847_CapNhatModel")]
-    partial class CapNhatModel
+    [Migration("20261008030000_ThemKhachHangVaDatSan")]
+    partial class ThemKhachHangVaDatSan
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
