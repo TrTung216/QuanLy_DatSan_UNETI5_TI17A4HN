@@ -134,7 +134,7 @@ Theo quy ước mục 4, `ChoXuLy` hiển thị “Chờ xác nhận”, `DangXu
 
 ### Thông báo và TempData
 
-M1-03 (`QuanLyTaiKhoanController`) và M5 (`DichVuController`) hiện ghi `Success` sau khi lưu. Lỗi form dùng `ModelState`. Partial đọc bốn key dưới đây; `Error`, `Warning`, `Info` vẫn là hợp đồng sẵn cho các module tích hợp:
+M1-03 (`QuanLyTaiKhoanController`), M1-04 (`LoaiSanController`) và M5 (`DichVuController`) ghi `Success` sau khi lưu. M1-04 ghi `Error` khi chặn xóa loại sân đang được tham chiếu. Lỗi form dùng `ModelState`. Partial đọc bốn key dưới đây; `Warning`, `Info` là hợp đồng sẵn cho các module tích hợp:
 
 | Key (phân biệt cách viết theo quy ước) | Bootstrap | Nhãn |
 | --- | --- | --- |
@@ -157,7 +157,7 @@ Thông báo tại chỗ không qua redirect:
 
 Dùng `pagination ql-pagination`, `aria-label` trên nav và `aria-current="page"` ở trang hiện tại. Trang bị vô hiệu hóa dùng span, không dùng link vẫn bấm được. Controller của module chịu trách nhiệm phân trang thật và giữ bộ lọc; layout không tự phân trang dữ liệu.
 
-Mặc định **10 dòng/trang**, dùng `Skip/Take` trên server; giữ từ khóa tìm kiếm, bộ lọc và sort khi chuyển trang theo quy ước mục 7. Chưa có action danh sách trong repo nên không thêm truy vấn hoặc phân trang giả.
+Mặc định **10 dòng/trang**, dùng `Skip/Take` trên server; giữ từ khóa tìm kiếm, bộ lọc và sort khi chuyển trang theo quy ước mục 7. Có thể tham khảo `LoaiSan/DanhSach` để kết hợp tìm kiếm, trạng thái, sắp xếp và phân trang.
 
 ```html
 <nav aria-label="Phân trang kết quả">
@@ -193,11 +193,12 @@ Layout dùng `User.Identity.IsAuthenticated` để chọn nhóm menu và inject 
 | Thông tin tài khoản | `TaiKhoan/ThongTin` (GET) | Ẩn | Có | Có | Có |
 | Đăng xuất | `TaiKhoan/DangXuat` (**POST**) | Ẩn | Có | Có | Có |
 | Quản lý tài khoản | `QuanLyTaiKhoan/DanhSach` (GET) | Ẩn | Ẩn | Ẩn | Có |
+| Loại sân | `LoaiSan/DanhSach` (GET) | Ẩn | Ẩn | Ẩn | Có |
 | Dịch vụ | `DichVu/DanhSach` (GET) | Ẩn | Ẩn | Ẩn | Có |
 
-Admin có thêm Quản lý tài khoản (M1-03) và Dịch vụ (M5), tương ứng Controller yêu cầu vai trò Admin. Nhân viên/Admin dùng `_AdminLayout` với nhãn “Khu vực quản trị”, còn khách dùng `_Layout`. Header hiển thị tên vai trò tiếng Việt. `TaiKhoan/TuChoiTruyCap` (HTTP 403) và `Home/Error` tồn tại nhưng không là mục điều hướng thường xuyên.
+Admin có thêm Quản lý tài khoản (M1-03), Loại sân (M1-04) và Dịch vụ (M5), tương ứng Controller yêu cầu vai trò Admin. Nhân viên/Admin dùng `_AdminLayout` với nhãn “Khu vực quản trị”, còn khách dùng `_Layout`. Header hiển thị tên vai trò tiếng Việt. `TaiKhoan/TuChoiTruyCap` (HTTP 403) và `Home/Error` tồn tại nhưng không là mục điều hướng thường xuyên.
 
-Đăng xuất luôn là form POST có `asp-antiforgery="true"`, tương ứng `[HttpPost, ValidateAntiForgeryToken]`. Không đổi thành link GET. Mục active so sánh cả Controller lẫn Action, không phân biệt hoa/thường; riêng Quản lý tài khoản giữ active cho cả DanhSach/Tao/Sua cùng Controller. Các trang lỗi không đánh dấu nhầm Trang chủ.
+Đăng xuất luôn là form POST có `asp-antiforgery="true"`, tương ứng `[HttpPost, ValidateAntiForgeryToken]`. Không đổi thành link GET. Mục active so sánh cả Controller lẫn Action, không phân biệt hoa/thường; Quản lý tài khoản và Loại sân giữ active ở các trang con cùng Controller. Các trang lỗi không đánh dấu nhầm Trang chủ.
 
 ### Thêm mục menu
 
@@ -217,7 +218,6 @@ Theo ma trận quyền mục 6 và hợp đồng layout mục 7 của tài liệ
 | Tạo đơn đặt sân (M3) | Chỉ Khách hàng; Nhân viên/Admin không được tạo theo ma trận hiện tại | Chưa có |
 | Lịch của tôi (M3) | Khách hàng chỉ dữ liệu của mình; Nhân viên/Admin xem đơn theo quyền xử lý | Chưa có |
 | Hồ sơ cá nhân (M3) | Cả ba vai trò, chỉ dữ liệu của mình; khác trang ThongTin chỉ đọc hiện có | Chưa có |
-| Quản lý loại sân (M1) | Chỉ Admin | Chưa có |
 | Quản lý sân (M2), khách hàng (M3) | Nhân viên/Admin; quản lý khách hàng không cấp quyền sửa mật khẩu/vai trò | Chưa có |
 | Quản lý đơn, xác nhận/từ chối (M4) | Nhân viên/Admin; hủy đơn chờ cho khách chỉ là thao tác trên đơn của mình | Chưa có |
 | Dịch vụ trong đơn và tính tiền (M5 phối hợp M4) | Nhân viên/Admin | Chưa có |
