@@ -34,7 +34,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITaiKhoanHienTai, TaiKhoanHienTai>();
 builder.Services.AddScoped<IPasswordHasher<TaiKhoan>, PasswordHasher<TaiKhoan>>();
 builder.Services.AddScoped<PhienDangNhap>();
-builder.Services.AddSingleton<IDongHo, DongHoHeThong>();
+builder.Services.AddSingleton<PhienBanQuyenTaiKhoan>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {
     options.Cookie.Name = "QuanLyDatSan.Auth";

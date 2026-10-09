@@ -1,0 +1,37 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ giao diện tạo tài khoản. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TaiKhoanTaoViewModel
+@{ ViewData["Title"] = "Thêm tài khoản"; }
+<div class="ql-page-header">
+    <h1>@ViewData["Title"]</h1>
+    <p class="ql-subtitle">Tài khoản mới có trạng thái hoạt động. Các trường có dấu * là bắt buộc.</p>
+</div>
+<section class="ql-panel ql-details" aria-label="Biểu mẫu tạo tài khoản">
+    <form id="form-quan-ly-tai-khoan" asp-action="Tao" method="post" asp-antiforgery="true">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="TenDangNhap" class="form-label"></label> <span aria-hidden="true">*</span>
+            <input asp-for="TenDangNhap" class="form-control" maxlength="50" required autocomplete="off" aria-describedby="loi-ten-dang-nhap" />
+            <span asp-validation-for="TenDangNhap" class="text-danger" id="loi-ten-dang-nhap"></span>
+        </div>
+        <partial name="_ThongTinForm" model="Model" />
+        <div class="mb-3">
+            <label asp-for="MatKhau" class="form-label"></label> <span aria-hidden="true">*</span>
+            <input asp-for="MatKhau" class="form-control" autocomplete="new-password" minlength="12" maxlength="128" required aria-describedby="goi-y-mat-khau loi-mat-khau" />
+            <div id="goi-y-mat-khau" class="form-text">Từ 12 đến 128 ký tự. Cung cấp mật khẩu cho người dùng qua kênh riêng.</div>
+            <span asp-validation-for="MatKhau" class="text-danger" id="loi-mat-khau"></span>
+        </div>
+        <div class="mb-4">
+            <label asp-for="XacNhanMatKhau" class="form-label"></label> <span aria-hidden="true">*</span>
+            <input asp-for="XacNhanMatKhau" class="form-control" autocomplete="new-password" maxlength="128" required aria-describedby="loi-xac-nhan" />
+            <span asp-validation-for="XacNhanMatKhau" class="text-danger" id="loi-xac-nhan"></span>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+            <a asp-action="DanhSach" class="btn btn-outline-secondary">Về danh sách</a>
+        </div>
+    </form>
+</section>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/quan-ly-tai-khoan.js" asp-append-version="true"></script>
+}

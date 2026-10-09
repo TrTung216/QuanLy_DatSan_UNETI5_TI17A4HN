@@ -92,7 +92,7 @@ Các kiểm tra bao gồm: tạo Admin và từ chối tạo lần hai; lưu m�
 
 ## Phạm vi phần tiếp theo
 
-Phần 3 sẽ thêm quản lý tài khoản/vai trò chỉ dành cho Admin. Phần 2 chưa tạo tài khoản khách vì cần hồ sơ KhachHang thuộc M3; chưa có đổi/khôi phục mật khẩu.
+M1-03 đã thêm quản lý tài khoản/vai trò chỉ dành cho Admin, xem [Phần 3](Phan-3-Quan-ly-tai-khoan.md). Tài khoản khách tạo tại M1-03 chưa tự tạo hồ sơ KhachHang thuộc M3; chưa có đổi/khôi phục mật khẩu. Phiên bản quyền được thêm vào cookie để thu hồi phiên khi đổi vai trò/trạng thái qua M1-03, kể cả đã khôi phục giá trị cũ trước request tiếp theo.
 
 Session và bộ đếm giới hạn đăng nhập đang lưu trong bộ nhớ của một tiến trình. Khởi động lại ứng dụng làm mất phiên. Khi triển khai nhiều máy hoặc qua reverse proxy, cần cấu hình kho Session dùng chung và địa chỉ proxy tin cậy; chưa có cấu hình đó trong phần này.
 
