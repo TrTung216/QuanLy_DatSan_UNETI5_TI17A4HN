@@ -4,6 +4,7 @@
 // Nội dung: đăng ký sân, cấu hình bảng, quan hệ loại sân và chuẩn hóa dữ liệu.
 // M5: Nguyễn Hữu Quang; MSSV: 23103100184
 // Nội dung: đăng ký và cấu hình bảng DichVu.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. ánh xạ, ràng buộc và chuẩn hóa dữ liệu KhachHang, ánh xạ DatSan.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
@@ -19,6 +20,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<LoaiSan> LoaiSans => Set<LoaiSan>();
     public DbSet<SanTheThao> SanTheThaos => Set<SanTheThao>();
     public DbSet<DichVu> DichVus => Set<DichVu>();
+    public DbSet<KhachHang> KhachHangs => Set<KhachHang>();
+    public DbSet<DatSan> DatSans => Set<DatSan>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -108,6 +112,59 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 new LoaiSan { MaLoaiSan = 5, TenLoai = "Quần vợt", SoNguoiToiDa = 4, DonGiaTheoGio = 120000m });
         });
 
+        modelBuilder.Entity<KhachHang>(entity =>
+        {
+            entity.ToTable("KhachHang", table =>
+            {
+                table.HasCheckConstraint("CK_KhachHang_TrangThai", "[TrangThai] IN (0, 1)");
+                table.HasCheckConstraint("CK_KhachHang_GioiTinh", "[GioiTinh] IS NULL OR [GioiTinh] IN (0, 1, 2, 3)");
+                table.HasCheckConstraint("CK_KhachHang_DiemTichLuy", "[DiemTichLuy] >= 0");
+                table.HasCheckConstraint("CK_KhachHang_HoTen", "LEN(LTRIM(RTRIM([HoTen]))) > 0");
+                table.HasCheckConstraint("CK_KhachHang_SoDienThoai", "LEN(LTRIM(RTRIM([SoDienThoai]))) > 0");
+                table.HasCheckConstraint("CK_KhachHang_Email", "LEN(LTRIM(RTRIM([Email]))) > 0");
+            });
+            entity.HasKey(x => x.MaKhachHang);
+            entity.Property(x => x.HoTen).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.SoDienThoai).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.Email).HasMaxLength(254).IsRequired();
+            entity.Property(x => x.DiaChi).HasMaxLength(255);
+            entity.Property(x => x.GhiChu).HasMaxLength(1000);
+            entity.HasIndex(x => x.MaTaiKhoan).IsUnique();
+            entity.HasOne(x => x.TaiKhoan)
+                .WithOne(x => x.KhachHang)
+                .HasForeignKey<KhachHang>(x => x.MaTaiKhoan)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<DatSan>(entity =>
+        {
+            entity.ToTable("DatSan", table =>
+            {
+                table.HasCheckConstraint("CK_DatSan_ThoiGian",
+                    "[GioKetThuc] > [GioBatDau] AND CAST([GioBatDau] AS date) = CAST([GioKetThuc] AS date)");
+                table.HasCheckConstraint("CK_DatSan_Tien", "[DonGia] >= 0 AND [TienCoc] >= 0");
+                table.HasCheckConstraint("CK_DatSan_TrangThai", "[TrangThai] IN (0, 1, 2, 3, 4)");
+            });
+            entity.HasKey(x => x.MaDatSan);
+            entity.Property(x => x.DonGia).HasPrecision(18, 2);
+            entity.Property(x => x.TienCoc).HasPrecision(18, 2);
+            entity.Property(x => x.TienSan).HasPrecision(18, 2);
+            entity.Property(x => x.TienDichVu).HasPrecision(18, 2);
+            entity.Property(x => x.TongTien).HasPrecision(18, 2);
+            entity.Property(x => x.LyDoHuy).HasMaxLength(1000);
+            entity.Property(x => x.RowVersion).IsRowVersion();
+            entity.HasIndex(x => new { x.MaSan, x.GioBatDau, x.GioKetThuc });
+            entity.HasIndex(x => new { x.MaKhachHang, x.GioBatDau });
+            entity.HasOne(x => x.KhachHang)
+                .WithMany(x => x.DanhSachDatSan)
+                .HasForeignKey(x => x.MaKhachHang)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.SanTheThao)
+                .WithMany()
+                .HasForeignKey(x => x.MaSan)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<DichVu>(entity =>
         {
             entity.ToTable("DichVu", table =>
@@ -157,6 +214,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entry.Entity.TenDichVu = entry.Entity.TenDichVu.Trim();
             entry.Entity.DonViTinh = entry.Entity.DonViTinh.Trim();
             entry.Entity.MoTa = entry.Entity.MoTa?.Trim();
+        }
+
+        foreach (var entry in ChangeTracker.Entries<KhachHang>()
+                     .Where(x => x.State is EntityState.Added or EntityState.Modified))
+        {
+            entry.Entity.HoTen = entry.Entity.HoTen.Trim();
+            entry.Entity.Email = entry.Entity.Email.Trim();
+            entry.Entity.SoDienThoai = entry.Entity.SoDienThoai.Trim();
+            entry.Entity.DiaChi = entry.Entity.DiaChi?.Trim();
+            entry.Entity.GhiChu = entry.Entity.GhiChu?.Trim();
         }
     }
 

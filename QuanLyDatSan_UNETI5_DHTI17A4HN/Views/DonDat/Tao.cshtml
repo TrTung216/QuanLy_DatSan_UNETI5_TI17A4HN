@@ -1,0 +1,84 @@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. giao diện khách hàng tạo đơn đặt sân. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TaoDonViewModel
+@using System.Globalization
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@{
+    ViewData["Title"] = "Đặt sân";
+    var inv = CultureInfo.InvariantCulture;
+}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h1 class="h3 mb-3">Đặt sân</h1>
+        <p class="text-muted">Đơn mới ở trạng thái "Chờ xác nhận" và giữ chỗ cho đến khi nhân viên xử lý. Giá lấy theo bảng giá hiện tại của sân.</p>
+        @if (Model.DanhSachSan.Count == 0)
+        {
+            <div class="alert alert-info" role="alert">Hiện chưa có sân nào nhận đặt.</div>
+        }
+        <form asp-action="Tao" method="post" id="dat-san">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            <div class="mb-3">
+                <label asp-for="MaSan" class="form-label"></label> <span aria-hidden="true">*</span>
+                <select asp-for="MaSan" class="form-select" required>
+                    <option value="">-- Chọn sân --</option>
+                    @foreach (var san in Model.DanhSachSan)
+                    {
+                        var nhan = $"{san.TenSan} - {san.TenLoai} - {HienThiDatSan.Tien(san.DonGia)}/giờ ({san.GioMoCua.ToString("HH:mm", inv)}-{san.GioDongCua.ToString("HH:mm", inv)})";
+                        <option value="@san.MaSan" data-don-gia="@san.DonGia.ToString("0.##", inv)">@nhan</option>
+                    }
+                </select>
+                <span asp-validation-for="MaSan" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="NgaySuDung" class="form-label"></label> <span aria-hidden="true">*</span>
+                <input type="date" id="NgaySuDung" name="NgaySuDung" class="form-control"
+                       value="@(Model.NgaySuDung?.ToString("yyyy-MM-dd", inv))" required />
+                <span asp-validation-for="NgaySuDung" class="text-danger"></span>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="GioBatDau" class="form-label"></label> <span aria-hidden="true">*</span>
+                    <input type="time" id="GioBatDau" name="GioBatDau" class="form-control"
+                           value="@(Model.GioBatDau?.ToString("HH:mm", inv))" required />
+                    <span asp-validation-for="GioBatDau" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="GioKetThuc" class="form-label"></label> <span aria-hidden="true">*</span>
+                    <input type="time" id="GioKetThuc" name="GioKetThuc" class="form-control"
+                           value="@(Model.GioKetThuc?.ToString("HH:mm", inv))" required />
+                    <span asp-validation-for="GioKetThuc" class="text-danger"></span>
+                </div>
+            </div>
+            <p class="text-muted">Tiền sân dự kiến (tham khảo): <strong id="tien-du-kien">—</strong>. Hệ thống tính lại khi lưu đơn.</p>
+            <button type="submit" class="btn btn-primary" disabled="@(Model.DanhSachSan.Count == 0)">Đặt sân</button>
+            <a asp-action="Index" class="btn btn-link">Lịch của tôi</a>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var san = document.getElementById('MaSan');
+            var batDau = document.getElementById('GioBatDau');
+            var ketThuc = document.getElementById('GioKetThuc');
+            var hienThi = document.getElementById('tien-du-kien');
+            function phut(giaTri) {
+                var phan = giaTri.split(':');
+                return parseInt(phan[0], 10) * 60 + parseInt(phan[1], 10);
+            }
+            function capNhat() {
+                var tuyChon = san.options[san.selectedIndex];
+                var donGia = tuyChon ? parseFloat(tuyChon.getAttribute('data-don-gia')) : NaN;
+                if (isNaN(donGia) || !batDau.value || !ketThuc.value) { hienThi.textContent = '—'; return; }
+                var soPhut = phut(ketThuc.value) - phut(batDau.value);
+                if (soPhut <= 0) { hienThi.textContent = '—'; return; }
+                hienThi.textContent = new Intl.NumberFormat('vi-VN').format(Math.round(soPhut * donGia / 60)) + ' ₫';
+            }
+            [san, batDau, ketThuc].forEach(function (phanTu) { phanTu.addEventListener('change', capNhat); });
+            capNhat();
+            document.getElementById('dat-san').addEventListener('submit', function () {
+                if ($(this).valid()) this.querySelector('button[type="submit"]').disabled = true;
+            });
+        })();
+    </script>
+}

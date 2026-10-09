@@ -24,5 +24,5 @@ public class XacNhanDonViewModel
     [BindNever] public string TenKhachHang { get; set; } = string.Empty;
     [BindNever] public DateTime BatDau { get; set; }
     [BindNever] public DateTime KetThuc { get; set; }
-    [BindNever] public TrangThaiDonDatSan TrangThai { get; set; }
+    [BindNever] public TrangThaiDatSan TrangThai { get; set; }
 }

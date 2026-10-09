@@ -1,0 +1,39 @@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. giao diện đăng ký tài khoản khách hàng. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DangKyKhachViewModel
+@{ ViewData["Title"] = "Đăng ký khách hàng"; }
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h1 class="h3 mb-3">Đăng ký tài khoản khách hàng</h1>
+        <form asp-action="DangKy" method="post" id="dang-ky">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            <div class="mb-3">
+                <label asp-for="TenDangNhap" class="form-label"></label> <span aria-hidden="true">*</span>
+                <input asp-for="TenDangNhap" class="form-control" autocomplete="username" maxlength="50" required />
+                <span asp-validation-for="TenDangNhap" class="text-danger"></span>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="MatKhau" class="form-label"></label> <span aria-hidden="true">*</span>
+                    <input asp-for="MatKhau" type="password" class="form-control" autocomplete="new-password" maxlength="128" required />
+                    <span asp-validation-for="MatKhau" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="XacNhanMatKhau" class="form-label"></label> <span aria-hidden="true">*</span>
+                    <input asp-for="XacNhanMatKhau" type="password" class="form-control" autocomplete="new-password" maxlength="128" required />
+                    <span asp-validation-for="XacNhanMatKhau" class="text-danger"></span>
+                </div>
+            </div>
+            <partial name="_TruongThongTinKhach" model="Model" />
+            <button type="submit" class="btn btn-primary">Đăng ký</button>
+            <a asp-controller="TaiKhoan" asp-action="DangNhap" class="btn btn-link">Đã có tài khoản</a>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('dang-ky').addEventListener('submit', function () {
+            if ($(this).valid()) this.querySelector('button[type="submit"]').disabled = true;
+        });
+    </script>
+}

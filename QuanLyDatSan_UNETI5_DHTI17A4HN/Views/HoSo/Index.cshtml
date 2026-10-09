@@ -1,0 +1,18 @@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. giao diện xem hồ sơ cá nhân của khách hàng. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.HoSoViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@{ ViewData["Title"] = "Hồ sơ cá nhân"; }
+<h1 class="h3 mb-3">Hồ sơ cá nhân</h1>
+<dl class="row">
+    <dt class="col-sm-3">Tên đăng nhập</dt><dd class="col-sm-9">@Model.TenDangNhap</dd>
+    <dt class="col-sm-3">Họ tên</dt><dd class="col-sm-9">@Model.HoTen</dd>
+    <dt class="col-sm-3">Email</dt><dd class="col-sm-9">@Model.Email</dd>
+    <dt class="col-sm-3">Số điện thoại</dt><dd class="col-sm-9">@Model.SoDienThoai</dd>
+    <dt class="col-sm-3">Ngày sinh</dt><dd class="col-sm-9">@(Model.NgaySinh?.ToString("dd/MM/yyyy") ?? "—")</dd>
+    <dt class="col-sm-3">Giới tính</dt>
+    <dd class="col-sm-9">@(Model.GioiTinh switch { GioiTinh.Nam => "Nam", GioiTinh.Nu => "Nữ", GioiTinh.Khac => "Khác", _ => "Không khai báo" })</dd>
+    <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.DiaChi) ? "—" : Model.DiaChi)</dd>
+    <dt class="col-sm-3">Ngày đăng ký</dt><dd class="col-sm-9">@Model.NgayDangKy.ToString("dd/MM/yyyy HH:mm")</dd>
+    <dt class="col-sm-3">Điểm tích lũy</dt><dd class="col-sm-9">@Model.DiemTichLuy</dd>
+</dl>
+<a asp-action="Sua" class="btn btn-primary">Chỉnh sửa hồ sơ</a>

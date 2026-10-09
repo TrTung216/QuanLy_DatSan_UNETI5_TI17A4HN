@@ -1,0 +1,70 @@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. giao diện lịch đặt cá nhân của khách hàng. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DanhSachDonViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@{ ViewData["Title"] = "Lịch của tôi"; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Lịch của tôi</h1>
+    <a asp-action="Tao" class="btn btn-primary">Đặt sân mới</a>
+</div>
+<form asp-action="Index" method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <label for="trangThai" class="visually-hidden">Trạng thái</label>
+        <select id="trangThai" name="trangThai" class="form-select">
+            <option value="">Tất cả trạng thái</option>
+            @foreach (var t in Enum.GetValues<TrangThaiDatSan>())
+            {
+                <option value="@((int)t)" selected="@(Model.TrangThai == t)">@HienThiDatSan.TenTrangThai(t)</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto"><button type="submit" class="btn btn-outline-secondary">Lọc</button></div>
+</form>
+@if (Model.Dong.Count == 0)
+{
+    <div class="alert alert-info" role="alert">Chưa có đơn đặt sân nào.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr><th>Mã đơn</th><th>Sân</th><th>Ngày</th><th>Giờ</th><th>Đơn giá</th><th>Trạng thái</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var don in Model.Dong)
+                {
+                    <tr>
+                        <td>@don.MaDatSan</td>
+                        <td>@don.TenSan <span class="text-muted">(@don.TenLoai)</span></td>
+                        <td>@don.GioBatDau.ToString("dd/MM/yyyy")</td>
+                        <td>@don.GioBatDau.ToString("HH:mm") - @don.GioKetThuc.ToString("HH:mm")</td>
+                        <td>@HienThiDatSan.Tien(don.DonGia)/giờ</td>
+                        <td><span class="badge @HienThiDatSan.LopMau(don.TrangThai)">@HienThiDatSan.TenTrangThai(don.TrangThai)</span></td>
+                        <td><a asp-action="ChiTiet" asp-route-id="@don.MaDatSan">Chi tiết</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted">Tổng cộng @Model.TongSo đơn.</p>
+}
+@if (Model.TongTrang > 1)
+{
+    <nav aria-label="Phân trang">
+        <ul class="pagination">
+            <li class="page-item @(Model.Trang <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-trangThai="@Model.TrangThai" asp-route-trang="@(Model.Trang - 1)">Trước</a>
+            </li>
+            @for (var i = 1; i <= Model.TongTrang; i++)
+            {
+                <li class="page-item @(i == Model.Trang ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-trangThai="@Model.TrangThai" asp-route-trang="@i">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.Trang >= Model.TongTrang ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-trangThai="@Model.TrangThai" asp-route-trang="@(Model.Trang + 1)">Sau</a>
+            </li>
+        </ul>
+    </nav>
+}
