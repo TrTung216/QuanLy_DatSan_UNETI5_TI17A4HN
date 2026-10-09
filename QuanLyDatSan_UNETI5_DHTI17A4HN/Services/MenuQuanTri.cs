@@ -31,6 +31,15 @@ public static class MenuQuanTri
                 "Danh mục dịch vụ đi kèm đơn đặt sân."));
         }
 
+        var taiKhoan = new List<MucMenu>();
+        if (laAdmin)
+        {
+            taiKhoan.Add(new MucMenu("Quản lý tài khoản", "QuanLyTaiKhoan", "DanhSach", ["Tao", "Sua"],
+                "Tạo, sửa và phân quyền tài khoản hệ thống."));
+        }
+        taiKhoan.Add(new MucMenu("Thông tin tài khoản", "TaiKhoan", "ThongTin", null,
+            "Xem họ tên và vai trò của tài khoản đang đăng nhập."));
+
         var ketQua = new List<NhomMenu>
         {
             new("Tổng quan", [new MucMenu("Trang điều hành", "QuanTri", "Index", null,
@@ -38,8 +47,7 @@ public static class MenuQuanTri
         };
         if (vanHanh.Count > 0) ketQua.Add(new NhomMenu("Vận hành", vanHanh));
         if (danhMuc.Count > 0) ketQua.Add(new NhomMenu("Danh mục", danhMuc));
-        ketQua.Add(new NhomMenu("Tài khoản", [new MucMenu("Thông tin tài khoản", "TaiKhoan", "ThongTin", null,
-            "Xem họ tên và vai trò của tài khoản đang đăng nhập.")]));
+        ketQua.Add(new NhomMenu("Tài khoản", taiKhoan));
         return ketQua;
     }
 }

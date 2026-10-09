@@ -6,5 +6,4 @@ public class TrangDieuHanhViewModel
     public int SoDonChoXacNhan { get; set; }
     public int SoKhachHangHoatDong { get; set; }
     public int SoSanHoatDong { get; set; }
-    public int? SoDichVuHoatDong { get; set; }
 }

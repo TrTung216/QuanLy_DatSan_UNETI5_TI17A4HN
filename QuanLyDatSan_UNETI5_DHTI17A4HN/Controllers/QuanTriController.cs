@@ -25,11 +25,6 @@ public class QuanTriController(ApplicationDbContext db, IDongHo dongHo) : Contro
             SoSanHoatDong = await db.SanTheThaos.CountAsync(
                 x => x.TrangThai == TrangThaiSan.HoatDong, cancellationToken)
         };
-        if (User.IsInRole(nameof(VaiTro.Admin)))
-        {
-            model.SoDichVuHoatDong = await db.DichVus.CountAsync(
-                x => x.TrangThai == TrangThaiDichVu.HoatDong, cancellationToken);
-        }
         return View(model);
     }
 }
