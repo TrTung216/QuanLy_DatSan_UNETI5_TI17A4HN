@@ -31,7 +31,8 @@ public class QuanLyTaiKhoanTests
             ["TenDangNhap"] = ten, ["MatKhau"] = app.MatKhau, ["__RequestVerificationToken"] = token
         }));
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("/TaiKhoan/ThongTin", response.Headers.Location?.OriginalString);
+        var diemDen = ten == "khachhang" ? "/KhachHang/TrangChu" : "/QuanTri";
+        Assert.Equal(diemDen, response.Headers.Location?.OriginalString);
     }
 
     private static Dictionary<string, string> TaoForm(UngDungKiemThu app, string ten = "taikhoan_moi") => new()
