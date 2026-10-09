@@ -31,6 +31,8 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 });
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IDongHo, DongHoHeThong>();//nghia them
+builder.Services.AddScoped<IDatSanService, DatSanService>();
 builder.Services.AddScoped<ITaiKhoanHienTai, TaiKhoanHienTai>();
 builder.Services.AddScoped<IPasswordHasher<TaiKhoan>, PasswordHasher<TaiKhoan>>();
 builder.Services.AddScoped<PhienDangNhap>();
