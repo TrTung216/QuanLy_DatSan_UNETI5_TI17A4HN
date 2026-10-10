@@ -39,6 +39,14 @@ public class SanTheThao
     [Display(Name = "Đơn giá theo giờ")]
     public decimal DonGia { get; set; }
 
+    [Column(TypeName = "decimal(18,2)")]
+    [Range(typeof(decimal), "0", "9999999999999999.99")]
+    public decimal? DonGiaCaoDiem { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    [Range(typeof(decimal), "0", "9999999999999999.99")]
+    public decimal? DonGiaCuoiTuan { get; set; }
+
     [EnumDataType(typeof(TrangThaiSan), ErrorMessage = "Trạng thái sân không hợp lệ.")]
     [Display(Name = "Trạng thái")]
     public TrangThaiSan TrangThai { get; set; } = TrangThaiSan.HoatDong;

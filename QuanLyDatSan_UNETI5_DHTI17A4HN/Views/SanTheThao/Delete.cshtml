@@ -1,0 +1,31 @@
+@* Họ tên: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Xác nhận xóa sân. *@
+@model SanTheThao
+@using System.Globalization
+@{
+    ViewData["Title"] = "Xóa sân";
+    var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
+}
+<div class="ql-page-header">
+    <h1>Xóa sân</h1>
+    <p class="ql-subtitle">Kiểm tra thông tin trước khi xác nhận.</p>
+</div>
+<section class="ql-panel" aria-label="Xác nhận xóa sân">
+    <div class="alert alert-warning" role="alert">
+        Bạn có chắc muốn xóa sân <strong>@Model.TenSan</strong>? Thao tác này không thể hoàn tác.
+        Sân đã có lịch sử sử dụng cần được giữ lại.
+    </div>
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+    <dl class="row">
+        <dt class="col-sm-3">Mã sân</dt><dd class="col-sm-9">@Model.MaSan</dd>
+        <dt class="col-sm-3">Tên sân</dt><dd class="col-sm-9 text-break">@Model.TenSan</dd>
+        <dt class="col-sm-3">Loại sân</dt><dd class="col-sm-9">@Model.LoaiSan.TenLoai</dd>
+        <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9 text-break">@Model.DiaChi</dd>
+        <dt class="col-sm-3">Giá theo giờ</dt><dd class="col-sm-9">@Model.DonGia.ToString("N0", vanHoa) ₫</dd>
+        <dt class="col-sm-3">Giờ phục vụ</dt>
+        <dd class="col-sm-9">@Model.GioMoCua.ToString("HH:mm") – @Model.GioDongCua.ToString("HH:mm")</dd>
+    </dl>
+    <form asp-action="Delete" asp-route-id="@Model.MaSan" method="post" asp-antiforgery="true" class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+    </form>
+</section>

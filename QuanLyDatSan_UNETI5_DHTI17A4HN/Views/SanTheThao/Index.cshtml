@@ -5,6 +5,7 @@
 @{
     ViewData["Title"] = "Danh sách sân";
     var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
+    var laQuanLy = User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien)));
 }
 <div class="ql-page-header">
     <h1>Danh sách sân</h1>
@@ -14,7 +15,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h2 class="h5 mb-0">Sân thể thao <span class="badge text-bg-primary">@Model.TongSoSan</span></h2>
         <div class="d-flex gap-2">
-            @if (User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien))))
+            @if (laQuanLy)
             {
                 <a asp-action="Create" class="btn btn-primary btn-sm">Thêm sân</a>
             }
@@ -35,9 +36,9 @@
                 <caption>Trang @Model.TrangHienTai / @Model.TongSoTrang</caption>
                 <thead><tr>
                     <th scope="col">Tên sân</th><th scope="col">Loại sân</th>
-                    <th scope="col">Địa chỉ</th><th scope="col">Giá/giờ</th>
+                    <th scope="col">Địa chỉ</th><th scope="col">Giá thuê (đồng/giờ)</th>
                     <th scope="col">Giờ phục vụ</th><th scope="col">Trạng thái</th>
-                    <th scope="col">Chi tiết</th>
+                    <th scope="col">Thao tác</th>
                 </tr></thead>
                 <tbody>
                     @foreach (var san in Model.DanhSachSan)
@@ -57,11 +58,26 @@
                         <tr>
                             <th scope="row">@san.TenSan</th>
                             <td>@san.LoaiSan.TenLoai</td><td>@san.DiaChi</td>
-                            <td class="text-nowrap">@san.DonGia.ToString("N0", vanHoa) ₫</td>
+                            <td class="text-nowrap">
+                                <div>T2–T6 thường: @san.DonGia.ToString("N0", vanHoa) ₫</div>
+                                <div>18h–21h: @((san.DonGiaCaoDiem ?? san.DonGia).ToString("N0", vanHoa)) ₫</div>
+                                <div>T7, CN cả ngày: @((san.DonGiaCuoiTuan ?? san.DonGia).ToString("N0", vanHoa)) ₫</div>
+                            </td>
                             <td class="text-nowrap">@san.GioMoCua.ToString("HH:mm") – @san.GioDongCua.ToString("HH:mm")</td>
                             <td><span class="badge @mau">@trangThai</span></td>
-                            <td><a asp-action="Details" asp-route-id="@san.MaSan" class="btn btn-outline-primary btn-sm"
-                                   aria-label="Chi tiết @san.TenSan">Xem</a></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a asp-action="Details" asp-route-id="@san.MaSan" class="btn btn-outline-primary btn-sm"
+                                       aria-label="Chi tiết @san.TenSan">Xem</a>
+                                    @if (laQuanLy)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@san.MaSan" class="btn btn-outline-secondary btn-sm"
+                                           aria-label="Sửa @san.TenSan">Sửa</a>
+                                        <a asp-action="Delete" asp-route-id="@san.MaSan" class="btn btn-outline-danger btn-sm"
+                                           aria-label="Xóa @san.TenSan">Xóa</a>
+                                    }
+                                </div>
+                            </td>
                         </tr>
                     }
                 </tbody>

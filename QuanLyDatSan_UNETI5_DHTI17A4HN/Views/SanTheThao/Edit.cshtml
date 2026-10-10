@@ -1,21 +1,22 @@
-@* Họ tên: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Form thêm sân. *@
-@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ThemSanViewModel
+@* Họ tên: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Form sửa thông tin sân. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.SuaSanViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using System.Globalization
 @{
-    ViewData["Title"] = "Thêm sân";
+    ViewData["Title"] = "Sửa sân";
 }
 <div class="ql-page-header">
-    <h1>Thêm sân</h1>
-    <p class="ql-subtitle">Nhập thông tin sân. Các trường có dấu * là bắt buộc.</p>
+    <h1>Sửa sân</h1>
+    <p class="ql-subtitle">Chỉnh sửa thông tin sân. Các trường có dấu * là bắt buộc.</p>
 </div>
-<section class="ql-panel" aria-label="Thông tin sân mới">
+<section class="ql-panel" aria-label="Chỉnh sửa thông tin sân">
     @if (Model.CacLoaiSan.Count == 0)
     {
         <div class="alert alert-warning" role="alert">Chưa có loại sân đang hoạt động. Cần bổ sung loại sân trước khi thêm sân.</div>
     }
     <p class="form-text">T2–T6: cao điểm từ 18h đến 21h, các giờ còn lại dùng giá thường. T7 và CN dùng giá cuối tuần cả ngày.</p>
-    <form asp-action="Create" method="post">
+    <form asp-action="Edit" asp-route-id="@Model.MaSan" method="post" asp-antiforgery="true">
+        <input asp-for="MaSan" type="hidden" />
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
         <div class="row g-3">
             <div class="col-md-6">
@@ -42,7 +43,8 @@
             <div class="col-md-6">
                 <label asp-for="DonGia" class="form-label"></label> <span aria-hidden="true">*</span>
                 <input asp-for="DonGia" type="number" asp-format="{0:0}" class="form-control" min="0" step="1" required aria-describedby="goi-y-gia" />
-                <div id="goi-y-gia" class="form-text">Nhập tiền nguyên theo đồng, ví dụ 200000. Chọn loại sân để điền giá mặc định; có thể điều chỉnh.</div>
+                <div id="goi-y-gia" class="form-text">Nhập tiền nguyên theo đồng. Đổi loại sân không tự thay giá đã nhập.</div>
+                <button id="ap-dung-gia" type="button" class="btn btn-outline-secondary btn-sm mt-2">Dùng bảng giá gợi ý cho loại sân</button>
                 <span asp-validation-for="DonGia" class="text-danger"></span>
             </div>
             <div class="col-md-6">
@@ -93,21 +95,22 @@
             </div>
         </div>
         <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn btn-primary" disabled="@(Model.CacLoaiSan.Count == 0)">Lưu sân</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-primary" disabled="@(Model.CacLoaiSan.Count == 0)">Lưu thay đổi</button>
+            <a asp-action="Details" asp-route-id="@Model.MaSan" class="btn btn-outline-secondary">Hủy</a>
         </div>
     </form>
 </section>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.getElementById('MaLoaiSan').addEventListener('change', function () {
-            const gia = this.selectedOptions[0]?.dataset.gia;
-            if (gia !== undefined) {
-                document.getElementById('DonGia').value = gia;
-                document.getElementById('DonGiaCaoDiem').value = this.selectedOptions[0].dataset.caoDiem;
-                document.getElementById('DonGiaCuoiTuan').value = this.selectedOptions[0].dataset.cuoiTuan;
+        document.getElementById('ap-dung-gia').addEventListener('click', function () {
+            const loai = document.getElementById('MaLoaiSan').selectedOptions[0];
+            if (loai?.dataset.gia !== undefined) {
+                document.getElementById('DonGia').value = loai.dataset.gia;
+                document.getElementById('DonGiaCaoDiem').value = loai.dataset.caoDiem;
+                document.getElementById('DonGiaCuoiTuan').value = loai.dataset.cuoiTuan;
             }
         });
     </script>
 }
+

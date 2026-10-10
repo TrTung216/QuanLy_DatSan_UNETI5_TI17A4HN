@@ -49,6 +49,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 table.HasCheckConstraint(
                     "CK_SanTheThao_DonGia",
                     "[DonGia] >= 0");
+                table.HasCheckConstraint("CK_SanTheThao_GiaKhungGio",
+                    "([DonGiaCaoDiem] IS NULL OR [DonGiaCaoDiem] >= 0) AND ([DonGiaCuoiTuan] IS NULL OR [DonGiaCuoiTuan] >= 0)");
 
                 table.HasCheckConstraint(
                     "CK_SanTheThao_TrangThai",
@@ -72,6 +74,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(x => x.TienIch).HasMaxLength(1000);
             entity.Property(x => x.GhiChu).HasMaxLength(1000);
             entity.Property(x => x.DonGia).HasPrecision(18, 2);
+            entity.Property(x => x.DonGiaCaoDiem).HasPrecision(18, 2);
+            entity.Property(x => x.DonGiaCuoiTuan).HasPrecision(18, 2);
             entity.Property(x => x.TrangThai).HasConversion<byte>();
             entity.Property(x => x.GioMoCua).HasColumnType("time(0)");
             entity.Property(x => x.GioDongCua).HasColumnType("time(0)");

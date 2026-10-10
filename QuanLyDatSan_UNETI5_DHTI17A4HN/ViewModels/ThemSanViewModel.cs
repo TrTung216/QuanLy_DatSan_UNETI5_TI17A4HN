@@ -29,8 +29,18 @@ public class ThemSanViewModel : IValidatableObject
 
     [Required(ErrorMessage = "Vui lòng nhập đơn giá.")]
     [Range(typeof(decimal), "0", "9999999999999999.99", ErrorMessage = "Đơn giá phải không âm và nằm trong giới hạn cho phép.")]
-    [Display(Name = "Đơn giá theo giờ (đồng)")]
+    [Display(Name = "Giá giờ thường T2–T6 (đồng/giờ)")]
     public decimal? DonGia { get; set; }
+
+    [Required(ErrorMessage = "Vui lòng nhập giá cao điểm.")]
+    [Range(typeof(decimal), "0", "9999999999999999.99", ErrorMessage = "Giá phải không âm và nằm trong giới hạn cho phép.")]
+    [Display(Name = "Giá cao điểm T2–T6, 18h–21h (đồng/giờ)")]
+    public decimal? DonGiaCaoDiem { get; set; }
+
+    [Required(ErrorMessage = "Vui lòng nhập giá cuối tuần.")]
+    [Range(typeof(decimal), "0", "9999999999999999.99", ErrorMessage = "Giá phải không âm và nằm trong giới hạn cho phép.")]
+    [Display(Name = "Giá T7 và CN, cả ngày (đồng/giờ)")]
+    public decimal? DonGiaCuoiTuan { get; set; }
 
     [Required(ErrorMessage = "Vui lòng chọn trạng thái sân.")]
     [EnumDataType(typeof(TrangThaiSan), ErrorMessage = "Trạng thái sân không hợp lệ.")]
@@ -62,7 +72,12 @@ public class ThemSanViewModel : IValidatableObject
 
         if (DonGia.HasValue && decimal.Truncate(DonGia.Value) != DonGia.Value)
             yield return new ValidationResult("Đơn giá phải là số nguyên theo đồng, không nhập phần thập phân.", [nameof(DonGia)]);
+        if (DonGiaCaoDiem.HasValue && decimal.Truncate(DonGiaCaoDiem.Value) != DonGiaCaoDiem.Value)
+            yield return new ValidationResult("Giá cao điểm phải là số nguyên theo đồng.", [nameof(DonGiaCaoDiem)]);
+        if (DonGiaCuoiTuan.HasValue && decimal.Truncate(DonGiaCuoiTuan.Value) != DonGiaCuoiTuan.Value)
+            yield return new ValidationResult("Giá cuối tuần phải là số nguyên theo đồng.", [nameof(DonGiaCuoiTuan)]);
     }
 }
 
-public record LuaChonLoaiSan(int MaLoaiSan, string TenLoai, decimal DonGiaTheoGio);
+public record LuaChonLoaiSan(int MaLoaiSan, string TenLoai, decimal DonGiaTheoGio,
+    decimal DonGiaCaoDiem = 0, decimal DonGiaCuoiTuan = 0);

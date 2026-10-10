@@ -23,7 +23,9 @@
         <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9 text-break">@Model.DiaChi</dd>
         <dt class="col-sm-3">Tiện ích</dt>
         <dd class="col-sm-9 text-break">@(string.IsNullOrWhiteSpace(Model.TienIch) ? "Chưa cập nhật" : Model.TienIch)</dd>
-        <dt class="col-sm-3">Giá theo giờ</dt><dd class="col-sm-9">@Model.DonGia.ToString("N0", vanHoa) ₫</dd>
+        <dt class="col-sm-3">Giá giờ thường T2–T6</dt><dd class="col-sm-9">@Model.DonGia.ToString("N0", vanHoa) ₫/giờ</dd>
+        <dt class="col-sm-3">Cao điểm T2–T6 (18h–21h)</dt><dd class="col-sm-9">@((Model.DonGiaCaoDiem ?? Model.DonGia).ToString("N0", vanHoa)) ₫/giờ</dd>
+        <dt class="col-sm-3">T7 và CN cả ngày</dt><dd class="col-sm-9">@((Model.DonGiaCuoiTuan ?? Model.DonGia).ToString("N0", vanHoa)) ₫/giờ</dd>
         <dt class="col-sm-3">Giờ phục vụ</dt>
         <dd class="col-sm-9">@Model.GioMoCua.ToString("HH:mm") – @Model.GioDongCua.ToString("HH:mm")</dd>
         <dt class="col-sm-3">Trạng thái</dt><dd class="col-sm-9">@trangThai</dd>
@@ -32,6 +34,34 @@
         <dt class="col-sm-3">Ghi chú</dt>
         <dd class="col-sm-9 text-break">@(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có" : Model.GhiChu)</dd>
     </dl>
+    <h2 class="h5 mt-4">Tính thử tiền thuê</h2>
+    <p class="form-text">Giá được chia theo từng khung giờ. Đây là tiền thuê dự kiến; chưa kiểm tra sân trống và chưa gồm dịch vụ.</p>
+    <form asp-action="Details" method="get" class="row g-3 mb-4">
+        <input type="hidden" name="id" value="@Model.MaSan" />
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        <div class="col-md-4">
+            <label for="ngay" class="form-label">Ngày thuê</label>
+            <input id="ngay" name="ngay" type="date" value="@ViewData["NgayTinhGia"]" class="form-control" required />
+        </div>
+        <div class="col-md-4">
+            <label for="batDau" class="form-label">Giờ bắt đầu</label>
+            <input id="batDau" name="batDau" type="time" value="@ViewData["GioBatDau"]" class="form-control" step="60" required />
+        </div>
+        <div class="col-md-4">
+            <label for="ketThuc" class="form-label">Giờ kết thúc</label>
+            <input id="ketThuc" name="ketThuc" type="time" value="@ViewData["GioKetThuc"]" class="form-control" step="60" required />
+        </div>
+        <div class="col-12"><button class="btn btn-outline-primary" type="submit">Tính tiền</button></div>
+        @if (ViewData["GiaDuKien"] is decimal giaDuKien)
+        {
+            <div class="col-12"><div class="alert alert-info mb-0" role="status">Tiền thuê dự kiến: <strong>@giaDuKien.ToString("N0", vanHoa) ₫</strong></div></div>
+        }
+    </form>
     <p class="text-muted">Sân hoạt động có thể đã được đặt trong giờ bạn muốn sử dụng.</p>
     <a asp-action="Index" class="btn btn-outline-secondary">Về danh sách sân</a>
+    @if (User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien))))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.MaSan" class="btn btn-outline-primary">Sửa sân</a>
+        <a asp-action="Delete" asp-route-id="@Model.MaSan" class="btn btn-outline-danger">Xóa sân</a>
+    }
 </section>
