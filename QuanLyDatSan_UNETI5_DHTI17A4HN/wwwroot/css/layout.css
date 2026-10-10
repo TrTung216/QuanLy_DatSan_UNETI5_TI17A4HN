@@ -93,12 +93,12 @@
 .ql-status--cancelled { background: #edf0f3; color: #495564; border-color: #bdc6d0; }
 .ql-status--rejected { background: #ffebe9; color: #a32424; border-color: #ecaaa5; }
 
-@media (max-width: 1199.98px) and (min-width: 992px) {
+@media (max-width: 1399.98px) and (min-width: 1200px) {
     .ql-brand { margin-right: .75rem; }
     .ql-account { gap: .5rem; margin-left: .5rem; }
     .ql-account-info { max-width: 8rem; }
 }
-@media (max-width: 991.98px) {
+@media (max-width: 1199.98px) {
     .ql-header .navbar-collapse { padding-top: 1rem; }
     .ql-account { margin: 1rem 0 0; padding-top: 1rem; border-top: 1px solid var(--ql-border); justify-content: space-between; }
     .ql-account-info { max-width: none; }

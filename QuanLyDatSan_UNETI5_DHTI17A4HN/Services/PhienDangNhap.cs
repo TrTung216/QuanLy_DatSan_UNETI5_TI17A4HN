@@ -8,14 +8,15 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
-public class PhienDangNhap(ApplicationDbContext db) : CookieAuthenticationEvents
+public class PhienDangNhap(ApplicationDbContext db, PhienBanQuyenTaiKhoan phienBanQuyen) : CookieAuthenticationEvents
 {
-    public static ClaimsPrincipal TaoPrincipal(TaiKhoan taiKhoan, string maPhien) => new(new ClaimsIdentity(
+    public static ClaimsPrincipal TaoPrincipal(TaiKhoan taiKhoan, string maPhien, string phienBanQuyen) => new(new ClaimsIdentity(
     [
         new Claim(ClaimTypes.NameIdentifier, taiKhoan.MaTaiKhoan.ToString()),
         new Claim(ClaimTypes.Name, taiKhoan.HoTen),
         new Claim(ClaimTypes.Role, taiKhoan.VaiTro.ToString()),
-        new Claim("MaPhien", maPhien)
+        new Claim("MaPhien", maPhien),
+        new Claim("PhienBanQuyen", phienBanQuyen)
     ], CookieAuthenticationDefaults.AuthenticationScheme));
 
     public static void LuuSession(ISession session, TaiKhoan taiKhoan)
@@ -37,6 +38,7 @@ public class PhienDangNhap(ApplicationDbContext db) : CookieAuthenticationEvents
             : null;
         if (taiKhoan is null || taiKhoan.TrangThai != TrangThaiTaiKhoan.HoatDong
             || !Enum.IsDefined(taiKhoan.VaiTro)
+            || context.Principal?.FindFirstValue("PhienBanQuyen") != phienBanQuyen.Lay(ma)
             || context.Principal?.FindFirstValue(ClaimTypes.Role) != taiKhoan.VaiTro.ToString())
         {
             context.RejectPrincipal();
@@ -47,7 +49,7 @@ public class PhienDangNhap(ApplicationDbContext db) : CookieAuthenticationEvents
         LuuSession(session, taiKhoan);
         if (context.Principal?.Identity?.Name != taiKhoan.HoTen)
         {
-            context.ReplacePrincipal(TaoPrincipal(taiKhoan, maPhien!));
+            context.ReplacePrincipal(TaoPrincipal(taiKhoan, maPhien!, context.Principal!.FindFirstValue("PhienBanQuyen")!));
             context.ShouldRenew = true;
         }
     }
