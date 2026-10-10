@@ -29,6 +29,7 @@
         if (User.IsInRole(nameof(VaiTro.Admin)))
         {
             menu.Add(("Quản lý tài khoản", "QuanLyTaiKhoan", "DanhSach"));
+            menu.Add(("Loại sân", "LoaiSan", "DanhSach"));
             menu.Add(("Dịch vụ", "DichVu", "DanhSach"));
         }
     }
@@ -56,7 +57,7 @@
                     @foreach (var muc in menu)
                     {
                         var hienTai = LaTrang(muc.Controller, muc.Action)
-                            || (muc.Controller == "QuanLyTaiKhoan"
+                            || (muc.Controller is "QuanLyTaiKhoan" or "LoaiSan"
                                 && string.Equals(controller, muc.Controller, StringComparison.OrdinalIgnoreCase));
                         <li class="nav-item">
                             <a class="nav-link @(hienTai ? "active" : "")" aria-current="@(hienTai ? "page" : null)"

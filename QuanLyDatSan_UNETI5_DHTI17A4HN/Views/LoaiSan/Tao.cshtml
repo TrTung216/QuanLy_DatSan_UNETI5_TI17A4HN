@@ -1,0 +1,17 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ giao diện thêm loại sân. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.LoaiSanFormViewModel
+@{ ViewData["Title"] = "Thêm loại sân"; }
+<div class="ql-page-header"><h1>@ViewData["Title"]</h1><p class="ql-subtitle">Các trường có dấu * là bắt buộc.</p></div>
+<div class="row"><div class="col-xl-8">
+    <section class="ql-panel" aria-label="Thông tin loại sân mới">
+        <form asp-action="Tao" method="post" asp-antiforgery="true" data-loai-san-form>
+            <partial name="_Form" model="Model" />
+            <button type="submit" class="btn btn-primary">Thêm loại sân</button>
+            <a asp-action="DanhSach" class="btn btn-outline-secondary">Hủy</a>
+        </form>
+    </section>
+</div></div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/loai-san.js" asp-append-version="true"></script>
+}
