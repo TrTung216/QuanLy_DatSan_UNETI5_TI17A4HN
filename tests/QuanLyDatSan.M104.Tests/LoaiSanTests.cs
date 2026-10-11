@@ -7,12 +7,30 @@ using QuanLyDatSan.M103.Tests;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 using Xunit;
 
 namespace QuanLyDatSan.M104.Tests;
 
 public class LoaiSanTests
 {
+    [Theory]
+    [InlineData(-1, 4, 1)]
+    [InlineData(100, 0, 1)]
+    [InlineData(100, 4, 99)]
+    public async Task ServiceChanDuLieuSaiKhongPhuThuocModelState(int gia, int soNguoi, int trangThai)
+    {
+        using var app = await TaoAppAsync();
+        using var scope = app.Services.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ILoaiSanService>();
+        var yeuCau = new GhiLoaiSan("Không được lưu", null, soNguoi, gia, (TrangThaiLoaiSan)trangThai);
+        Assert.Equal(MaLoiLoaiSan.DuLieuKhongHopLe, (await service.TaoAsync(yeuCau, default)).MaLoi);
+        Assert.Equal(MaLoiLoaiSan.DuLieuKhongHopLe, (await service.SuaAsync(2, yeuCau, default)).MaLoi);
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(2, await db.LoaiSans.CountAsync());
+        Assert.Equal("Loai chua su dung", (await db.LoaiSans.AsNoTracking().SingleAsync(x => x.MaLoaiSan == 2)).TenLoai);
+    }
+
     private static async Task<UngDungKiemThu> TaoAppAsync()
     {
         var app = new UngDungKiemThu();
@@ -31,6 +49,7 @@ public class LoaiSanTests
                 MaSan INTEGER PRIMARY KEY AUTOINCREMENT, TenSan TEXT NOT NULL,
                 MaLoaiSan INTEGER NOT NULL REFERENCES LoaiSan(MaLoaiSan) ON DELETE NO ACTION,
                 DiaChi TEXT NOT NULL, TienIch TEXT, DonGia TEXT NOT NULL, TrangThai INTEGER NOT NULL,
+                DonGiaCaoDiem TEXT, DonGiaCuoiTuan TEXT,
                 GioMoCua TEXT NOT NULL, GioDongCua TEXT NOT NULL, GhiChu TEXT, NgayBaoTri TEXT
             );
             """);
