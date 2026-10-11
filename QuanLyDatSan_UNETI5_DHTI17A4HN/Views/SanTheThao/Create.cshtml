@@ -1,6 +1,5 @@
 @* Họ tên: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Form thêm sân. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ThemSanViewModel
-@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using System.Globalization
 @{
     ViewData["Title"] = "Thêm sân";
@@ -58,6 +57,7 @@
             <div class="col-md-6">
                 <label asp-for="TrangThai" class="form-label"></label> <span aria-hidden="true">*</span>
                 <select asp-for="TrangThai" class="form-select" required>
+                    <option value="">-- Chọn trạng thái --</option>
                     <option value="1">Hoạt động</option>
                     <option value="2">Bảo trì</option>
                     <option value="3">Ngừng hoạt động</option>

@@ -45,7 +45,7 @@ public class ThemSanViewModel : IValidatableObject
     [Required(ErrorMessage = "Vui lòng chọn trạng thái sân.")]
     [EnumDataType(typeof(TrangThaiSan), ErrorMessage = "Trạng thái sân không hợp lệ.")]
     [Display(Name = "Trạng thái")]
-    public TrangThaiSan? TrangThai { get; set; } = TrangThaiSan.HoatDong;
+    public TrangThaiSan? TrangThai { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập giờ mở cửa.")]
     [Display(Name = "Giờ mở cửa")]

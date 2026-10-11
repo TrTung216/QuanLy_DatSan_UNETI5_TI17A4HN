@@ -21,6 +21,7 @@ public class SanTheThaoController(ApplicationDbContext db) : Controller
     {
         var model = new ThemSanViewModel
         {
+            TrangThai = TrangThaiSan.HoatDong,
             GioMoCua = new TimeOnly(6, 0),
             GioDongCua = new TimeOnly(22, 0)
         };
