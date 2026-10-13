@@ -21,12 +21,24 @@ public static class MenuQuanTri
     {
         var laAdmin = nguoiDung.IsInRole(nameof(VaiTro.Admin));
 
+        var laNhanVien = nguoiDung.IsInRole(nameof(VaiTro.NhanVien));
+
         var vanHanh = new List<MucMenu>();
-        // Vận hành: đơn đặt sân (M4), sân thể thao (M2), khách hàng (M3) bổ sung tại đây khi có màn hình quản lý.
+        // Sân thể thao (M2): action Create/Edit/Delete yêu cầu Admin hoặc Nhân viên.
+        if (laAdmin || laNhanVien)
+        {
+            vanHanh.Add(new MucMenu("Danh sách sân", "SanTheThao", "Index", ["Details", "Edit", "Delete"],
+                "Xem, sửa và xóa sân thể thao."));
+            vanHanh.Add(new MucMenu("Thêm sân", "SanTheThao", "Create", null,
+                "Tạo sân thể thao mới."));
+        }
+        // Đơn đặt sân (M4) và khách hàng (M3) bổ sung tại đây khi có màn hình quản lý.
 
         var danhMuc = new List<MucMenu>();
         if (laAdmin)
         {
+            danhMuc.Add(new MucMenu("Loại sân", "LoaiSan", "DanhSach", ["ChiTiet", "Tao", "Sua", "Xoa"],
+                "Danh mục loại sân và giá mặc định."));
             danhMuc.Add(new MucMenu("Dịch vụ", "DichVu", "DanhSach", ["Tao", "Sua"],
                 "Danh mục dịch vụ đi kèm đơn đặt sân."));
         }
