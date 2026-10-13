@@ -1,5 +1,5 @@
 // Họ tên: Phan Giang Tâm; MSSV: 23103100196.
-// Nội dung: Kiểm tra trạng thái bắt buộc khi thêm và sửa sân qua HTTP.
+// Nội dung: Kiểm tra trạng thái, quyền xem sân và phân trang qua HTTP.
 using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +12,7 @@ using Xunit;
 
 namespace QuanLyDatSan.M201.Tests;
 
-public class TrangThaiSanTests
+public partial class TrangThaiSanTests
 {
     private static async Task<UngDungKiemThu> TaoAppAsync()
     {
@@ -63,12 +63,12 @@ public class TrangThaiSanTests
         return WebUtility.HtmlDecode(match.Groups[1].Value);
     }
 
-    private static async Task DangNhapAsync(UngDungKiemThu app, HttpClient client)
+    private static async Task DangNhapAsync(UngDungKiemThu app, HttpClient client, string tenDangNhap = "admin")
     {
         var html = await client.GetStringAsync("/TaiKhoan/DangNhap");
         var response = await client.PostAsync("/TaiKhoan/DangNhap", new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["TenDangNhap"] = "admin", ["MatKhau"] = app.MatKhau, ["__RequestVerificationToken"] = Token(html)
+            ["TenDangNhap"] = tenDangNhap, ["MatKhau"] = app.MatKhau, ["__RequestVerificationToken"] = Token(html)
         }));
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
     }
@@ -195,5 +195,108 @@ public class TrangThaiSanTests
         var form = Form(trangThai); form["MaSan"] = "1";
         Assert.Equal(HttpStatusCode.Redirect, (await PostAsync(client, "/SanTheThao/Edit/1", form)).StatusCode);
         Assert.Equal((TrangThaiSan)int.Parse(trangThai), (await DocSanAsync(app, 1)).TrangThai);
+    }
+
+    private static async Task ThemDuLieuDanhSachAsync(UngDungKiemThu app)
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.LoaiSans.Add(new LoaiSan
+        {
+            MaLoaiSan = 2, TenLoai = "Loại sân ngừng hoạt động", SoNguoiToiDa = 10,
+            DonGiaTheoGio = 200000, TrangThai = TrangThaiLoaiSan.NgungHoatDong
+        });
+        await db.SaveChangesAsync();
+        for (var i = 1; i <= 13; i++)
+        {
+            db.SanTheThaos.Add(new SanTheThao
+            {
+                MaSan = i + 2,
+                TenSan = i <= 12 ? $"Sân hoạt động {i:00}" : "Sân thuộc loại ngừng hoạt động",
+                MaLoaiSan = i <= 12 ? 1 : 2, DiaChi = "Hà Nội", DonGia = 200000,
+                DonGiaCaoDiem = 350000, DonGiaCuoiTuan = 450000,
+                TrangThai = TrangThaiSan.HoatDong,
+                GioMoCua = new(6, 0), GioDongCua = new(22, 0)
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static string[] TenSanTrongBang(string html)
+        => Regex.Matches(html, "<th scope=\"row\">([^<]*)</th>")
+            .Select(x => WebUtility.HtmlDecode(x.Groups[1].Value)).ToArray();
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("khachhang", false)]
+    [InlineData("admin", true)]
+    [InlineData("nhanvien", true)]
+    public async Task DanhSachVaHaiTrangGiuDungQuyenXem(string? taiKhoan, bool laQuanLy)
+    {
+        using var app = await TaoAppAsync(); using var client = app.TaoClient();
+        await ThemDuLieuDanhSachAsync(app);
+        if (taiKhoan is not null) await DangNhapAsync(app, client, taiKhoan);
+
+        // Tham số URL không được nâng quyền xem của khách.
+        var trang1 = await client.GetStringAsync("/SanTheThao?trang=1&laQuanLy=true");
+        var trang2 = await client.GetStringAsync("/SanTheThao?trang=2&laQuanLy=true");
+        var tenTrang1 = TenSanTrongBang(trang1);
+        var tenTrang2 = TenSanTrongBang(trang2);
+        var tatCaTen = tenTrang1.Concat(tenTrang2).ToArray();
+
+        Assert.Equal(10, tenTrang1.Length);
+        Assert.Equal(laQuanLy ? 5 : 2, tenTrang2.Length);
+        Assert.Equal(tatCaTen.Length, tatCaTen.Distinct().Count());
+        for (var i = 1; i <= 12; i++) Assert.Contains($"Sân hoạt động {i:00}", tatCaTen);
+        foreach (var tenAn in new[] { "Sân bảo trì", "Sân ngừng hoạt động", "Sân thuộc loại ngừng hoạt động" })
+            Assert.Equal(laQuanLy, tatCaTen.Contains(tenAn));
+        Assert.Contains("Trang 1 / 2", trang1);
+        Assert.Contains("Trang 2 / 2", trang2);
+        Assert.Equal(laQuanLy, trang1.Contains("/SanTheThao/Edit/"));
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("khachhang", false)]
+    [InlineData("admin", true)]
+    [InlineData("nhanvien", true)]
+    public async Task ChiTietGiuQuyenXemVaTinhGia(string? taiKhoan, bool laQuanLy)
+    {
+        using var app = await TaoAppAsync(); using var client = app.TaoClient();
+        await ThemDuLieuDanhSachAsync(app);
+        if (taiKhoan is not null) await DangNhapAsync(app, client, taiKhoan);
+        foreach (var id in new[] { 1, 2, 15 })
+        {
+            var response = await client.GetAsync($"/SanTheThao/Details/{id}?laQuanLy=true");
+            Assert.Equal(laQuanLy ? HttpStatusCode.OK : HttpStatusCode.NotFound, response.StatusCode);
+        }
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/SanTheThao/Details/999")).StatusCode);
+
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync(
+            "/SanTheThao/Details/3?ngay=2026-10-12&batDau=17:00&ketThuc=19:00"));
+        Assert.Contains("Sân hoạt động 01", html);
+        Assert.Contains("Bóng đá 5 người", html);
+        Assert.Contains("550.000", html);
+    }
+
+    [Theory]
+    [InlineData(-3, 1, 10)]
+    [InlineData(999, 2, 2)]
+    public async Task TrangNgoaiPhamViDuocDuaVeTrangHopLe(int trang, int trangDung, int soSan)
+    {
+        using var app = await TaoAppAsync(); using var client = app.TaoClient();
+        await ThemDuLieuDanhSachAsync(app);
+        var html = await client.GetStringAsync($"/SanTheThao?trang={trang}");
+        Assert.Contains($"Trang {trangDung} / 2", html);
+        Assert.Equal(soSan, TenSanTrongBang(html).Length);
+    }
+
+    [Fact]
+    public async Task KhachKhongCoSanDuocXemNhanTrangRong()
+    {
+        using var app = await TaoAppAsync(); using var client = app.TaoClient();
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/SanTheThao"));
+        Assert.Contains("Chưa có sân để hiển thị", html);
+        Assert.Empty(TenSanTrongBang(html));
     }
 }
