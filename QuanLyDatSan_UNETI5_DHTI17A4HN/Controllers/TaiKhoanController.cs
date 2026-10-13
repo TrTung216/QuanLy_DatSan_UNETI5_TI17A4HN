@@ -1,22 +1,19 @@
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ gọi service xác thực, giữ Session/cookie và đăng xuất.
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ đăng nhập/đăng xuất.
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. điều hướng sau đăng nhập theo vai trò (khách hàng, quản trị).
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class TaiKhoanController(ApplicationDbContext db, IPasswordHasher<TaiKhoan> hasher,
+public class TaiKhoanController(IXacThucTaiKhoanService service,
     ITaiKhoanHienTai taiKhoanHienTai, PhienBanQuyenTaiKhoan phienBanQuyen) : Controller
 {
     [AllowAnonymous, HttpGet]
@@ -31,24 +28,16 @@ public class TaiKhoanController(ApplicationDbContext db, IPasswordHasher<TaiKhoa
     public async Task<IActionResult> DangNhap(DangNhapViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid) return View(model);
-        var tenDangNhap = model.TenDangNhap.Trim();
-        var taiKhoan = await db.TaiKhoans.SingleOrDefaultAsync(x => x.TenDangNhap == tenDangNhap, cancellationToken);
-        var ketQua = PasswordVerificationResult.Failed;
-        if (taiKhoan is not null && taiKhoan.TrangThai == TrangThaiTaiKhoan.HoatDong && Enum.IsDefined(taiKhoan.VaiTro))
+        var ketQua = await service.XacThucAsync(new XacThucTaiKhoanYeuCau
         {
-            try { ketQua = hasher.VerifyHashedPassword(taiKhoan, taiKhoan.MatKhau, model.MatKhau); }
-            catch (FormatException) { /* Giá trị băm hỏng: từ chối đăng nhập. */ }
-        }
-        if (taiKhoan is null || ketQua == PasswordVerificationResult.Failed)
+            TenDangNhap = model.TenDangNhap, MatKhau = model.MatKhau
+        }, cancellationToken);
+        if (ketQua.MaLoi != MaLoiXacThuc.ThanhCong || ketQua.TaiKhoan is null)
         {
             ModelState.AddModelError(string.Empty, "Tên đăng nhập hoặc mật khẩu không đúng, hoặc tài khoản đã bị khóa.");
             return View(model);
         }
-        if (ketQua == PasswordVerificationResult.SuccessRehashNeeded)
-        {
-            taiKhoan.MatKhau = hasher.HashPassword(taiKhoan, model.MatKhau);
-            await db.SaveChangesAsync(cancellationToken);
-        }
+        var taiKhoan = ketQua.TaiKhoan;
         HttpContext.Session.Clear();
         // Mỗi lần đăng nhập có mã mới, cookie cũ không thể dùng lại sau khi đăng nhập lần sau.
         var maPhien = Guid.NewGuid().ToString("N");

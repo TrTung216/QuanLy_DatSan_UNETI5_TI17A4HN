@@ -103,6 +103,50 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
                         });
                 });
 
+            modelBuilder.Entity("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.DichVu", b =>
+                {
+                    b.Property<int>("MaDichVu")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaDichVu"));
+
+                    b.Property<decimal>("DonGia")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("DonViTinh")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("MoTa")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("TenDichVu")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .UseCollation("Vietnamese_100_CI_AS");
+
+                    b.Property<int>("TrangThai")
+                        .HasColumnType("int");
+
+                    b.HasKey("MaDichVu");
+
+                    b.ToTable("DichVu", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_DichVu_DonGia", "[DonGia] >= 0");
+
+                            t.HasCheckConstraint("CK_DichVu_DonViTinh", "LEN(LTRIM(RTRIM([DonViTinh]))) > 0");
+
+                            t.HasCheckConstraint("CK_DichVu_TenDichVu", "LEN(LTRIM(RTRIM([TenDichVu]))) > 0");
+
+                            t.HasCheckConstraint("CK_DichVu_TrangThai", "[TrangThai] IN (0, 1)");
+                        });
+                });
+
             modelBuilder.Entity("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.KhachHang", b =>
                 {
                     b.Property<int>("MaKhachHang")
