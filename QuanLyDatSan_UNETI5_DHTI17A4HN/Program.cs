@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Threading.RateLimiting;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITaiKhoanHienTai, TaiKhoanHienTai>();
 builder.Services.AddScoped<IPasswordHasher<TaiKhoan>, PasswordHasher<TaiKhoan>>();
 builder.Services.AddScoped<PhienDangNhap>();
+builder.Services.AddUngDungServices();
 builder.Services.AddSingleton<PhienBanQuyenTaiKhoan>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {

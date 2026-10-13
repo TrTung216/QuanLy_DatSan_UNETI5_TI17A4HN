@@ -95,6 +95,8 @@ public class QuanLyTaiKhoanTests
         form["HoTen"] = "  Tên mới  ";
         var tao = await GuiAsync(client, Goc + "/Tao", form);
         Assert.Equal(HttpStatusCode.Redirect, tao.StatusCode);
+        Assert.Equal(Goc + "/DanhSach", tao.Headers.Location!.OriginalString);
+        Assert.Contains("Đã tạo tài khoản.", WebUtility.HtmlDecode(await client.GetStringAsync(tao.Headers.Location)));
         var tk = await app.DocTaiKhoanAsync(4);
         Assert.Equal("Moi", tk.TenDangNhap);
         Assert.Equal("Tên mới", tk.HoTen);
@@ -110,7 +112,10 @@ public class QuanLyTaiKhoanTests
         var sua = SuaForm("3", "0");
         sua["TenDangNhap"] = "doi_ten_trai_phep";
         sua["MatKhau"] = "khong-duoc-luu";
-        Assert.Equal(HttpStatusCode.Redirect, (await GuiAsync(client, Goc + "/Sua/4", sua)).StatusCode);
+        var suaResponse = await GuiAsync(client, Goc + "/Sua/4", sua);
+        Assert.Equal(HttpStatusCode.Redirect, suaResponse.StatusCode);
+        Assert.Equal(Goc + "/DanhSach", suaResponse.Headers.Location!.OriginalString);
+        Assert.Contains("Đã cập nhật tài khoản.", WebUtility.HtmlDecode(await client.GetStringAsync(suaResponse.Headers.Location)));
         var updated = await app.DocTaiKhoanAsync(4);
         Assert.Equal(VaiTro.KhachHang, updated.VaiTro);
         Assert.Equal(TrangThaiTaiKhoan.BiKhoa, updated.TrangThai);
@@ -153,7 +158,13 @@ public class QuanLyTaiKhoanTests
         using var client = app.TaoClient();
         await DangNhapAsync(app, client, "admin");
         var trung = await GuiAsync(client, Goc + "/Tao", TaoForm(app, " ADMIN "));
-        Assert.Contains("Tên đăng nhập đã được sử dụng", WebUtility.HtmlDecode(await trung.Content.ReadAsStringAsync()));
+        Assert.Equal(HttpStatusCode.OK, trung.StatusCode);
+        var htmlTrung = WebUtility.HtmlDecode(await trung.Content.ReadAsStringAsync());
+        Assert.Contains("Tên đăng nhập đã được sử dụng.", htmlTrung);
+        Assert.Contains("value=\" ADMIN \"", htmlTrung);
+        Assert.Contains("value=\"Người dùng mới\"", htmlTrung);
+        Assert.DoesNotContain(app.MatKhau, htmlTrung);
+        Assert.Matches("<span[^>]*data-valmsg-for=\"TenDangNhap\"[^>]*>Tên đăng nhập đã được sử dụng\\.</span>", htmlTrung);
         foreach (var path in new[] { Goc + "/Tao", Goc + "/Sua/2" })
             Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync(path, new FormUrlEncodedContent(TaoForm(app)))).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync(Goc + "/Sua/999")).StatusCode);
@@ -176,7 +187,11 @@ public class QuanLyTaiKhoanTests
         var response = await GuiAsync(client, Goc + "/Sua/1", SuaForm(vaiTro, trangThai));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
-        Assert.Contains("Admin hoạt động cuối cùng", html);
+        Assert.Contains("Không thể khóa hoặc hạ quyền Admin hoạt động cuối cùng.", html);
+        Assert.Contains("Bạn không thể tự khóa hoặc hạ quyền tài khoản đang đăng nhập.", html);
+        Assert.Contains("action=\"/QuanLyTaiKhoan/Sua/1\"", html);
+        Assert.Contains("<strong>admin</strong>", html);
+        Assert.Contains("value=\"Họ tên cập nhật\"", html);
         var tk = await app.DocTaiKhoanAsync(1);
         Assert.Equal(VaiTro.Admin, tk.VaiTro);
         Assert.Equal(TrangThaiTaiKhoan.HoatDong, tk.TrangThai);
@@ -194,9 +209,16 @@ public class QuanLyTaiKhoanTests
         await DangNhapAsync(app, client, "admin");
         var form = SuaForm();
         form[key] = value;
+        form["TenDangNhap"] = "ten_gia_tu_client";
         var response = await GuiAsync(client, Goc + "/Sua/2", form);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("field-validation-error", await response.Content.ReadAsStringAsync());
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        Assert.Contains("field-validation-error", html);
+        Assert.Contains("action=\"/QuanLyTaiKhoan/Sua/2\"", html);
+        Assert.Contains("<strong>nhanvien</strong>", html);
+        Assert.DoesNotContain("ten_gia_tu_client", html);
+        Assert.Contains("value=\"Họ tên cập nhật\"", html);
+        Assert.Contains("value=\"capnhat@example.test\"", html);
         Assert.Equal("nhanvien", (await app.DocTaiKhoanAsync(2)).HoTen);
     }
 
