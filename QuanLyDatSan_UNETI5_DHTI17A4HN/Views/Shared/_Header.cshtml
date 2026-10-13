@@ -1,4 +1,5 @@
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ header, menu và thao tác tài khoản dùng chung. *@
+@* M2: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Thêm menu danh sách sân và thêm sân. *@
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @inject QuanLyDatSan_UNETI5_DHTI17A4HN.Services.ITaiKhoanHienTai TaiKhoanHienTai
 @{
@@ -21,14 +22,19 @@
     var menu = new List<(string Ten, string Controller, string Action)>
     {
         ("Trang chủ", "Home", "Index"),
-        ("Quyền riêng tư", "Home", "Privacy")
+        ("Danh sách sân", "SanTheThao", "Index")
     };
+    if (daDangNhap && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien))))
+    {
+        menu.Add(("Thêm sân", "SanTheThao", "Create"));
+    }
     if (daDangNhap)
     {
         menu.Add(("Thông tin tài khoản", "TaiKhoan", "ThongTin"));
         if (User.IsInRole(nameof(VaiTro.Admin)))
         {
             menu.Add(("Quản lý tài khoản", "QuanLyTaiKhoan", "DanhSach"));
+            menu.Add(("Loại sân", "LoaiSan", "DanhSach"));
             menu.Add(("Dịch vụ", "DichVu", "DanhSach"));
         }
     }
@@ -56,7 +62,7 @@
                     @foreach (var muc in menu)
                     {
                         var hienTai = LaTrang(muc.Controller, muc.Action)
-                            || (muc.Controller == "QuanLyTaiKhoan"
+                            || (muc.Controller is "QuanLyTaiKhoan" or "LoaiSan"
                                 && string.Equals(controller, muc.Controller, StringComparison.OrdinalIgnoreCase));
                         <li class="nav-item">
                             <a class="nav-link @(hienTai ? "active" : "")" aria-current="@(hienTai ? "page" : null)"

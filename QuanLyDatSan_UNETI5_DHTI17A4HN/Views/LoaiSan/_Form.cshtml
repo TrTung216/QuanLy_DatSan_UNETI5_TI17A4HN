@@ -1,0 +1,36 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ trường thêm/sửa loại sân. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.LoaiSanFormViewModel
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<div class="mb-3">
+    <label asp-for="TenLoai" class="form-label"></label> <span aria-hidden="true">*</span>
+    <input asp-for="TenLoai" class="form-control" maxlength="100" required />
+    <span asp-validation-for="TenLoai" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="MoTa" class="form-label"></label>
+    <textarea asp-for="MoTa" class="form-control" rows="4" maxlength="1000"></textarea>
+    <span asp-validation-for="MoTa" class="text-danger"></span>
+</div>
+<div class="row">
+    <div class="col-sm-6 mb-3">
+        <label asp-for="SoNguoiToiDa" class="form-label"></label> <span aria-hidden="true">*</span>
+        <input asp-for="SoNguoiToiDa" class="form-control" type="number" min="1" max="2147483647" step="1" required />
+        <span asp-validation-for="SoNguoiToiDa" class="text-danger"></span>
+    </div>
+    <div class="col-sm-6 mb-3">
+        <label asp-for="DonGiaTheoGio" class="form-label"></label> <span aria-hidden="true">*</span>
+        <input asp-for="DonGiaTheoGio" asp-format="{0:0}" class="form-control" type="number" min="0" max="9999999999999999" step="1" required aria-describedby="ghi-chu-gia" />
+        <span asp-validation-for="DonGiaTheoGio" class="text-danger"></span>
+    </div>
+</div>
+<p id="ghi-chu-gia" class="text-muted">Nhập số đồng nguyên. Đây là giá mặc định khi tạo sân; thay đổi không cập nhật giá các sân đã có.</p>
+<div class="mb-3">
+    <label asp-for="TrangThai" class="form-label"></label> <span aria-hidden="true">*</span>
+    <select asp-for="TrangThai" class="form-select" required aria-describedby="ghi-chu-trang-thai">
+        <option value="">-- Chọn trạng thái --</option>
+        <option value="1">Hoạt động</option>
+        <option value="0">Ngừng hoạt động</option>
+    </select>
+    <span asp-validation-for="TrangThai" class="text-danger"></span>
+    <p id="ghi-chu-trang-thai" class="form-text">Ngừng hoạt động giữ nguyên các sân và lịch sử liên quan.</p>
+</div>

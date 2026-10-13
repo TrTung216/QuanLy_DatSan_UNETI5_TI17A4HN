@@ -1,0 +1,25 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ chi tiết loại sân và số sân liên quan. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.LoaiSanChiTietViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using System.Globalization
+@{
+    ViewData["Title"] = "Chi tiết loại sân";
+    var hoatDong = Model.TrangThai == TrangThaiLoaiSan.HoatDong;
+}
+<div class="ql-page-header"><h1>@Model.TenLoai</h1><p class="ql-subtitle">Thông tin danh mục loại sân.</p></div>
+<section class="ql-panel ql-details" aria-label="Chi tiết loại sân">
+    <dl class="row">
+        <dt class="col-sm-4">Tên loại sân</dt><dd class="col-sm-8">@Model.TenLoai</dd>
+        <dt class="col-sm-4">Mô tả</dt><dd class="col-sm-8 text-break" style="white-space: pre-line">@(Model.MoTa ?? "Chưa có mô tả")</dd>
+        <dt class="col-sm-4">Số người tối đa</dt><dd class="col-sm-8">@Model.SoNguoiToiDa</dd>
+        <dt class="col-sm-4">Đơn giá mặc định</dt><dd class="col-sm-8">@Model.DonGiaTheoGio.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫/giờ</dd>
+        <dt class="col-sm-4">Trạng thái</dt><dd class="col-sm-8"><span class="ql-status @(hoatDong ? "ql-status--completed" : "ql-status--cancelled")">@(hoatDong ? "Hoạt động" : "Ngừng hoạt động")</span></dd>
+        <dt class="col-sm-4">Số sân đang tham chiếu</dt><dd class="col-sm-8">@Model.SoSan</dd>
+    </dl>
+    <p class="text-muted">Cập nhật giá loại sân không thay đổi giá sân hoặc giao dịch đã phát sinh.</p>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" asp-action="Sua" asp-route-id="@Model.MaLoaiSan">Cập nhật / đổi trạng thái</a>
+        <a class="btn btn-outline-danger" asp-action="Xoa" asp-route-id="@Model.MaLoaiSan">Kiểm tra xóa</a>
+        <a class="btn btn-outline-secondary" asp-action="DanhSach">Về danh sách</a>
+    </div>
+</section>

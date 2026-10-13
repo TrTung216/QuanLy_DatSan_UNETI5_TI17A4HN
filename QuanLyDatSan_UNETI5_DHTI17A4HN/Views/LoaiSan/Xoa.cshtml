@@ -1,0 +1,25 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ xác nhận xóa và cảnh báo tham chiếu. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.LoaiSanChiTietViewModel
+@{ ViewData["Title"] = "Xóa loại sân"; }
+<div class="ql-page-header"><h1>@ViewData["Title"]</h1><p class="ql-subtitle">@Model.TenLoai</p></div>
+<section class="ql-panel" aria-label="Xác nhận xóa loại sân">
+    @if (Model.SoSan > 0)
+    {
+        <div class="alert alert-warning" role="alert">
+            <strong>Không thể xóa:</strong> có @Model.SoSan sân đang tham chiếu loại sân này, kể cả sân đã ngừng hoạt động.
+            Hãy đổi trạng thái loại sân sang “Ngừng hoạt động” nếu không còn sử dụng.
+        </div>
+        <a class="btn btn-primary" asp-action="Sua" asp-route-id="@Model.MaLoaiSan">Cập nhật trạng thái</a>
+    }
+    else
+    {
+        <p>Bạn có chắc muốn xóa loại sân <strong>@Model.TenLoai</strong>? Thao tác này không thể hoàn tác từ giao diện.</p>
+        <p class="text-muted">Hệ thống kiểm tra lại tham chiếu khi bạn xác nhận.</p>
+        <form asp-action="Xoa" asp-route-id="@Model.MaLoaiSan" method="post" asp-antiforgery="true" data-loai-san-form>
+            <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+            <a class="btn btn-outline-secondary" asp-action="ChiTiet" asp-route-id="@Model.MaLoaiSan">Hủy</a>
+        </form>
+    }
+    <a class="d-inline-block mt-3" asp-action="DanhSach">Về danh sách loại sân</a>
+</section>
+@section Scripts { <script src="~/js/loai-san.js" asp-append-version="true"></script> }
