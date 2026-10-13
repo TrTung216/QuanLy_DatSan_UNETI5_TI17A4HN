@@ -10,6 +10,8 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
 using Xunit;
@@ -18,6 +20,22 @@ namespace QuanLyDatSan.M103.Tests;
 
 public class ServiceM1Tests
 {
+    [Theory]
+    [InlineData(typeof(ILoaiSanService))]
+    [InlineData(typeof(IQuanLyTaiKhoanService))]
+    [InlineData(typeof(IXacThucTaiKhoanService))]
+    [InlineData(typeof(IDichVuService))]
+    public void DiUngDungDangKyMotLanVaDungVongDoiScoped(Type kieuService)
+    {
+        using var app = new UngDungKiemThu();
+        using var scope1 = app.Services.CreateScope();
+        using var scope2 = app.Services.CreateScope();
+        var service = Assert.Single(scope1.ServiceProvider.GetServices(kieuService));
+        Assert.NotNull(service);
+        Assert.Same(service, scope1.ServiceProvider.GetRequiredService(kieuService));
+        Assert.NotSame(service, scope2.ServiceProvider.GetRequiredService(kieuService));
+    }
+
     private sealed class NguoiThaoTac(int? id) : ITaiKhoanHienTai
     {
         public int? MaTaiKhoan => id;
@@ -39,6 +57,14 @@ public class ServiceM1Tests
         var ketQua = await service.SuaAsync(3, new("Không được lưu", "test@example.test", VaiTro.Admin, TrangThaiTaiKhoan.HoatDong), default);
         Assert.Contains(MaLoiTaiKhoan.KhongDuQuyen, ketQua.Loi);
         Assert.Equal(VaiTro.KhachHang, (await app.DocTaiKhoanAsync(3)).VaiTro);
+        Assert.Null(db.Database.CurrentTransaction);
+        var tao = await service.TaoAsync(new TaoTaiKhoan
+        {
+            TenDangNhap = "khong_duoc_tao", MatKhau = app.MatKhau,
+            HoTen = "Không được lưu", Email = "test@example.test", VaiTro = VaiTro.Admin
+        }, default);
+        Assert.Contains(MaLoiTaiKhoan.KhongDuQuyen, tao.Loi);
+        Assert.Equal(3, await db.TaiKhoans.CountAsync());
         Assert.Null(db.Database.CurrentTransaction);
     }
 
@@ -158,6 +184,77 @@ public class ServiceM1Tests
         { ["__RequestVerificationToken"] = Token(html) }));
         Assert.Equal("/TaiKhoan/DangNhap", logout.Headers.Location!.OriginalString);
         Assert.Contains("/TaiKhoan/DangNhap", (await client.GetAsync("/TaiKhoan/ThongTin")).Headers.Location!.OriginalString);
+    }
+
+    [Theory]
+    [InlineData("sai_mat_khau")]
+    [InlineData("khong_ton_tai")]
+    [InlineData("bi_khoa")]
+    [InlineData("hash_hong")]
+    public async Task DangNhapHttpGiuLoiChungVaFormKhongTaoPhien(string tinhHuong)
+    {
+        using var app = new UngDungKiemThu(); await app.KhoiTaoAsync();
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var tk = await db.TaiKhoans.SingleAsync(x => x.MaTaiKhoan == 2);
+            if (tinhHuong == "bi_khoa") tk.TrangThai = TrangThaiTaiKhoan.BiKhoa;
+            if (tinhHuong == "hash_hong") tk.MatKhau = "khong-phai-base64";
+            await db.SaveChangesAsync();
+        }
+        var hashTruoc = (await app.DocTaiKhoanAsync(2)).MatKhau;
+        using var client = app.TaoClient();
+        var ten = tinhHuong == "khong_ton_tai" ? "khongco" : "nhanvien";
+        var matKhau = tinhHuong == "sai_mat_khau" ? app.MatKhau + "sai" : app.MatKhau;
+        var response = await client.PostAsync("/TaiKhoan/DangNhap", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["TenDangNhap"] = ten, ["MatKhau"] = matKhau, ["ReturnUrl"] = "/LoaiSan/DanhSach",
+            ["__RequestVerificationToken"] = Token(await client.GetStringAsync("/TaiKhoan/DangNhap"))
+        }));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        Assert.Contains("Tên đăng nhập hoặc mật khẩu không đúng, hoặc tài khoản đã bị khóa.", html);
+        Assert.Contains($"value=\"{ten}\"", html);
+        Assert.Contains("value=\"/LoaiSan/DanhSach\"", html);
+        Assert.DoesNotContain(matKhau, html);
+        Assert.DoesNotContain(hashTruoc, html);
+        Assert.Equal(hashTruoc, (await app.DocTaiKhoanAsync(2)).MatKhau);
+        var thongTin = await client.GetAsync("/TaiKhoan/ThongTin");
+        Assert.Equal(HttpStatusCode.Redirect, thongTin.StatusCode);
+        Assert.Contains("/TaiKhoan/DangNhap", thongTin.Headers.Location!.OriginalString);
+    }
+
+    [Fact]
+    public async Task DangNhapHttpThieuAntiforgeryKhongTaoPhien()
+    {
+        using var app = new UngDungKiemThu(); await app.KhoiTaoAsync();
+        using var client = app.TaoClient();
+        var response = await client.PostAsync("/TaiKhoan/DangNhap", new FormUrlEncodedContent(new Dictionary<string, string>
+        { ["TenDangNhap"] = "admin", ["MatKhau"] = app.MatKhau }));
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var thongTin = await client.GetAsync("/TaiKhoan/ThongTin");
+        Assert.Equal(HttpStatusCode.Redirect, thongTin.StatusCode);
+        Assert.Contains("/TaiKhoan/DangNhap", thongTin.Headers.Location!.OriginalString);
+    }
+
+    [Fact]
+    public async Task DangNhapHttpGiuGioiHanMuoiLanThu()
+    {
+        using var app = new UngDungKiemThu();
+        using var client = app.TaoClient();
+        var form = new Dictionary<string, string>
+        {
+            ["TenDangNhap"] = "khongco", ["MatKhau"] = app.MatKhau,
+            ["__RequestVerificationToken"] = Token(await client.GetStringAsync("/TaiKhoan/DangNhap"))
+        };
+        for (var lan = 0; lan < 10; lan++)
+        {
+            using var response = await client.PostAsync("/TaiKhoan/DangNhap", new FormUrlEncodedContent(form));
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+        var biChan = await client.PostAsync("/TaiKhoan/DangNhap", new FormUrlEncodedContent(form));
+        Assert.Equal(HttpStatusCode.TooManyRequests, biChan.StatusCode);
+        Assert.Equal("Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau một phút.", await biChan.Content.ReadAsStringAsync());
     }
 
     private static string Token(string html) => WebUtility.HtmlDecode(

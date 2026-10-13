@@ -129,7 +129,8 @@ public class LoaiSanTests
     {
         using var app = await TaoAppAsync(); using var client = app.TaoClient(); await DangNhapAsync(app, client);
         var form = Form(); form["TenLoai"] = "  Loai moi  "; form["MaLoaiSan"] = "1";
-        Assert.Equal(HttpStatusCode.Redirect, (await PostAsync(client, "/LoaiSan/Tao", form)).StatusCode);
+        var tao = await PostAsync(client, "/LoaiSan/Tao", form);
+        Assert.Equal(HttpStatusCode.Redirect, tao.StatusCode);
         int id;
         using (var scope = app.Services.CreateScope())
         {
@@ -137,7 +138,9 @@ public class LoaiSanTests
             var loai = await db.LoaiSans.SingleAsync(x => x.TenLoai == "Loai moi");
             id = loai.MaLoaiSan; Assert.NotEqual(1, id);
         }
-        var detail = await client.GetStringAsync($"/LoaiSan/ChiTiet/{id}");
+        Assert.Equal($"/LoaiSan/ChiTiet/{id}", tao.Headers.Location!.OriginalString);
+        var detail = WebUtility.HtmlDecode(await client.GetStringAsync(tao.Headers.Location));
+        Assert.Contains("Đã thêm loại sân.", detail);
         Assert.Contains("Loai moi", detail);
         Assert.Matches("nav-link active[^>]*aria-current=\"page\"[^>]*href=\"/LoaiSan/DanhSach\"", detail);
         // Decimal đọc từ DB có thể mang scale .0; jQuery step=1 cần giá được render không có phần lẻ.
@@ -145,11 +148,17 @@ public class LoaiSanTests
         var priceInput = Regex.Match(editHtml, "<input[^>]*id=\"DonGiaTheoGio\"[^>]*>").Value;
         Assert.Contains("value=\"150000\"", priceInput);
         form = Form(); form["TrangThai"] = "0";
-        Assert.Equal(HttpStatusCode.Redirect, (await PostAsync(client, $"/LoaiSan/Sua/{id}", form)).StatusCode);
+        var sua = await PostAsync(client, $"/LoaiSan/Sua/{id}", form);
+        Assert.Equal(HttpStatusCode.Redirect, sua.StatusCode);
+        Assert.Equal($"/LoaiSan/ChiTiet/{id}", sua.Headers.Location!.OriginalString);
+        Assert.Contains("Đã cập nhật loại sân.", WebUtility.HtmlDecode(await client.GetStringAsync(sua.Headers.Location)));
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/LoaiSan/Xoa/{id}")).StatusCode);
         using (var scope = app.Services.CreateScope())
             Assert.Equal(TrangThaiLoaiSan.NgungHoatDong, (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoaiSans.FindAsync(id))!.TrangThai);
-        Assert.Equal(HttpStatusCode.Redirect, (await PostAsync(client, $"/LoaiSan/Xoa/{id}", [])).StatusCode);
+        var xoa = await PostAsync(client, $"/LoaiSan/Xoa/{id}", []);
+        Assert.Equal(HttpStatusCode.Redirect, xoa.StatusCode);
+        Assert.Equal("/LoaiSan/DanhSach", xoa.Headers.Location!.OriginalString);
+        Assert.Contains("Đã xóa loại sân chưa được tham chiếu.", WebUtility.HtmlDecode(await client.GetStringAsync(xoa.Headers.Location)));
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/LoaiSan/ChiTiet/{id}")).StatusCode);
     }
 
@@ -191,8 +200,19 @@ public class LoaiSanTests
             var form = Form(); form["TenLoai"] = "  LOAI DA CO SAN  ";
             var response = await PostAsync(client, path, form);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Contains("Tên loại sân đã được sử dụng", WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()));
+            var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            Assert.Contains("Tên loại sân đã được sử dụng.", html);
+            Assert.Contains($"action=\"{path}\"", html);
+            Assert.Contains("value=\"  LOAI DA CO SAN  \"", html);
+            Assert.Contains("value=\"12\"", html);
+            Assert.Contains("value=\"150000\"", html);
+            Assert.Matches("<textarea[^>]*id=\"MoTa\"[^>]*>\\s*Mo ta</textarea>", html);
+            Assert.Matches("<span[^>]*data-valmsg-for=\"TenLoai\"[^>]*>Tên loại sân đã được sử dụng\\.</span>", html);
         }
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(2, await db.LoaiSans.CountAsync());
+        Assert.Equal("Loai chua su dung", (await db.LoaiSans.FindAsync(2))!.TenLoai);
     }
 
     [Fact]
@@ -205,6 +225,8 @@ public class LoaiSanTests
         Assert.DoesNotContain("Xác nhận xóa", WebUtility.HtmlDecode(Regex.Replace(html, "aria-label=\"[^\"]*\"", "")));
         var response = await PostAsync(client, "/LoaiSan/Xoa/1", []);
         Assert.Equal("/LoaiSan/Xoa/1", response.Headers.Location!.OriginalString);
+        Assert.Contains("Không thể xóa loại sân đang được tham chiếu. Bạn có thể chuyển sang Ngừng hoạt động để giữ dữ liệu liên quan.",
+            WebUtility.HtmlDecode(await client.GetStringAsync(response.Headers.Location)));
         using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Equal(TrangThaiLoaiSan.NgungHoatDong, (await db.LoaiSans.FindAsync(1))!.TrangThai);
         var san = (await db.SanTheThaos.FindAsync(1))!;
