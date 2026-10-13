@@ -3,9 +3,9 @@
 // Phát hiện mã lỗi chưa được ánh xạ hoặc thiếu dữ liệu để tạo thông báo.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
-namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
+namespace QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 
-public static class ThongBaoLoiDatSan
+public static class ThongBaoLoiDatSanViewModel
 {
     public static (string Truong, string ThongBao) AnhXa(LoiDatSan loi) => loi.Ma switch
     {

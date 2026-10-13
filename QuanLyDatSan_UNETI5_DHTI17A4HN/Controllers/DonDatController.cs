@@ -89,7 +89,7 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
             model.GioBatDau!.Value, model.GioKetThuc!.Value), cancellationToken);
         if (!ketQua.ThanhCong)
         {
-            var loi = ThongBaoLoiDatSan.AnhXa(ketQua.Loi!);
+            var loi = ThongBaoLoiDatSanViewModel.AnhXa(ketQua.Loi!);
             ModelState.AddModelError(loi.Truong, loi.ThongBao);
             await NapDanhSachSanAsync(model, cancellationToken);
             return View(model);

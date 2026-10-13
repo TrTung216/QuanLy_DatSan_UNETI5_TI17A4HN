@@ -2,7 +2,7 @@
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
@@ -27,10 +27,10 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
             Assert.False(KetQuaTaoDon.ThatBai(error).ThanhCong);
             Assert.NotNull(KetQuaTaoDon.ThatBai(error).Loi);
             Assert.False(KetQuaXuLyDon.ThatBai(code).ThanhCong);
-            Assert.False(string.IsNullOrWhiteSpace(ThongBaoLoiDatSan.AnhXa(error).ThongBao));
+            Assert.False(string.IsNullOrWhiteSpace(ThongBaoLoiDatSanViewModel.AnhXa(error).ThongBao));
         }
-        Assert.Throws<InvalidOperationException>(() => ThongBaoLoiDatSan.AnhXa(new((MaLoiDatSan)999)));
-        Assert.Throws<InvalidOperationException>(() => ThongBaoLoiDatSan.AnhXa(new(MaLoiDatSan.NgoaiGioKhiTao)));
+        Assert.Throws<InvalidOperationException>(() => ThongBaoLoiDatSanViewModel.AnhXa(new((MaLoiDatSan)999)));
+        Assert.Throws<InvalidOperationException>(() => ThongBaoLoiDatSanViewModel.AnhXa(new(MaLoiDatSan.NgoaiGioKhiTao)));
     }
 
     [Fact]

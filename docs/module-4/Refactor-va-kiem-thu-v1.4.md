@@ -25,7 +25,7 @@ chưa phải nghiệm thu toàn bộ giao diện M4 cho nhân viên.
 | File | Trách nhiệm |
 | --- | --- |
 | `Controllers/DonDatController.cs` | Phân quyền, ModelState, ánh xạ DTO sang ViewModel, View/redirect/TempData |
-| `Controllers/ThongBaoLoiDatSan.cs` | Ánh xạ đầy đủ mã lỗi sang trường form và thông báo tiếng Việt |
+| `ViewModels/ThongBaoLoiDatSanViewModel.cs` | Ánh xạ đầy đủ mã lỗi sang trường form và thông báo tiếng Việt |
 | `Services/DatSan/IDatSanService.cs` | Interface dùng chung M3–M4 |
 | `Services/DatSan/HopDongDatSan.cs` | DTO yêu cầu/kết quả, mã lỗi, kết quả nghiệp vụ có invariant |
 | `Services/DatSanService.cs` | Tạo đơn, kiểm tra giao lịch, khóa sân, công thức dự kiến hiện có |
