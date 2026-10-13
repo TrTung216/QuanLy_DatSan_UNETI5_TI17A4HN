@@ -1,85 +1,91 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. xem và sửa hồ sơ cá nhân của khách hàng đang đăng nhập.
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyKhachHang;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize(Roles = nameof(VaiTro.KhachHang))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class HoSoController(ApplicationDbContext db, ITaiKhoanHienTai taiKhoanHienTai) : Controller
+public class HoSoController(IKhachHangService khachHangService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var khachHang = await LayHoSoAsync(cancellationToken);
-        if (khachHang is null) return KhongCoHoSo();
-        return View(TaoViewModel(khachHang));
+        var hoSo = await khachHangService.LayHoSoAsync(cancellationToken);
+        if (hoSo is null) return KhongCoHoSo();
+        return View(TaoViewModel(hoSo));
     }
 
     [HttpGet]
     public async Task<IActionResult> Sua(CancellationToken cancellationToken)
     {
-        var khachHang = await LayHoSoAsync(cancellationToken);
-        if (khachHang is null) return KhongCoHoSo();
-        if (khachHang.TrangThai != TrangThaiKhachHang.HoatDong) return HoSoBiKhoa();
-        return View(TaoViewModel(khachHang));
+        var hoSo = await khachHangService.LayHoSoAsync(cancellationToken);
+        if (hoSo is null) return KhongCoHoSo();
+        if (hoSo.TrangThai != TrangThaiKhachHang.HoatDong) return HoSoBiKhoa();
+        return View(TaoViewModel(hoSo));
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Sua(HoSoViewModel model, CancellationToken cancellationToken)
     {
-        var khachHang = await LayHoSoAsync(cancellationToken);
-        if (khachHang is null) return KhongCoHoSo();
-        if (khachHang.TrangThai != TrangThaiKhachHang.HoatDong) return HoSoBiKhoa();
+        var hoSo = await khachHangService.LayHoSoAsync(cancellationToken);
+        if (hoSo is null) return KhongCoHoSo();
+        if (hoSo.TrangThai != TrangThaiKhachHang.HoatDong) return HoSoBiKhoa();
 
         if (!ModelState.IsValid)
         {
-            model.TenDangNhap = khachHang.TaiKhoan.TenDangNhap;
-            model.NgayDangKy = khachHang.NgayDangKy;
-            model.DiemTichLuy = khachHang.DiemTichLuy;
+            GanTruongChiDoc(model, hoSo);
             return View(model);
         }
 
-        var hoTen = model.HoTen.Trim();
-        var email = model.Email.Trim();
-        khachHang.HoTen = hoTen;
-        khachHang.Email = email;
-        khachHang.SoDienThoai = model.SoDienThoai.Trim();
-        khachHang.NgaySinh = model.NgaySinh;
-        khachHang.GioiTinh = model.GioiTinh;
-        khachHang.DiaChi = string.IsNullOrWhiteSpace(model.DiaChi) ? null : model.DiaChi.Trim();
-        khachHang.TaiKhoan.HoTen = hoTen;
-        khachHang.TaiKhoan.Email = email;
-        await db.SaveChangesAsync(cancellationToken);
+        var dto = new CapNhatHoSoDto(model.HoTen, model.Email, model.SoDienThoai, model.NgaySinh,
+            model.GioiTinh, model.DiaChi);
+        var ketQua = await khachHangService.CapNhatHoSoAsync(dto, cancellationToken);
 
-        TempData["Success"] = "Đã cập nhật hồ sơ.";
-        return RedirectToAction(nameof(Index));
+        if (ketQua.ThanhCong)
+        {
+            TempData["Success"] = "Đã cập nhật hồ sơ.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        switch (ketQua.Loi)
+        {
+            case MaLoiHoSo.KhongTonTai:
+                return KhongCoHoSo();
+            case MaLoiHoSo.HoSoBiKhoa:
+                return HoSoBiKhoa();
+            case MaLoiHoSo.NgaySinhKhongHopLe:
+                ModelState.AddModelError(nameof(model.NgaySinh), "Ngày sinh không hợp lệ.");
+                GanTruongChiDoc(model, hoSo);
+                return View(model);
+            default:
+                // Mã lỗi chưa được ánh xạ là lỗi lập trình, để xử lý lỗi chung ghi nhận.
+                throw new InvalidOperationException($"Chưa ánh xạ mã lỗi hồ sơ: {ketQua.Loi}.");
+        }
     }
 
-    private Task<KhachHang?> LayHoSoAsync(CancellationToken cancellationToken)
+    private static HoSoViewModel TaoViewModel(HoSoKhachDto hoSo) => new()
     {
-        var maTaiKhoan = taiKhoanHienTai.MaTaiKhoan ?? 0;
-        return db.KhachHangs.Include(x => x.TaiKhoan)
-            .SingleOrDefaultAsync(x => x.MaTaiKhoan == maTaiKhoan, cancellationToken);
-    }
-
-    private static HoSoViewModel TaoViewModel(KhachHang khachHang) => new()
-    {
-        TenDangNhap = khachHang.TaiKhoan.TenDangNhap,
-        HoTen = khachHang.HoTen,
-        Email = khachHang.Email,
-        SoDienThoai = khachHang.SoDienThoai,
-        NgaySinh = khachHang.NgaySinh,
-        GioiTinh = khachHang.GioiTinh ?? GioiTinh.KhongKhaiBao,
-        DiaChi = khachHang.DiaChi,
-        NgayDangKy = khachHang.NgayDangKy,
-        DiemTichLuy = khachHang.DiemTichLuy
+        TenDangNhap = hoSo.TenDangNhap,
+        HoTen = hoSo.HoTen,
+        Email = hoSo.Email,
+        SoDienThoai = hoSo.SoDienThoai,
+        NgaySinh = hoSo.NgaySinh,
+        GioiTinh = hoSo.GioiTinh,
+        DiaChi = hoSo.DiaChi,
+        NgayDangKy = hoSo.NgayDangKy,
+        DiemTichLuy = hoSo.DiemTichLuy
     };
+
+    // Các trường BindNever không đi theo form nên phải nạp lại khi hiển thị lại form lỗi.
+    private static void GanTruongChiDoc(HoSoViewModel model, HoSoKhachDto hoSo)
+    {
+        model.TenDangNhap = hoSo.TenDangNhap;
+        model.NgayDangKy = hoSo.NgayDangKy;
+        model.DiemTichLuy = hoSo.DiemTichLuy;
+    }
 
     private RedirectToActionResult KhongCoHoSo()
     {
