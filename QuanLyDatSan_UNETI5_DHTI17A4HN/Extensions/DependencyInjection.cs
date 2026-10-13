@@ -44,7 +44,7 @@ public static class DependencyInjection
         services.AddScoped<ISanTheThaoService, SanTheThaoService>();
         return services;
     }
-}
+    
     // M3: hồ sơ khách hàng
     private static IServiceCollection AddModuleKhachHang(this IServiceCollection services)
     {
