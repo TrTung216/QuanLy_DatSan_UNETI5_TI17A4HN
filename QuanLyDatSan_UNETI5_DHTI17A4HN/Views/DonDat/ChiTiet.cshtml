@@ -2,9 +2,12 @@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ChiTietDonViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
 @{ ViewData["Title"] = "Đơn đặt sân #" + Model.MaDatSan; }
-<h1 class="h3 mb-3">Đơn đặt sân #@Model.MaDatSan
-    <span class="badge @HienThiDatSan.LopMau(Model.TrangThai)">@HienThiDatSan.TenTrangThai(Model.TrangThai)</span>
-</h1>
+<div class="ql-page-header">
+    <p class="ql-eyebrow">Khách hàng</p>
+    <h1>Đơn đặt sân #@Model.MaDatSan</h1>
+    <p class="mt-2 mb-0"><span class="@HienThiDatSan.LopMau(Model.TrangThai)">@HienThiDatSan.TenTrangThai(Model.TrangThai)</span></p>
+</div>
+<section class="ql-panel ql-details" aria-label="Chi tiết đơn đặt sân">
 <dl class="row">
     <dt class="col-sm-3">Sân</dt><dd class="col-sm-9">@Model.TenSan (@Model.TenLoai)</dd>
     <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9">@Model.DiaChi</dd>
@@ -38,3 +41,4 @@
     }
 </dl>
 <a asp-action="Index" class="btn btn-outline-secondary">Quay lại lịch của tôi</a>
+</section>

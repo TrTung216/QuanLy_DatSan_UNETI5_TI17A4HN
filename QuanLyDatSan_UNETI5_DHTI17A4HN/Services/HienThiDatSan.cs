@@ -21,11 +21,11 @@ public static class HienThiDatSan
 
     public static string LopMau(TrangThaiDatSan trangThai) => trangThai switch
     {
-        TrangThaiDatSan.ChoXuLy => "bg-warning text-dark",
-        TrangThaiDatSan.DangXuLy => "bg-primary",
-        TrangThaiDatSan.HoanThanh => "bg-success",
-        TrangThaiDatSan.DaHuy => "bg-secondary",
-        TrangThaiDatSan.TuChoi => "bg-danger",
-        _ => "bg-light text-dark"
+        TrangThaiDatSan.ChoXuLy => "ql-status ql-status--waiting",
+        TrangThaiDatSan.DangXuLy => "ql-status ql-status--confirmed",
+        TrangThaiDatSan.HoanThanh => "ql-status ql-status--completed",
+        TrangThaiDatSan.DaHuy => "ql-status ql-status--cancelled",
+        TrangThaiDatSan.TuChoi => "ql-status ql-status--rejected",
+        _ => "ql-status"
     };
 }

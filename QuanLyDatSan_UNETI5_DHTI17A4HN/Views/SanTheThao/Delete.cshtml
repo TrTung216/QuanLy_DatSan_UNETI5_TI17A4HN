@@ -1,5 +1,5 @@
 @* Họ tên: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Xác nhận xóa sân. *@
-@model SanTheThao
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.SanChiTietViewModel
 @using System.Globalization
 @{
     ViewData["Title"] = "Xóa sân";
@@ -18,7 +18,7 @@
     <dl class="row">
         <dt class="col-sm-3">Mã sân</dt><dd class="col-sm-9">@Model.MaSan</dd>
         <dt class="col-sm-3">Tên sân</dt><dd class="col-sm-9 text-break">@Model.TenSan</dd>
-        <dt class="col-sm-3">Loại sân</dt><dd class="col-sm-9">@Model.LoaiSan.TenLoai</dd>
+        <dt class="col-sm-3">Loại sân</dt><dd class="col-sm-9">@Model.TenLoai</dd>
         <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9 text-break">@Model.DiaChi</dd>
         <dt class="col-sm-3">Giá theo giờ</dt><dd class="col-sm-9">@Model.DonGia.ToString("N0", vanHoa) ₫</dd>
         <dt class="col-sm-3">Giờ phục vụ</dt>

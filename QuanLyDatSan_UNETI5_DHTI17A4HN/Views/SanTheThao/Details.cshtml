@@ -1,5 +1,5 @@
 @* Họ tên: Phan Giang Tâm; MSSV: 23103100196. Nội dung: Trang chi tiết sân. *@
-@model SanTheThao
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.SanChiTietViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using System.Globalization
 @{
@@ -14,12 +14,12 @@
 }
 <div class="ql-page-header">
     <h1>@Model.TenSan</h1>
-    <p class="ql-subtitle">@Model.LoaiSan.TenLoai · @trangThai</p>
+    <p class="ql-subtitle">@Model.TenLoai · @trangThai</p>
 </div>
 <section class="ql-panel" aria-label="Thông tin sân">
     <h2 class="h5 mb-4">Thông tin sân</h2>
     <dl class="row">
-        <dt class="col-sm-3">Loại sân</dt><dd class="col-sm-9">@Model.LoaiSan.TenLoai</dd>
+        <dt class="col-sm-3">Loại sân</dt><dd class="col-sm-9">@Model.TenLoai</dd>
         <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9 text-break">@Model.DiaChi</dd>
         <dt class="col-sm-3">Tiện ích</dt>
         <dd class="col-sm-9 text-break">@(string.IsNullOrWhiteSpace(Model.TienIch) ? "Chưa cập nhật" : Model.TienIch)</dd>

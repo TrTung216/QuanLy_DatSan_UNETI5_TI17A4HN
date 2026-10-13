@@ -1,6 +1,9 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. các trường hồ sơ khách hàng dùng chung cho đăng ký và sửa hồ sơ. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ThongTinKhachViewModel
+@using System.Globalization
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@inject IDongHo DongHo
 <div class="mb-3">
     <label asp-for="HoTen" class="form-label"></label> <span aria-hidden="true">*</span>
     <input asp-for="HoTen" class="form-control" autocomplete="name" maxlength="100" required />
@@ -19,7 +22,9 @@
 <div class="row">
     <div class="col-md-6 mb-3">
         <label asp-for="NgaySinh" class="form-label"></label>
-        <input asp-for="NgaySinh" class="form-control" autocomplete="bday" />
+        <input type="date" id="NgaySinh" name="NgaySinh" class="form-control" autocomplete="bday"
+               min="1900-01-01" max="@DongHo.HomNay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+               value="@(Model.NgaySinh?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))" />
         <span asp-validation-for="NgaySinh" class="text-danger"></span>
     </div>
     <div class="col-md-6 mb-3">

@@ -3,6 +3,11 @@
 Ngày thực hiện: 13/10/2026. Codex hỗ trợ theo yêu cầu người dùng.
 Đối chiếu quy ước nhóm v1.4, đặc biệt mục 17.
 
+> Cập nhật sau đợt refactor: đã bổ sung màn hình nhân viên/Admin theo issue #22.
+> Xem [M4-02 — Danh sách và chi tiết đơn](M4-02-Danh-sach-va-chi-tiet-don.md)
+> để biết chức năng hiện tại và kết quả hồi quy 231 test. Phạm vi và số liệu dưới đây
+> ghi nhận thời điểm refactor ban đầu.
+
 ## 1. Phạm vi thực tế
 
 Code M4 hiện có nằm trong `DatSanService`: xác nhận, từ chối, khách hủy,

@@ -1,9 +1,13 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. giao diện đăng ký tài khoản khách hàng. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DangKyKhachViewModel
 @{ ViewData["Title"] = "Đăng ký khách hàng"; }
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <h1 class="h3 mb-3">Đăng ký tài khoản khách hàng</h1>
+<div class="ql-form-page">
+    <div class="ql-page-header">
+        <p class="ql-eyebrow">Khách hàng</p>
+        <h1>Đăng ký tài khoản khách hàng</h1>
+        <p class="ql-subtitle">Tạo tài khoản để đặt sân và theo dõi lịch của bạn. Các trường có dấu * là bắt buộc.</p>
+    </div>
+    <section class="ql-panel" aria-label="Biểu mẫu đăng ký">
         <form asp-action="DangKy" method="post" id="dang-ky">
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="mb-3">
@@ -27,7 +31,7 @@
             <button type="submit" class="btn btn-primary">Đăng ký</button>
             <a asp-controller="TaiKhoan" asp-action="DangNhap" class="btn btn-link">Đã có tài khoản</a>
         </form>
-    </div>
+    </section>
 </div>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

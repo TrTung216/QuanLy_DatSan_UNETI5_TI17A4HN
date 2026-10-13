@@ -11,16 +11,17 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
 public partial class DatSanService(ApplicationDbContext db, IDongHo dongHo) : IDatSanService
 {
+    private Task<bool> KhachDuDieuKienAsync(int maTaiKhoan, CancellationToken cancellationToken) =>
+        db.KhachHangs.AsNoTracking().AnyAsync(x => x.MaTaiKhoan == maTaiKhoan
+            && x.TrangThai == TrangThaiKhachHang.HoatDong
+            && x.TaiKhoan.TrangThai == TrangThaiTaiKhoan.HoatDong
+            && x.TaiKhoan.VaiTro == VaiTro.KhachHang, cancellationToken);
+
     public async Task<KetQuaTaoDon> TaoDonAsync(TaoDonYeuCau yeuCau, CancellationToken cancellationToken)
     {
         var (maTaiKhoan, maSan, ngaySuDung, gioBatDau, gioKetThuc) = yeuCau;
-        var khachHang = await db.KhachHangs.Include(x => x.TaiKhoan)
-            .SingleOrDefaultAsync(x => x.MaTaiKhoan == maTaiKhoan, cancellationToken);
-        if (khachHang is null || khachHang.TrangThai != TrangThaiKhachHang.HoatDong
-            || khachHang.TaiKhoan.TrangThai != TrangThaiTaiKhoan.HoatDong)
-        {
+        if (!await KhachDuDieuKienAsync(maTaiKhoan, cancellationToken))
             return Loi(MaLoiDatSan.HoSoKhongHoatDong);
-        }
 
         var gioBatDauChuan = new TimeOnly(gioBatDau.Hour, gioBatDau.Minute);
         var gioKetThucChuan = new TimeOnly(gioKetThuc.Hour, gioKetThuc.Minute);
@@ -31,6 +32,17 @@ public partial class DatSanService(ApplicationDbContext db, IDongHo dongHo) : ID
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await KhoaSanAsync(maSan, cancellationToken);
+
+        // M3: đọc lại điều kiện khách và giờ hiện tại sau khi chờ khóa sân.
+        var khachHang = await db.KhachHangs.AsNoTracking().Include(x => x.TaiKhoan)
+            .SingleOrDefaultAsync(x => x.MaTaiKhoan == maTaiKhoan, cancellationToken);
+        if (khachHang is null || khachHang.TrangThai != TrangThaiKhachHang.HoatDong
+            || khachHang.TaiKhoan.TrangThai != TrangThaiTaiKhoan.HoatDong
+            || khachHang.TaiKhoan.VaiTro != VaiTro.KhachHang)
+            return Loi(MaLoiDatSan.HoSoKhongHoatDong);
+
+        var bayGio = dongHo.BayGio;
+        if (batDau <= bayGio) return Loi(MaLoiDatSan.BatDauKhongTuongLai);
 
         var san = await db.SanTheThaos.Include(x => x.LoaiSan)
             .SingleOrDefaultAsync(x => x.MaSan == maSan, cancellationToken);
@@ -53,7 +65,7 @@ public partial class DatSanService(ApplicationDbContext db, IDongHo dongHo) : ID
         {
             MaKhachHang = khachHang.MaKhachHang,
             MaSan = san.MaSan,
-            NgayDat = dongHo.BayGio,
+            NgayDat = bayGio,
             GioBatDau = batDau,
             GioKetThuc = ketThuc,
             DonGia = san.DonGia,

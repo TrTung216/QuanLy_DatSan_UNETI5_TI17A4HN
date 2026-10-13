@@ -1,5 +1,5 @@
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ DbContext, xác thực và Session.
-// M3: Nguyễn Văn Quý; MSSV: 23103100181. đăng ký IDongHo dùng chung.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. đăng ký IDongHo và IDatSanService.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -32,7 +32,7 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 });
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSingleton<IDongHo, DongHoHeThong>();//nghia them
+builder.Services.AddSingleton<IDongHo, DongHoHeThong>();
 builder.Services.AddScoped<IDatSanService, DatSanService>();
 builder.Services.AddScoped<ITaiKhoanHienTai, TaiKhoanHienTai>();
 builder.Services.AddScoped<IPasswordHasher<TaiKhoan>, PasswordHasher<TaiKhoan>>();

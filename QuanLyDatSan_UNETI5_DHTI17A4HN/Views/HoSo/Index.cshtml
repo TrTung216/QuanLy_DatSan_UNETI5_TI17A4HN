@@ -2,7 +2,12 @@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.HoSoViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @{ ViewData["Title"] = "Hồ sơ cá nhân"; }
-<h1 class="h3 mb-3">Hồ sơ cá nhân</h1>
+<div class="ql-page-header">
+    <p class="ql-eyebrow">Khách hàng</p>
+    <h1>Hồ sơ cá nhân</h1>
+    <p class="ql-subtitle">Thông tin liên hệ dùng khi bạn đặt sân.</p>
+</div>
+<section class="ql-panel ql-details" aria-label="Thông tin hồ sơ">
 <dl class="row">
     <dt class="col-sm-3">Tên đăng nhập</dt><dd class="col-sm-9">@Model.TenDangNhap</dd>
     <dt class="col-sm-3">Họ tên</dt><dd class="col-sm-9">@Model.HoTen</dd>
@@ -16,3 +21,4 @@
     <dt class="col-sm-3">Điểm tích lũy</dt><dd class="col-sm-9">@Model.DiemTichLuy</dd>
 </dl>
 <a asp-action="Sua" class="btn btn-primary">Chỉnh sửa hồ sơ</a>
+</section>
