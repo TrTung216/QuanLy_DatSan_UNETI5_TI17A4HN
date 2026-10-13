@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize]
