@@ -1,0 +1,77 @@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ tìm kiếm, lọc, sắp xếp và phân trang loại sân. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.LoaiSanDanhSachViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using System.Globalization
+@{ ViewData["Title"] = "Quản lý loại sân"; }
+<div class="ql-page-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div><h1>@ViewData["Title"]</h1><p class="ql-subtitle">Danh mục, sức chứa và giá mặc định khi tạo sân.</p></div>
+    <a class="btn btn-primary" asp-action="Tao">Thêm loại sân</a>
+</div>
+<section class="ql-panel" aria-label="Danh sách loại sân">
+    <form asp-action="DanhSach" method="get" class="row g-3 mb-4">
+        <div class="col-lg-4">
+            <label asp-for="TuKhoa" class="form-label">Tên loại sân</label>
+            <input asp-for="TuKhoa" class="form-control" maxlength="100" placeholder="Nhập tên cần tìm" />
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <label asp-for="TrangThai" class="form-label">Trạng thái</label>
+            <select asp-for="TrangThai" class="form-select"><option value="">Tất cả trạng thái</option><option value="1">Hoạt động</option><option value="0">Ngừng hoạt động</option></select>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <label asp-for="SapXep" class="form-label">Sắp xếp</label>
+            <select asp-for="SapXep" class="form-select"><option value="ten_tang">Tên A → Z</option><option value="ten_giam">Tên Z → A</option></select>
+        </div>
+        <div class="col-lg-2 d-flex flex-wrap align-items-end gap-2">
+            <button type="submit" class="btn btn-outline-primary">Lọc</button><a class="btn btn-outline-secondary" asp-action="DanhSach">Đặt lại</a>
+        </div>
+    </form>
+    <p>@Model.TongSo loại sân phù hợp</p>
+    @if (Model.DanhSach.Count == 0)
+    {
+        <div class="ql-empty"><h2 class="h5">Chưa có kết quả</h2><p class="mb-0">Thử thay đổi điều kiện tìm kiếm hoặc thêm loại sân mới.</p></div>
+    }
+    else
+    {
+        <div class="table-responsive" role="region" aria-label="Bảng loại sân" tabindex="0">
+            <table class="table table-hover align-middle ql-table ql-loai-san-table">
+                <caption>Loại sân — trang @Model.Trang / @Model.TongTrang</caption>
+                <thead><tr><th scope="col">Tên loại sân</th><th scope="col">Số người tối đa</th><th scope="col">Giá mặc định/giờ</th><th scope="col">Số sân</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+                <tbody>
+                    @foreach (var loai in Model.DanhSach)
+                    {
+                        var hoatDong = loai.TrangThai == TrangThaiLoaiSan.HoatDong;
+                        <tr>
+                            <th scope="row"><a asp-action="ChiTiet" asp-route-id="@loai.MaLoaiSan">@loai.TenLoai</a></th>
+                            <td>@loai.SoNguoiToiDa</td><td>@loai.DonGiaTheoGio.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td><td>@loai.SoSan</td>
+                            <td><span class="ql-status @(hoatDong ? "ql-status--completed" : "ql-status--cancelled")">@(hoatDong ? "Hoạt động" : "Ngừng hoạt động")</span></td>
+                            <td><div class="d-flex flex-wrap gap-2">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Sua" asp-route-id="@loai.MaLoaiSan" aria-label="Cập nhật @loai.TenLoai">Cập nhật</a>
+                                <a class="btn btn-sm btn-outline-danger" asp-action="Xoa" asp-route-id="@loai.MaLoaiSan" aria-label="Kiểm tra xóa @loai.TenLoai">Xóa</a>
+                            </div></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (Model.TongTrang > 1)
+        {
+            <nav class="mt-3" aria-label="Phân trang loại sân"><ul class="pagination ql-pagination">
+                @if (Model.Trang > 1)
+                {
+                    <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-route-trang="@(Model.Trang - 1)" asp-route-tuKhoa="@Model.TuKhoa" asp-route-trangThai="@Model.TrangThai" asp-route-sapXep="@Model.SapXep">Trước</a></li>
+                }
+                else { <li class="page-item disabled"><span class="page-link">Trước</span></li> }
+                @for (var i = Math.Max(1, Model.Trang - 2); i <= Math.Min(Model.TongTrang, Model.Trang + 2); i++)
+                {
+                    if (i == Model.Trang) { <li class="page-item active"><span class="page-link" aria-current="page">@i</span></li> }
+                    else { <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-route-trang="@i" asp-route-tuKhoa="@Model.TuKhoa" asp-route-trangThai="@Model.TrangThai" asp-route-sapXep="@Model.SapXep">@i</a></li> }
+                }
+                @if (Model.Trang < Model.TongTrang)
+                {
+                    <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-route-trang="@(Model.Trang + 1)" asp-route-tuKhoa="@Model.TuKhoa" asp-route-trangThai="@Model.TrangThai" asp-route-sapXep="@Model.SapXep">Sau</a></li>
+                }
+                else { <li class="page-item disabled"><span class="page-link">Sau</span></li> }
+            </ul></nav>
+        }
+    }
+</section>

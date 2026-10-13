@@ -1,4 +1,7 @@
 <Solution>
   <Project Path="QuanLyDatSan_UNETI5_DHTI17A4HN/QuanLyDatSan_UNETI5_DHTI17A4HN.csproj" />
   <Project Path="tests/QuanLyDatSan.M103.Tests/QuanLyDatSan.M103.Tests.csproj" />
+  <Project Path="tests/QuanLyDatSan.M104.Tests/QuanLyDatSan.M104.Tests.csproj" />
+  <Project Path="tests/QuanLyDatSan.M201.Tests/QuanLyDatSan.M201.Tests.csproj" />
+  <Project Path="tests/QuanLyDatSan.M4.Tests/QuanLyDatSan.M4.Tests.csproj" />
 </Solution>

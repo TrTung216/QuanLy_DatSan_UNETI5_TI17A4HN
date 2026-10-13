@@ -321,6 +321,14 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("DonGiaCaoDiem")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("DonGiaCuoiTuan")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("GhiChu")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -356,6 +364,8 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
                     b.ToTable("SanTheThao", null, t =>
                         {
                             t.HasCheckConstraint("CK_SanTheThao_DonGia", "[DonGia] >= 0");
+
+                            t.HasCheckConstraint("CK_SanTheThao_GiaKhungGio", "([DonGiaCaoDiem] IS NULL OR [DonGiaCaoDiem] >= 0) AND ([DonGiaCuoiTuan] IS NULL OR [DonGiaCuoiTuan] >= 0)");
 
                             t.HasCheckConstraint("CK_SanTheThao_Gio", "[GioDongCua] > [GioMoCua]");
 

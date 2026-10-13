@@ -6,11 +6,16 @@ using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
 public class PhienDangNhap(ApplicationDbContext db, PhienBanQuyenTaiKhoan phienBanQuyen) : CookieAuthenticationEvents
 {
-    public static ClaimsPrincipal TaoPrincipal(TaiKhoan taiKhoan, string maPhien, string phienBanQuyen) => new(new ClaimsIdentity(
+    // Giữ overload Entity cho các module hiện có; Controller đăng nhập chỉ nhận DTO không có mật khẩu.
+    public static ClaimsPrincipal TaoPrincipal(TaiKhoan taiKhoan, string maPhien, string phienBanQuyen) =>
+        TaoPrincipal(new TaiKhoanDaXacThuc(taiKhoan.MaTaiKhoan, taiKhoan.HoTen, taiKhoan.VaiTro), maPhien, phienBanQuyen);
+
+    public static ClaimsPrincipal TaoPrincipal(TaiKhoanDaXacThuc taiKhoan, string maPhien, string phienBanQuyen) => new(new ClaimsIdentity(
     [
         new Claim(ClaimTypes.NameIdentifier, taiKhoan.MaTaiKhoan.ToString()),
         new Claim(ClaimTypes.Name, taiKhoan.HoTen),
@@ -19,7 +24,10 @@ public class PhienDangNhap(ApplicationDbContext db, PhienBanQuyenTaiKhoan phienB
         new Claim("PhienBanQuyen", phienBanQuyen)
     ], CookieAuthenticationDefaults.AuthenticationScheme));
 
-    public static void LuuSession(ISession session, TaiKhoan taiKhoan)
+    public static void LuuSession(ISession session, TaiKhoan taiKhoan) =>
+        LuuSession(session, new TaiKhoanDaXacThuc(taiKhoan.MaTaiKhoan, taiKhoan.HoTen, taiKhoan.VaiTro));
+
+    public static void LuuSession(ISession session, TaiKhoanDaXacThuc taiKhoan)
     {
         session.SetInt32("MaTaiKhoan", taiKhoan.MaTaiKhoan);
         session.SetString("HoTen", taiKhoan.HoTen);

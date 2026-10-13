@@ -1,0 +1,3 @@
+/* M1: Trần Trọng Tùng; MSSV: 23103100202. Bảng loại sân cuộn riêng trên màn hình nhỏ. */
+.ql-loai-san-table { min-width: 58rem; }
+.ql-loai-san-table th[scope="row"] { min-width: 12rem; max-width: 20rem; overflow-wrap: anywhere; }
