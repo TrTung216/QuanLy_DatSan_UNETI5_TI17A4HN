@@ -4,6 +4,7 @@
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Extensions;
 
@@ -13,6 +14,7 @@ public static class DependencyInjection
     {
         services.AddModuleTaiKhoanVaLoaiSan();
         services.AddModuleDichVu();
+        services.AddModuleSan();
         // Module khác tự thêm dòng của mình ở đây
         return services;
     }
@@ -30,6 +32,13 @@ public static class DependencyInjection
     private static IServiceCollection AddModuleDichVu(this IServiceCollection services)
     {
         services.AddScoped<IDichVuService, DichVuService>();
+        return services;
+    }
+
+    // M2: Phan Giang Tâm - 23103100196. Đăng ký service quản lý sân.
+    private static IServiceCollection AddModuleSan(this IServiceCollection services)
+    {
+        services.AddScoped<ISanTheThaoService, SanTheThaoService>();
         return services;
     }
 }
