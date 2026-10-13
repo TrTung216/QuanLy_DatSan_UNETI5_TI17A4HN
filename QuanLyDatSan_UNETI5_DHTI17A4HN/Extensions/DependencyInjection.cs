@@ -1,6 +1,8 @@
 ﻿using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
 
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ gom DI M1; giữ đăng ký M5 hiện có.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. thêm đăng ký service hồ sơ khách hàng.
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyKhachHang;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
@@ -15,6 +17,7 @@ public static class DependencyInjection
         services.AddModuleTaiKhoanVaLoaiSan();
         services.AddModuleDichVu();
         services.AddModuleSan();
+        services.AddModuleKhachHang();
         // Module khác tự thêm dòng của mình ở đây
         return services;
     }
@@ -39,6 +42,13 @@ public static class DependencyInjection
     private static IServiceCollection AddModuleSan(this IServiceCollection services)
     {
         services.AddScoped<ISanTheThaoService, SanTheThaoService>();
+        return services;
+    }
+}
+    // M3: hồ sơ khách hàng
+    private static IServiceCollection AddModuleKhachHang(this IServiceCollection services)
+    {
+        services.AddScoped<IKhachHangService, KhachHangService>();
         return services;
     }
 }

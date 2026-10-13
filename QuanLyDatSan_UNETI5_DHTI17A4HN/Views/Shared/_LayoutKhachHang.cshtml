@@ -1,0 +1,34 @@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. layout riêng cho khách chưa đăng nhập và khách hàng: đăng ký, đăng nhập, đặt sân, lịch và hồ sơ. *@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] ?? "Trang chủ") | Quản lý đặt sân</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/QuanLyDatSan_UNETI5_DHTI17A4HN.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/thanh-phan.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="ql-app ql-khach">
+    <a class="ql-skip-link" href="#noi-dung-chinh">Chuyển đến nội dung chính</a>
+    <partial name="_HeaderKhachHang" />
+    <main id="noi-dung-chinh" class="container ql-main" tabindex="-1">
+        <partial name="_ThongBao" />
+        @RenderBody()
+    </main>
+    <footer class="ql-footer">
+        <div class="container d-flex flex-wrap justify-content-between gap-2">
+            <span>Quản lý đặt sân <span aria-hidden="true">·</span> UNETI</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Quyền riêng tư</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

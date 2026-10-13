@@ -1,19 +1,37 @@
-﻿@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ trang chủ và liên kết theo trạng thái đăng nhập. *@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ trang chủ và liên kết theo trạng thái đăng nhập. *@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. trang chủ gọn: banner ngắn và ba bước đặt sân, lối vào theo vai trò. *@
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @{
     ViewData["Title"] = "Trang chủ";
+    var daDangNhap = User.Identity?.IsAuthenticated == true;
+    var laKhachHang = daDangNhap && User.IsInRole(nameof(VaiTro.KhachHang));
+    var laQuanTri = daDangNhap && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien)));
 }
-
-<section class="ql-panel ql-welcome" aria-labelledby="tieu-de-trang-chu">
-    <p class="ql-eyebrow">Hệ thống quản lý sân thể thao</p>
-    <h1 id="tieu-de-trang-chu" class="mb-3">Chào mừng đến với Quản lý đặt sân</h1>
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <p class="ql-subtitle mb-4">Bạn đã đăng nhập. Xem thông tin tài khoản và sử dụng các chức năng được cấp quyền trên menu.</p>
-        <a class="btn btn-primary" asp-controller="TaiKhoan" asp-action="ThongTin">Xem thông tin tài khoản</a>
-    }
-    else
-    {
-        <p class="ql-subtitle mb-4">Đăng nhập bằng tài khoản được cấp để truy cập hệ thống quản lý đặt sân.</p>
-        <a class="btn btn-primary" asp-controller="TaiKhoan" asp-action="DangNhap">Đăng nhập vào hệ thống</a>
-    }
+<section class="ql-hero ql-hero--gon" aria-labelledby="tieu-de-trang-chu">
+    <h1 id="tieu-de-trang-chu" class="mb-2">Đặt sân thể thao nhanh chóng</h1>
+    <p>Chọn sân, ngày và khung giờ; đơn được gửi đến nhân viên xác nhận.</p>
+    <div class="d-flex flex-wrap gap-2">
+        @if (laKhachHang)
+        {
+            <a class="btn btn-light" asp-controller="DonDat" asp-action="Tao">Đặt sân ngay</a>
+            <a class="btn btn-outline-light" asp-controller="KhachHang" asp-action="TrangChu">Trang của tôi</a>
+        }
+        else if (laQuanTri)
+        {
+            <a class="btn btn-light" asp-controller="QuanTri" asp-action="Index">Vào trang điều hành</a>
+        }
+        else
+        {
+            <a class="btn btn-light" asp-controller="KhachHang" asp-action="DangKy">Đăng ký</a>
+            <a class="btn btn-outline-light" asp-controller="TaiKhoan" asp-action="DangNhap">Đăng nhập</a>
+        }
+    </div>
+</section>
+<section class="mt-3" aria-labelledby="cach-dat-san">
+    <h2 id="cach-dat-san" class="visually-hidden">Cách đặt sân</h2>
+    <ol class="ql-steps ql-steps--gon">
+        <li><h3>Đăng ký</h3><p>Tạo tài khoản khách hàng.</p></li>
+        <li><h3>Chọn sân và giờ</h3><p>Hệ thống chặn khung giờ đã có người đặt.</p></li>
+        <li><h3>Chờ xác nhận</h3><p>Theo dõi trong "Lịch của tôi".</p></li>
+    </ol>
 </section>

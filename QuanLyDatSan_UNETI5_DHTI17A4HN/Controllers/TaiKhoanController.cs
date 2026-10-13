@@ -1,4 +1,6 @@
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ gọi service xác thực, giữ Session/cookie và đăng xuất.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ đăng nhập/đăng xuất.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. điều hướng sau đăng nhập theo vai trò (khách hàng, quản trị).
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize]
@@ -17,7 +20,7 @@ public class TaiKhoanController(IXacThucTaiKhoanService service,
     [AllowAnonymous, HttpGet]
     public IActionResult DangNhap(string? returnUrl = null)
     {
-        if (User.Identity?.IsAuthenticated == true) return VeTrangSauDangNhap(returnUrl);
+        if (User.Identity?.IsAuthenticated == true) return VeTrangSauDangNhap(returnUrl, taiKhoanHienTai.VaiTro);
         return View(new DangNhapViewModel { ReturnUrl = returnUrl });
     }
 
@@ -44,7 +47,7 @@ public class TaiKhoanController(IXacThucTaiKhoanService service,
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
             PhienDangNhap.TaoPrincipal(taiKhoan, maPhien, phienBanQuyen.Lay(taiKhoan.MaTaiKhoan)),
             new AuthenticationProperties { IsPersistent = false });
-        return VeTrangSauDangNhap(model.ReturnUrl);
+        return VeTrangSauDangNhap(model.ReturnUrl, taiKhoan.VaiTro);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -65,6 +68,14 @@ public class TaiKhoanController(IXacThucTaiKhoanService service,
         return View();
     }
 
-    private IActionResult VeTrangSauDangNhap(string? returnUrl) => Url.IsLocalUrl(returnUrl)
-        ? LocalRedirect(returnUrl!) : RedirectToAction(nameof(ThongTin));
+    private IActionResult VeTrangSauDangNhap(string? returnUrl, VaiTro? vaiTro)
+    {
+        if (Url.IsLocalUrl(returnUrl)) return LocalRedirect(returnUrl!);
+        return vaiTro switch
+        {
+            VaiTro.KhachHang => RedirectToAction("TrangChu", "KhachHang"),
+            VaiTro.Admin or VaiTro.NhanVien => RedirectToAction("Index", "QuanTri"),
+            _ => RedirectToAction(nameof(ThongTin))
+        };
+    }
 }
