@@ -1,4 +1,7 @@
-// M4: refactor Controller/Service theo quy ước v1.4; Codex hỗ trợ theo yêu cầu người dùng.
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+// Nội dung: định nghĩa mã lỗi, kết quả nghiệp vụ, DTO yêu cầu tạo/xử lý đơn và DTO dữ liệu danh sách, chi tiết, lựa chọn sân.
+// Các factory bảo đảm kết quả thành công không kèm lỗi và kết quả thất bại có mã lỗi hợp lệ.
+
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 

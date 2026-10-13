@@ -1,5 +1,8 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. kiểm tra nghiệp vụ, khóa theo sân và tạo đơn đặt sân; M4 dùng chung KhoaSanAsync/CoTrungLichAsync.
-//M4: Phạm Thành Nghĩa; MSSV: 23103100308, nghiệp vụ xác nhận, từ chối, khách hàng hủy, nhân viên/Admin hủy và hoàn thành đơn
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+// Nội dung M4: chuẩn hóa DTO và mã lỗi tạo đơn; dùng chung kiểm tra trùng lịch và khóa sân khi xử lý đơn.
+// File này còn cung cấp công thức tính tiền sân dự kiến theo thời lượng và đơn giá trên đơn.
+
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;

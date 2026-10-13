@@ -1,4 +1,7 @@
-// M4: refactor Controller/Service theo quy ước v1.4; Codex hỗ trợ theo yêu cầu người dùng.
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+// Nội dung: xác nhận, từ chối, khách hàng hủy, nhân viên/Admin hủy và hoàn thành đơn theo điều kiện nghiệp vụ.
+// Kiểm tra quyền sở hữu khi khách hủy; điều phối khóa sân, RowVersion và transaction; lưu trạng thái, thời điểm, lý do và tiền chốt.
+
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;

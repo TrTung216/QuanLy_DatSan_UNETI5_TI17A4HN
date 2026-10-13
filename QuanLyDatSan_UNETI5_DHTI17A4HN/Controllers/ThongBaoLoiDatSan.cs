@@ -1,4 +1,7 @@
-// M4: refactor Controller/Service theo quy ước v1.4; Codex hỗ trợ theo yêu cầu người dùng.
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+// Nội dung: ánh xạ mã lỗi tạo đơn, xác nhận, từ chối, hủy và hoàn thành đơn sang trường form và thông báo tiếng Việt.
+// Phát hiện mã lỗi chưa được ánh xạ hoặc thiếu dữ liệu để tạo thông báo.
+
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 

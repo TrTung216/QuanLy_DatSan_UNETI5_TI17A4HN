@@ -1,4 +1,7 @@
-// M4: refactor Controller/Service theo quy ước v1.4; Codex hỗ trợ theo yêu cầu người dùng.
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+// Nội dung: truy vấn lịch đặt cá nhân có lọc trạng thái, sắp xếp, phân trang; lấy chi tiết đơn theo chủ sở hữu.
+// Tính tiền sân dự kiến và lấy danh sách sân đang hoạt động để chọn khi tạo đơn; trả DTO đã tải từ database.
+
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;

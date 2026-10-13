@@ -1,6 +1,7 @@
-// Họ và tên: Phạm Thành Nghĩa
-// Mã sinh viên: 23103100308
-// Nội dung thực hiện: M4 - xác nhận đơn 
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+// Nội dung: khai báo dữ liệu và validation cho form xác nhận đơn: mã đơn, phiên bản, ghi chú và thông tin hiển thị.
+// Các trường hiển thị dùng BindNever để không nhận giá trị từ form gửi lên.
+
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
