@@ -23,26 +23,42 @@ public interface IDatSanService
 
 public class DatSanService(ApplicationDbContext db, IDongHo dongHo, ILogger<DatSanService> logger) : IDatSanService
 {
+    private const string LoiKhachKhongDuDieuKien = "Hồ sơ hoặc tài khoản không đủ điều kiện để đặt sân.";
+
+    private Task<bool> KhachDuDieuKienAsync(int maTaiKhoan, CancellationToken cancellationToken) =>
+        db.KhachHangs.AsNoTracking().AnyAsync(x => x.MaTaiKhoan == maTaiKhoan
+            && x.TrangThai == TrangThaiKhachHang.HoatDong
+            && x.TaiKhoan.TrangThai == TrangThaiTaiKhoan.HoatDong
+            && x.TaiKhoan.VaiTro == VaiTro.KhachHang, cancellationToken);
+
     public async Task<KetQuaTaoDon> TaoDonAsync(int maTaiKhoan, int maSan, DateOnly ngaySuDung, TimeOnly gioBatDau,
         TimeOnly gioKetThuc, CancellationToken cancellationToken)
     {
-        var khachHang = await db.KhachHangs.Include(x => x.TaiKhoan)
-            .SingleOrDefaultAsync(x => x.MaTaiKhoan == maTaiKhoan, cancellationToken);
-        if (khachHang is null || khachHang.TrangThai != TrangThaiKhachHang.HoatDong
-            || khachHang.TaiKhoan.TrangThai != TrangThaiTaiKhoan.HoatDong)
-        {
-            return Loi("Hồ sơ hoặc tài khoản không đủ điều kiện để đặt sân.");
-        }
-
         var gioBatDauChuan = new TimeOnly(gioBatDau.Hour, gioBatDau.Minute);
         var gioKetThucChuan = new TimeOnly(gioKetThuc.Hour, gioKetThuc.Minute);
         var batDau = ngaySuDung.ToDateTime(gioBatDauChuan);
         var ketThuc = ngaySuDung.ToDateTime(gioKetThucChuan);
+
+        // Kiểm tra nhanh trước khi xin khóa để không giữ khóa sân vì yêu cầu hiển nhiên sai.
+        if (!await KhachDuDieuKienAsync(maTaiKhoan, cancellationToken)) return Loi(LoiKhachKhongDuDieuKien);
         if (batDau <= dongHo.BayGio) return Loi("Thời gian bắt đầu phải ở tương lai.", "GioBatDau");
         if (ketThuc <= batDau) return Loi("Giờ kết thúc phải sau giờ bắt đầu.", "GioKetThuc");
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await KhoaSanAsync(maSan, cancellationToken);
+
+        // Có thể đã chờ khóa một lúc: đọc lại hồ sơ/tài khoản từ database và lấy lại giờ hiện tại
+        // rồi mới quyết định, không dùng dữ liệu hay mốc giờ đã đọc trước khi chờ.
+        var khachHang = await db.KhachHangs.AsNoTracking().Include(x => x.TaiKhoan)
+            .SingleOrDefaultAsync(x => x.MaTaiKhoan == maTaiKhoan, cancellationToken);
+        if (khachHang is null || khachHang.TrangThai != TrangThaiKhachHang.HoatDong
+            || khachHang.TaiKhoan.TrangThai != TrangThaiTaiKhoan.HoatDong
+            || khachHang.TaiKhoan.VaiTro != VaiTro.KhachHang)
+        {
+            return Loi(LoiKhachKhongDuDieuKien);
+        }
+        var bayGio = dongHo.BayGio;
+        if (batDau <= bayGio) return Loi("Thời gian bắt đầu phải ở tương lai.", "GioBatDau");
 
         var san = await db.SanTheThaos.Include(x => x.LoaiSan)
             .SingleOrDefaultAsync(x => x.MaSan == maSan, cancellationToken);
@@ -65,7 +81,7 @@ public class DatSanService(ApplicationDbContext db, IDongHo dongHo, ILogger<DatS
         {
             MaKhachHang = khachHang.MaKhachHang,
             MaSan = san.MaSan,
-            NgayDat = dongHo.BayGio,
+            NgayDat = bayGio,
             GioBatDau = batDau,
             GioKetThuc = ketThuc,
             DonGia = san.DonGia,
