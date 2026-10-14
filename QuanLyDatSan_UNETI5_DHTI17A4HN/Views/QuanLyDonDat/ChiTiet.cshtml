@@ -1,4 +1,6 @@
-@* M4: Phạm Thành Nghĩa; MSSV: 23103100308. Codex hỗ trợ chi tiết đơn nhân viên (#22). *@
+@* M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+   Nội dung: M4-02/03 - chi tiết đơn quản lý; form xác nhận/từ chối/hủy theo trạng thái, giờ và cọc.
+   Gửi antiforgery/RowVersion, giữ lý do khi lỗi và nạp JS xác nhận thao tác/chống gửi lặp. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ChiTietDonQuanLyViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
 @{
@@ -11,6 +13,7 @@
     </div>
     <a href="@Model.QuayLai" class="btn btn-outline-secondary">Quay lại danh sách</a>
 </div>
+<div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
 <div class="row g-4">
     <section class="col-lg-6" aria-label="Khách hàng và sân">
         <div class="ql-panel h-100">
@@ -61,4 +64,49 @@
             </dl>
         </div>
     </section>
+    @if (Model.CoTheXacNhan || Model.CoTheTuChoi || Model.CoTheNhanVienHuy)
+    {
+        <section class="col-12 ql-panel mt-4" aria-label="Thao tác đơn đặt sân">
+            <h2 class="h5">Xử lý đơn</h2>
+            <p>Các trường có dấu * là bắt buộc.</p>
+            <div class="d-flex flex-wrap gap-3">
+                @if (Model.CoTheXacNhan)
+                {
+                    <form asp-action="XacNhan" data-xu-ly-don method="post" asp-antiforgery="true">
+                        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+                        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+                        <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        <button type="submit" class="btn btn-primary">Xác nhận đơn</button>
+                    </form>
+                }
+                @if (Model.CoTheTuChoi)
+                {
+                    <form asp-action="TuChoi" data-xu-ly-don data-xac-nhan="Bạn có chắc muốn từ chối đơn này?" method="post" asp-antiforgery="true" class="d-flex flex-wrap align-items-end gap-2">
+                        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+                        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+                        <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        <div><label for="ly-do-tu-choi-@Model.MaDatSan" class="form-label">Lý do từ chối *</label>
+                            <input id="ly-do-tu-choi-@Model.MaDatSan" name="LyDo" value="@Model.LyDoTuChoiNhap" class="form-control" required maxlength="1000" /></div>
+                        <button type="submit" class="btn btn-outline-danger">Từ chối</button>
+                    </form>
+                }
+                @if (Model.CoTheNhanVienHuy)
+                {
+                    <form asp-action="Huy" data-xu-ly-don data-xac-nhan="Bạn có chắc muốn hủy đơn này?" method="post" asp-antiforgery="true" class="d-flex flex-wrap align-items-end gap-2">
+                        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+                        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+                        <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        <div><label for="ly-do-huy-@Model.MaDatSan" class="form-label">Lý do hủy *</label>
+                            <input id="ly-do-huy-@Model.MaDatSan" name="LyDo" value="@Model.LyDoHuyNhap" class="form-control" required maxlength="1000" /></div>
+                        <button type="submit" class="btn btn-danger">Hủy đơn</button>
+                    </form>
+                }
+            </div>
+        </section>
+    }
+
 </div>
+
+@section Scripts {
+    <script src="~/js/quan-ly-don-dat.js" asp-append-version="true"></script>
+}

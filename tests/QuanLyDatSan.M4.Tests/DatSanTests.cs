@@ -1,4 +1,6 @@
-// M4: kiểm thử chuyển trạng thái, quyền dữ liệu, transaction và khóa SQL Server.
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+// Nội dung: kiểm thử SQL Server cho quy tắc đặt sân, xác nhận/từ chối/hủy/hoàn thành, cọc và quyền sở hữu.
+// Kiểm tra thời điểm, lý do, RowVersion, thao tác lặp, khóa đồng thời và rollback transaction.
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -116,6 +118,7 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
     [InlineData(TrangThaiDatSan.ChoXuLy, 2, 0, true)]
     [InlineData(TrangThaiDatSan.DangXuLy, 2, 0, true)]
     [InlineData(TrangThaiDatSan.DangXuLy, 2, 100, false)]
+    [InlineData(TrangThaiDatSan.ChoXuLy, 2, 100, false)]
     [InlineData(TrangThaiDatSan.ChoXuLy, 0, 0, false)]
     [InlineData(TrangThaiDatSan.HoanThanh, 2, 0, false)]
     [InlineData(TrangThaiDatSan.DaHuy, 2, 0, false)]
@@ -130,6 +133,46 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
         Assert.Equal(allowed ? TrangThaiDatSan.DaHuy : state, saved.TrangThai);
         if (allowed) { Assert.Equal("Đổi kế hoạch", saved.LyDoHuy); Assert.Equal(f.Clock.BayGio, saved.NgayHuy); }
         else Assert.Null(saved.NgayHuy);
+    }
+
+    [Theory]
+    [InlineData("TuChoi")]
+    [InlineData("KhachHuy")]
+    public async Task DonChoCoCocKhongBiTuChoiHoacKhachHuy(string action)
+    {
+        var order = await f.Booking(deposit: 50000m);
+        await using var db = f.Db();
+        var service = f.Service(db);
+        var request = new HuyDonYeuCau(order.MaDatSan, "Lý do", order.RowVersion);
+        var result = action == "TuChoi"
+            ? await service.TuChoiDonAsync(request, default)
+            : await service.KhachHangHuyDonAsync(request, f.CustomerAccountId, default);
+        Assert.Equal(MaLoiDatSan.DaNhanCoc, result.Loi);
+        var saved = await f.Read(order.MaDatSan);
+        Assert.Equal(order.RowVersion, saved.RowVersion);
+        Assert.Equal(50000m, saved.TienCoc);
+        Assert.Null(saved.NgayHuy);
+    }
+
+    [Fact]
+    public async Task M3DocPhienBanVaHuyDonQuaHopDongDungChung()
+    {
+        var order = await f.Booking();
+        await using var db = f.Db();
+        IDatSanService service = f.Service(db);
+        Assert.Null(await service.LayChiTietCaNhanAsync(f.OtherCustomerAccountId, order.MaDatSan, default));
+        var detail = await service.LayChiTietCaNhanAsync(f.CustomerAccountId, order.MaDatSan, default);
+        Assert.NotNull(detail);
+        Assert.Equal(order.RowVersion, detail.PhienBan);
+        var request = new HuyDonYeuCau(detail.MaDatSan, "Đổi kế hoạch", detail.PhienBan);
+        Assert.True((await service.KhachHangHuyDonAsync(request, f.CustomerAccountId, default)).ThanhCong);
+        var saved = await f.Read(order.MaDatSan);
+        Assert.Equal(TrangThaiDatSan.DaHuy, saved.TrangThai);
+        Assert.Equal(f.Clock.BayGio, saved.NgayHuy);
+        Assert.Equal("Đổi kế hoạch", saved.LyDoHuy);
+        await using var retry = f.Db();
+        Assert.Equal(MaLoiDatSan.PhienBanDaCu,
+            (await f.Service(retry).KhachHangHuyDonAsync(request, f.CustomerAccountId, default)).Loi);
     }
 
     [Fact]

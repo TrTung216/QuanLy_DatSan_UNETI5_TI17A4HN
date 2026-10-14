@@ -1,4 +1,6 @@
-// M4-02 (#22): kiểm thử SQL Server và HTTP cho tra cứu đơn quản lý, bộ lọc và phân quyền.
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+// Nội dung: M4-02/03 - kiểm thử SQL Server và HTTP cho tra cứu, phân quyền, xác nhận/từ chối/hủy đơn.
+// Kiểm tra antiforgery, lý do, RowVersion, cọc/thời gian/trạng thái; tài khoản khóa, thao tác lặp và đồng thời.
 using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.DataProtection;
@@ -164,7 +166,9 @@ public sealed class QuanLyDonDatTests(SqlFixture f) : IClassFixture<SqlFixture>
     public async Task QuerySaiTraThongBaoKhongLoi500(string query)
     {
         using var app = new App(f); using var client = app.Client(); await Login(client, "staff");
-        var html = await client.GetStringAsync("/QuanLyDonDat/DanhSach?" + query);
+        var response = await client.GetAsync("/QuanLyDonDat/DanhSach?" + query);
+        var html = await response.Content.ReadAsStringAsync();
+        Assert.True(response.StatusCode == HttpStatusCode.OK, html);
         Assert.Contains("validation-summary-errors", html);
         Assert.DoesNotContain("Bảng đơn đặt sân", WebUtility.HtmlDecode(html));
     }
@@ -217,8 +221,266 @@ public sealed class QuanLyDonDatTests(SqlFixture f) : IClassFixture<SqlFixture>
         Assert.Contains("&lt;script&gt;", html); Assert.DoesNotContain("<script>alert(1)</script>", html);
     }
 
+    [Theory]
+    [InlineData("staff")]
+    [InlineData("admin")]
+    public async Task NhanVienXuLyXacNhanTuChoiVaHuyQuaHttp(string user)
+    {
+        var confirm = await f.Booking();
+        var reject = await f.Booking();
+        var cancel = await f.Booking();
+        var cancelConfirmed = await f.Booking(TrangThaiDatSan.DangXuLy);
+        using var app = new App(f); using var client = app.Client(); await Login(client, user);
+
+        var confirmResponse = await PostFromDetail(client, confirm.MaDatSan, "XacNhan");
+        Assert.Equal(HttpStatusCode.Redirect, confirmResponse.StatusCode);
+        var confirmed = await f.Read(confirm.MaDatSan);
+        Assert.Equal(TrangThaiDatSan.DangXuLy, confirmed.TrangThai);
+        Assert.Equal(f.Clock.BayGio, confirmed.NgayXacNhan);
+
+        var rejectResponse = await PostFromDetail(client, reject.MaDatSan, "TuChoi", "LyDo", "  Sân bảo trì  ");
+        Assert.Equal(HttpStatusCode.Redirect, rejectResponse.StatusCode);
+        var rejected = await f.Read(reject.MaDatSan);
+        Assert.Equal(TrangThaiDatSan.TuChoi, rejected.TrangThai);
+        Assert.Equal("Sân bảo trì", rejected.LyDoHuy);
+        Assert.Equal(f.Clock.BayGio, rejected.NgayHuy);
+
+        var cancelResponse = await PostFromDetail(client, cancel.MaDatSan, "Huy", "LyDo", "Khách đổi lịch");
+        Assert.Equal(HttpStatusCode.Redirect, cancelResponse.StatusCode);
+        var cancelled = await f.Read(cancel.MaDatSan);
+        Assert.Equal(TrangThaiDatSan.DaHuy, cancelled.TrangThai);
+        Assert.Equal("Khách đổi lịch", cancelled.LyDoHuy);
+        Assert.Equal(f.Clock.BayGio, cancelled.NgayHuy);
+
+        var cancelConfirmedResponse = await PostFromDetail(client, cancelConfirmed.MaDatSan, "Huy", "LyDo", "Sân đóng cửa");
+        Assert.Equal(HttpStatusCode.Redirect, cancelConfirmedResponse.StatusCode);
+        Assert.Equal(TrangThaiDatSan.DaHuy, (await f.Read(cancelConfirmed.MaDatSan)).TrangThai);
+    }
+
+    [Theory]
+    [InlineData("XacNhan")]
+    [InlineData("TuChoi")]
+    [InlineData("Huy")]
+    public async Task ThaoTacQuanLyDonCanDungVaiTroVaAntiforgery(string action)
+    {
+        var order = await f.Booking();
+        using var anonymousApp = new App(f); using var anonymous = anonymousApp.Client();
+        var anonymousResponse = await anonymous.PostAsync($"/QuanLyDonDat/{action}", new FormUrlEncodedContent([]));
+        Assert.Equal(HttpStatusCode.Redirect, anonymousResponse.StatusCode);
+
+        using var customerApp = new App(f); using var customer = customerApp.Client();
+        await Login(customer, "customer");
+        var customerResponse = await customer.PostAsync($"/QuanLyDonDat/{action}", new FormUrlEncodedContent([]));
+        Assert.Equal(HttpStatusCode.Redirect, customerResponse.StatusCode);
+        Assert.Contains("TuChoiTruyCap", customerResponse.Headers.Location!.OriginalString);
+
+        using var staffApp = new App(f); using var staff = staffApp.Client();
+        await Login(staff, "staff");
+        var noToken = await staff.PostAsync($"/QuanLyDonDat/{action}", new FormUrlEncodedContent(new Dictionary<string, string>
+        { ["MaDon"] = order.MaDatSan.ToString(), ["PhienBan"] = Convert.ToBase64String(order.RowVersion) }));
+        Assert.Equal(HttpStatusCode.BadRequest, noToken.StatusCode);
+        Assert.Equal(TrangThaiDatSan.ChoXuLy, (await f.Read(order.MaDatSan)).TrangThai);
+    }
+
+    [Theory]
+    [InlineData("XacNhan")]
+    [InlineData("TuChoi")]
+    [InlineData("Huy")]
+    public async Task RowVersionCuKhongChuyenTrangThaiQuaHttp(string action)
+    {
+        var order = await f.Booking();
+        using var app = new App(f); using var client = app.Client(); await Login(client, "admin");
+        var html = await client.GetStringAsync($"/QuanLyDonDat/ChiTiet/{order.MaDatSan}");
+        var token = Token(html);
+        var oldVersion = Hidden(html, "PhienBan");
+        await using (var db = f.Db())
+        {
+            var changed = await db.DatSans.SingleAsync(x => x.MaDatSan == order.MaDatSan);
+            changed.LyDoHuy = "Được cập nhật ở nơi khác";
+            await db.SaveChangesAsync();
+        }
+        var response = await client.PostAsync($"/QuanLyDonDat/{action}", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["MaDon"] = order.MaDatSan.ToString(), ["PhienBan"] = oldVersion,
+            ["QuayLai"] = $"/QuanLyDonDat/DanhSach", ["LyDo"] = "Từ chối"
+        }));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var returned = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        Assert.Contains("Đơn đã được cập nhật ở nơi khác", returned);
+        var saved = await f.Read(order.MaDatSan);
+        Assert.Equal(TrangThaiDatSan.ChoXuLy, saved.TrangThai);
+        Assert.Equal("Được cập nhật ở nơi khác", saved.LyDoHuy);
+        Assert.Equal(Convert.ToBase64String(saved.RowVersion), Hidden(returned, "PhienBan"));
+        if (action != "XacNhan") Assert.Contains("value=\"Từ chối\"", returned);
+    }
+
+
+    [Theory]
+    [InlineData("XacNhan")]
+    [InlineData("TuChoi")]
+    [InlineData("Huy")]
+    public async Task PhienBanSaiDinhDangTraLoiRoRangVaGiuLyDo(string action)
+    {
+        var order = await f.Booking();
+        using var app = new App(f); using var client = app.Client(); await Login(client, "staff");
+        var html = await client.GetStringAsync($"/QuanLyDonDat/ChiTiet/{order.MaDatSan}");
+        foreach (var version in new[] { "", "not-base64!", Convert.ToBase64String(new byte[7]), Convert.ToBase64String(new byte[9]) })
+        {
+            var response = await PostCommand(client, order.MaDatSan, action, Token(html), version,
+                "<script>lý do</script>", "https://evil.example");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var raw = await response.Content.ReadAsStringAsync();
+            Assert.Contains("Phiên bản đơn không hợp lệ", WebUtility.HtmlDecode(raw));
+            Assert.DoesNotContain("evil.example", raw);
+            if (action != "XacNhan")
+            {
+                Assert.Contains("&lt;script&gt;", raw);
+                Assert.DoesNotContain("<script>lý do</script>", raw);
+            }
+            var saved = await f.Read(order.MaDatSan);
+            Assert.Equal(TrangThaiDatSan.ChoXuLy, saved.TrangThai);
+            Assert.Equal(order.RowVersion, saved.RowVersion);
+        }
+    }
+
+    [Theory]
+    [InlineData("TuChoi")]
+    [InlineData("Huy")]
+    public async Task LyDoBatBuocVaToiDa1000KyTuQuaHttp(string action)
+    {
+        var order = await f.Booking();
+        using var app = new App(f); using var client = app.Client(); await Login(client, "staff");
+        foreach (var reason in new[] { "", "   ", new string('a', 1001) })
+        {
+            var response = await PostFromDetail(client, order.MaDatSan, action, "LyDo", reason);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            Assert.Contains("validation-summary-errors", html);
+            if (reason.Length > 1000) Assert.Contains(reason, html);
+            Assert.Equal(order.RowVersion, (await f.Read(order.MaDatSan)).RowVersion);
+        }
+    }
+
+    [Theory]
+    [InlineData("XacNhan", TrangThaiDatSan.ChoXuLy, 0, 0)]
+    [InlineData("XacNhan", TrangThaiDatSan.HoanThanh, 2, 0)]
+    [InlineData("TuChoi", TrangThaiDatSan.DangXuLy, 2, 0)]
+    [InlineData("TuChoi", TrangThaiDatSan.ChoXuLy, 2, 50000)]
+    [InlineData("Huy", TrangThaiDatSan.DangXuLy, 2, 50000)]
+    [InlineData("Huy", TrangThaiDatSan.ChoXuLy, 2, 50000)]
+    [InlineData("Huy", TrangThaiDatSan.ChoXuLy, 0, 0)]
+    [InlineData("Huy", TrangThaiDatSan.HoanThanh, 2, 0)]
+    [InlineData("Huy", TrangThaiDatSan.TuChoi, 2, 0)]
+    public async Task AnNutVaChanPostGiaMaoKhiKhongDuDieuKien(string action, TrangThaiDatSan state, int hours, int deposit)
+    {
+        var order = await f.Booking(state, hours, deposit);
+        using var app = new App(f); using var client = app.Client(); await Login(client, "staff");
+        var html = await client.GetStringAsync($"/QuanLyDonDat/ChiTiet/{order.MaDatSan}");
+        Assert.DoesNotContain($"action=\"/QuanLyDonDat/{action}\"", html);
+        var response = await PostCommand(client, order.MaDatSan, action, Token(html),
+            Convert.ToBase64String(order.RowVersion), "Lý do hợp lệ");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("validation-summary-errors", await response.Content.ReadAsStringAsync());
+        var saved = await f.Read(order.MaDatSan);
+        Assert.Equal(state, saved.TrangThai);
+        Assert.Equal(order.RowVersion, saved.RowVersion);
+        Assert.Equal(deposit, saved.TienCoc);
+        Assert.Null(saved.NgayHuy);
+    }
+
+    [Theory]
+    [InlineData("XacNhan", TrangThaiDatSan.DangXuLy)]
+    [InlineData("TuChoi", TrangThaiDatSan.TuChoi)]
+    [InlineData("Huy", TrangThaiDatSan.DaHuy)]
+    public async Task GuiDongThoiVaLapLaiChiMotLanThanhCong(string action, TrangThaiDatSan state)
+    {
+        var order = await f.Booking();
+        using var app = new App(f); using var client = app.Client(); await Login(client, "staff");
+        var html = await client.GetStringAsync($"/QuanLyDonDat/ChiTiet/{order.MaDatSan}");
+        var token = Token(html);
+        var version = Hidden(html, "PhienBan");
+        const string back = "/QuanLyDonDat/DanhSach?trang=2&trangThai=ChoXuLy";
+        var responses = await Task.WhenAll(
+            PostCommand(client, order.MaDatSan, action, token, version, "Lý do", back),
+            PostCommand(client, order.MaDatSan, action, token, version, "Lý do", back));
+        Assert.Single(responses, x => x.StatusCode == HttpStatusCode.Redirect);
+        Assert.Single(responses, x => x.StatusCode == HttpStatusCode.OK);
+        var success = responses.Single(x => x.StatusCode == HttpStatusCode.Redirect);
+        Assert.Equal(back, QueryHelpers.ParseQuery(new Uri(client.BaseAddress!, success.Headers.Location!).Query)["quayLai"]);
+        var saved = await f.Read(order.MaDatSan);
+        Assert.Equal(state, saved.TrangThai);
+        var repeated = await PostCommand(client, order.MaDatSan, action, token, version, "Đổi lý do");
+        Assert.Equal(HttpStatusCode.OK, repeated.StatusCode);
+        Assert.Contains("Đơn đã được cập nhật ở nơi khác", WebUtility.HtmlDecode(await repeated.Content.ReadAsStringAsync()));
+        Assert.Equal(saved.RowVersion, (await f.Read(order.MaDatSan)).RowVersion);
+    }
+
+    [Theory]
+    [InlineData("XacNhan")]
+    [InlineData("TuChoi")]
+    [InlineData("Huy")]
+    public async Task TaiKhoanBiKhoaSauDangNhapKhongDuocXuLyDon(string action)
+    {
+        var order = await f.Booking();
+        using var app = new App(f); using var client = app.Client(); await Login(client, "staff");
+        var html = await client.GetStringAsync($"/QuanLyDonDat/ChiTiet/{order.MaDatSan}");
+        await using var db = f.Db();
+        var account = await db.TaiKhoans.SingleAsync(x => x.TenDangNhap == "staff");
+        var original = account.TrangThai;
+        try
+        {
+            account.TrangThai = TrangThaiTaiKhoan.BiKhoa;
+            await db.SaveChangesAsync();
+            var response = await PostCommand(client, order.MaDatSan, action, Token(html), Hidden(html, "PhienBan"), "Lý do");
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Contains("DangNhap", response.Headers.Location!.OriginalString);
+            Assert.Equal(order.RowVersion, (await f.Read(order.MaDatSan)).RowVersion);
+        }
+        finally
+        {
+            account.TrangThai = original;
+            await db.SaveChangesAsync();
+        }
+    }
+
+    private static Task<HttpResponseMessage> PostCommand(HttpClient client, int id, string action,
+        string token, string version, string reason, string back = "/QuanLyDonDat/DanhSach") =>
+        client.PostAsync($"/QuanLyDonDat/{action}", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["MaDon"] = id.ToString(), ["PhienBan"] = version, ["LyDo"] = reason, ["QuayLai"] = back
+        }));
+
     private static string[] Links(string html) => Regex.Matches(html, "href=\"([^\"]+)\"")
         .Select(x => WebUtility.HtmlDecode(x.Groups[1].Value)).ToArray();
+
+    private static string Token(string html)
+    {
+        var match = Regex.Match(html, "name=\\\"__RequestVerificationToken\\\"[^>]*value=\\\"([^\\\"]+)\\\"");
+        Assert.True(match.Success, "Antiforgery token không tồn tại.");
+        return WebUtility.HtmlDecode(match.Groups[1].Value);
+    }
+    private static string Hidden(string html, string name)
+    {
+        var match = Regex.Match(html, $"name=\\\"{Regex.Escape(name)}\\\"[^>]*value=\\\"([^\\\"]*)\\\"");
+        Assert.True(match.Success, $"Hidden input {name} không tồn tại.");
+        return WebUtility.HtmlDecode(match.Groups[1].Value);
+    }
+
+    private async Task<HttpResponseMessage> PostFromDetail(HttpClient client, int id, string action,
+        string? extraName = null, string? extraValue = null)
+    {
+        var html = await client.GetStringAsync($"/QuanLyDonDat/ChiTiet/{id}");
+        var values = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = Token(html),
+            ["MaDon"] = id.ToString(), ["PhienBan"] = Hidden(html, "PhienBan"),
+            ["QuayLai"] = "/QuanLyDonDat/DanhSach"
+        };
+        if (extraName is not null) values[extraName] = extraValue ?? string.Empty;
+        return await client.PostAsync($"/QuanLyDonDat/{action}", new FormUrlEncodedContent(values));
+    }
 
     private async Task Login(HttpClient client, string user)
     {
@@ -227,7 +489,7 @@ public sealed class QuanLyDonDatTests(SqlFixture f) : IClassFixture<SqlFixture>
         Assert.True(token.Success);
         var response = await client.PostAsync("/TaiKhoan/DangNhap", new FormUrlEncodedContent(new Dictionary<string, string>
         { ["TenDangNhap"] = user, ["MatKhau"] = f.Password, ["__RequestVerificationToken"] = WebUtility.HtmlDecode(token.Groups[1].Value) }));
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.True(response.StatusCode == HttpStatusCode.Redirect, await response.Content.ReadAsStringAsync());
     }
 
     private sealed class App(SqlFixture fixture) : WebApplicationFactory<QuanLyDonDatController>

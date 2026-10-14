@@ -1,6 +1,6 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung: truy vấn lịch đặt cá nhân có lọc trạng thái, sắp xếp, phân trang; lấy chi tiết đơn theo chủ sở hữu.
-// Tính tiền sân dự kiến và lấy danh sách sân đang hoạt động để chọn khi tạo đơn; trả DTO đã tải từ database.
+// Trả RowVersion để M3 gọi hủy đơn; tính tiền sân dự kiến và lấy danh sách sân đang hoạt động để tạo đơn.
 
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
@@ -48,6 +48,7 @@ public partial class DatSanService
             .Where(x => x.MaDatSan == id && x.KhachHang.MaTaiKhoan == maTaiKhoan)
             .Select(x => new ChiTietDonDto
             {
+                PhienBan = x.RowVersion,
                 MaDatSan = x.MaDatSan,
                 TenSan = x.SanTheThao.TenSan,
                 TenLoai = x.SanTheThao.LoaiSan.TenLoai,

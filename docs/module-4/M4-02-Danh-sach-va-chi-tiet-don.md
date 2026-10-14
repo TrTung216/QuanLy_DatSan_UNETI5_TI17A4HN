@@ -39,11 +39,11 @@ không đưa entity/tài khoản/mật khẩu sang view. Endpoint quản lý kh�
 
 ## Kiểm thử
 
-Kết quả ngày 13/10/2026: build thành công, **231 test đạt, 0 lỗi, 0 bỏ qua**.
+Kết quả mới nhất: 114 test M4 và 4 test JS đạt. M103/M104/M201 đạt 45/24/80 ca. Lần LocalDB mặc định gặp timeout; M4 đã chạy lại đạt trên instance riêng, xem tài liệu M4-03.
 
 | Project test | Số ca đạt |
 | --- | ---: |
-| M4 (gồm 20 ca mới của M4-02) | 82 |
+| M4 (gồm tra cứu, nghiệp vụ và HTTP M4-03) | 114 |
 | M103 | 45 |
 | M104 | 24 |
 | M201 | 80 |
@@ -66,8 +66,7 @@ bằng `EnsureCreated`, không kiểm chứng chuỗi migration. Không thay đ�
 
 ## Phần tiếp theo
 
-- #23: nối action/form xác nhận, từ chối, hủy vào nghiệp vụ service đã có,
-  kèm antiforgery, RowVersion và kiểm thử HTTP. Hủy từ giao diện khách phối hợp M3 (#20).
-- #24: ghi nhận cọc và hoàn thành đơn, phối hợp hợp đồng tính tiền M5 (#27).
-- M4-02 chưa bổ sung các nút chuyển trạng thái và chưa kiểm tra giao diện trực quan bằng trình duyệt.
+- #23: đã bổ sung action/form xác nhận, từ chối, hủy cho nhân viên/Admin; xem [M4-03](M4-03-Xac-nhan-tu-choi-huy-don.md).
+- #24: còn ghi nhận cọc và hoàn thành đơn, phối hợp hợp đồng tính tiền M5 (#27).
+- Nút chuyển trạng thái đã bổ sung trong M4-03; chưa kiểm tra trực quan bằng trình duyệt.
 - Đây là kết quả triển khai local, chưa xác nhận nhóm review/merge hoặc đóng issue trên GitHub.
