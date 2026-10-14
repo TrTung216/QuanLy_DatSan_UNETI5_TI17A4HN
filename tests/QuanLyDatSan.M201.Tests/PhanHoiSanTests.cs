@@ -153,8 +153,10 @@ public class PhanHoiSanTests
         public KetQuaSan<int> KetQuaGhi { get; init; } = KetQuaSan<int>.Dat(1);
         public KetQuaSan<decimal> KetQuaGia { get; init; } = KetQuaSan<decimal>.Dat(550000);
         public Exception? LoiDanhSach { get; init; }
-        public Task<TrangSanDoc> LayDanhSachAsync(int trang, CancellationToken token)
-            => LoiDanhSach is null ? Task.FromResult(new TrangSanDoc([], 1, 1, 0)) : Task.FromException<TrangSanDoc>(LoiDanhSach);
+        public Task<KetQuaSan<TrangSanDoc>> LayDanhSachAsync(TraCuuSan x, CancellationToken token)
+            => LoiDanhSach is null ? Task.FromResult(KetQuaSan<TrangSanDoc>.Dat(new([], 1, 1, 0))) : Task.FromException<KetQuaSan<TrangSanDoc>>(LoiDanhSach);
+        public Task<IReadOnlyList<LoaiSanLoc>> LayLoaiSanLocAsync(CancellationToken token)
+            => Task.FromResult<IReadOnlyList<LoaiSanLoc>>([new(1, "Bóng đá")]);
         public Task<SanDoc?> LayChiTietAsync(int id, CancellationToken token)
             => Task.FromResult<SanDoc?>(new(1, "Sân cũ", 1, "Bóng đá", "Hà Nội", null, 200000, 350000, 450000,
                 TrangThaiSan.HoatDong, new(6, 0), new(22, 0), null, null));

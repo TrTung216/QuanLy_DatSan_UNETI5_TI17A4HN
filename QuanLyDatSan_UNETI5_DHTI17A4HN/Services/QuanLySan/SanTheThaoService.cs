@@ -10,17 +10,53 @@ public class SanTheThaoService(ApplicationDbContext db, ITaiKhoanHienTai taiKhoa
 {
     private const int SoDongMoiTrang = 10;
 
-    public async Task<TrangSanDoc> LayDanhSachAsync(int trang, CancellationToken cancellationToken)
+    public async Task<KetQuaSan<TrangSanDoc>> LayDanhSachAsync(TraCuuSan dieuKien, CancellationToken cancellationToken)
     {
+        if (!TraCuuHopLe(dieuKien)) return KetQuaSan<TrangSanDoc>.Loi(MaLoiSan.DuLieuKhongHopLe);
+        // Lọc quyền trước: điều kiện URL không thể làm lộ sân của khách.
         var truyVan = LaySanDuocXem();
+        var tuKhoa = dieuKien.TuKhoa?.Trim().ToLower();
+        if (!string.IsNullOrEmpty(tuKhoa))
+            truyVan = truyVan.Where(x => x.TenSan.ToLower().Contains(tuKhoa)
+                || x.LoaiSan.TenLoai.ToLower().Contains(tuKhoa) || x.DiaChi.ToLower().Contains(tuKhoa));
+        if (dieuKien.MaLoaiSan.HasValue) truyVan = truyVan.Where(x => x.MaLoaiSan == dieuKien.MaLoaiSan);
+        if (dieuKien.TrangThai.HasValue) truyVan = truyVan.Where(x => x.TrangThai == dieuKien.TrangThai);
+        if (dieuKien.GiaTu.HasValue) truyVan = truyVan.Where(x => x.DonGia >= dieuKien.GiaTu.Value);
+        if (dieuKien.GiaDen.HasValue) truyVan = truyVan.Where(x => x.DonGia <= dieuKien.GiaDen.Value);
         var tongSoSan = await truyVan.CountAsync(cancellationToken);
         var tongTrang = Math.Max(1, (int)Math.Ceiling(tongSoSan / (double)SoDongMoiTrang));
-        trang = Math.Clamp(trang, 1, tongTrang);
-        var danhSach = await truyVan.Include(x => x.LoaiSan)
-            .OrderBy(x => x.TenSan).ThenBy(x => x.MaSan)
+        var trang = Math.Clamp(dieuKien.Trang, 1, tongTrang);
+        var sapXep = dieuKien.SapXep switch
+        {
+            "ten_giam" => truyVan.OrderByDescending(x => x.TenSan),
+            "gia_tang" => truyVan.OrderBy(x => x.DonGia),
+            "gia_giam" => truyVan.OrderByDescending(x => x.DonGia),
+            "gio_tang" => truyVan.OrderBy(x => x.GioMoCua),
+            "gio_giam" => truyVan.OrderByDescending(x => x.GioMoCua),
+            _ => truyVan.OrderBy(x => x.TenSan)
+        };
+        // MaSan bảo đảm thứ tự ổn định khi nhiều sân có cùng tên/giá/giờ.
+        var danhSach = await sapXep.ThenBy(x => x.MaSan).Include(x => x.LoaiSan)
             .Skip((trang - 1) * SoDongMoiTrang).Take(SoDongMoiTrang).ToListAsync(cancellationToken);
-        return new(danhSach.Select(ThanhDuLieuDoc).ToList(), trang, tongTrang, tongSoSan);
+        return KetQuaSan<TrangSanDoc>.Dat(new(danhSach.Select(ThanhDuLieuDoc).ToList(), trang, tongTrang, tongSoSan));
     }
+
+    public async Task<IReadOnlyList<LoaiSanLoc>> LayLoaiSanLocAsync(CancellationToken cancellationToken)
+    {
+        var loaiSan = db.LoaiSans.AsNoTracking();
+        if (taiKhoanHienTai.VaiTro is not (VaiTro.Admin or VaiTro.NhanVien))
+            loaiSan = loaiSan.Where(x => x.TrangThai == TrangThaiLoaiSan.HoatDong);
+        return await loaiSan.OrderBy(x => x.TenLoai).ThenBy(x => x.MaLoaiSan)
+            .Select(x => new LoaiSanLoc(x.MaLoaiSan, x.TenLoai)).ToListAsync(cancellationToken);
+    }
+
+    private static bool TraCuuHopLe(TraCuuSan x)
+        => (x.TuKhoa?.Length ?? 0) <= 100 && (x.MaLoaiSan is null || x.MaLoaiSan > 0)
+        && (!x.TrangThai.HasValue || Enum.IsDefined(x.TrangThai.Value))
+        && (!x.GiaTu.HasValue || GiaHopLe(x.GiaTu.Value))
+        && (!x.GiaDen.HasValue || GiaHopLe(x.GiaDen.Value))
+        && (!x.GiaTu.HasValue || !x.GiaDen.HasValue || x.GiaTu <= x.GiaDen)
+        && x.SapXep is "ten_tang" or "ten_giam" or "gia_tang" or "gia_giam" or "gio_tang" or "gio_giam";
 
     public async Task<SanDoc?> LayChiTietAsync(int maSan, CancellationToken cancellationToken)
     {
