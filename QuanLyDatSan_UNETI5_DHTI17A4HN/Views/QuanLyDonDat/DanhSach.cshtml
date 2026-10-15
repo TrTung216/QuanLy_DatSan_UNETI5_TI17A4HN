@@ -1,0 +1,107 @@
+@* M4: Phạm Thành Nghĩa; MSSV: 23103100308. Codex hỗ trợ tra cứu đơn nhân viên (#22). *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DanhSachDonQuanLyViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@{
+    ViewData["Title"] = "Quản lý đơn đặt sân";
+    var quayLai = Url.Action("DanhSach", new Microsoft.AspNetCore.Routing.RouteValueDictionary(
+        Model.ThamSoTrang(Model.Trang).ToDictionary(x => x.Key, x => (object?)x.Value)));
+}
+<div class="ql-page-header">
+    <h1>@ViewData["Title"]</h1>
+    <p class="ql-subtitle">Tra cứu đơn theo khách hàng, sân và ngày sử dụng.</p>
+</div>
+<section class="ql-panel" aria-label="Tra cứu đơn đặt sân">
+    <form asp-action="DanhSach" method="get" class="row g-3 mb-4">
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        <div class="col-md-6 col-lg-4">
+            <label asp-for="TuKhoa" class="form-label"></label>
+            <input asp-for="TuKhoa" maxlength="200" class="form-control" placeholder="Nhập tên khách hàng hoặc sân" />
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label asp-for="MaLoaiSan" class="form-label"></label>
+            <select asp-for="MaLoaiSan" class="form-select">
+                <option value="">Tất cả loại sân</option>
+                @foreach (var loai in Model.LoaiSan) { <option value="@loai.MaLoaiSan">@loai.TenLoai</option> }
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label asp-for="TrangThai" class="form-label"></label>
+            <select asp-for="TrangThai" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                @foreach (var state in Enum.GetValues<TrangThaiDatSan>())
+                { <option value="@((int)state)">@HienThiDatSan.TenTrangThai(state)</option> }
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <label asp-for="TuNgay" class="form-label"></label>
+            <input asp-for="TuNgay" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" />
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <label asp-for="DenNgay" class="form-label"></label>
+            <input asp-for="DenNgay" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" />
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label asp-for="SapXep" class="form-label"></label>
+            <select asp-for="SapXep" class="form-select">
+                <option value="NgayGiam">Ngày sử dụng mới nhất</option><option value="NgayTang">Ngày sử dụng cũ nhất</option>
+                <option value="KhachTang">Tên khách A → Z</option><option value="KhachGiam">Tên khách Z → A</option>
+                <option value="SanTang">Tên sân A → Z</option><option value="SanGiam">Tên sân Z → A</option>
+            </select>
+        </div>
+        <div class="col-lg-2 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary">Tìm</button>
+            <a asp-action="DanhSach" class="btn btn-outline-secondary">Đặt lại</a>
+        </div>
+    </form>
+    @if (ViewData.ModelState.IsValid)
+    {
+        <p><strong>@Model.TongSo</strong> đơn phù hợp · Trang @Model.Trang / @Model.TongTrang</p>
+        @if (Model.Dong.Count == 0)
+        {
+            <div class="ql-empty"><h2 class="h5">Không có đơn phù hợp</h2><p>Thử đổi từ khóa hoặc bộ lọc.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive" role="region" aria-label="Bảng đơn đặt sân" tabindex="0">
+                <table class="table table-hover align-middle ql-table">
+                    <caption>Danh sách đơn — ngày lọc là ngày sử dụng sân.</caption>
+                    <thead><tr><th scope="col">Mã đơn</th><th scope="col">Khách hàng</th><th scope="col">Sân</th><th scope="col">Ngày sử dụng</th><th scope="col">Trạng thái</th><th scope="col">Tiền cọc</th><th scope="col">Thao tác</th></tr></thead>
+                    <tbody>
+                    @foreach (var don in Model.Dong)
+                    {
+                        <tr>
+                            <th scope="row">#@don.MaDatSan</th><td>@don.TenKhachHang</td>
+                            <td>@don.TenSan<div class="small text-muted">@don.TenLoai</div></td>
+                            <td>@don.GioBatDau.ToString("dd/MM/yyyy")<div class="small">@don.GioBatDau.ToString("HH:mm") – @don.GioKetThuc.ToString("HH:mm")</div></td>
+                            <td><span class="badge @HienThiDatSan.LopMau(don.TrangThai)">@HienThiDatSan.TenTrangThai(don.TrangThai)</span></td>
+                            <td>@HienThiDatSan.Tien(don.TienCoc)</td>
+                            <td><a class="btn btn-sm btn-outline-primary" asp-action="ChiTiet" asp-route-id="@don.MaDatSan" asp-route-quayLai="@quayLai" aria-label="Chi tiết đơn @don.MaDatSan">Chi tiết</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.TongTrang > 1)
+            {
+                <nav aria-label="Phân trang đơn đặt sân"><ul class="pagination flex-wrap">
+                    @if (Model.Trang > 1)
+                    {
+                        <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-all-route-data="@Model.ThamSoTrang(1)">Đầu</a></li>
+                        <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-all-route-data="@Model.ThamSoTrang(Model.Trang - 1)">Trước</a></li>
+                    }
+                    @for (var i = Math.Max(1, Model.Trang - 2); i <= Math.Min(Model.TongTrang, Model.Trang + 2); i++)
+                    {
+                        if (i == Model.Trang) { <li class="page-item active"><span class="page-link" aria-current="page">@i</span></li> }
+                        else { <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-all-route-data="@Model.ThamSoTrang(i)">@i</a></li> }
+                    }
+                    @if (Model.Trang < Model.TongTrang)
+                    {
+                        <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-all-route-data="@Model.ThamSoTrang(Model.Trang + 1)">Sau</a></li>
+                        <li class="page-item"><a class="page-link" asp-action="DanhSach" asp-all-route-data="@Model.ThamSoTrang(Model.TongTrang)">Cuối</a></li>
+                    }
+                </ul></nav>
+            }
+        }
+    }
+</section>

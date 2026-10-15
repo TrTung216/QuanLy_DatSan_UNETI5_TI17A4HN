@@ -142,7 +142,7 @@ public class LoaiSanTests
         var detail = WebUtility.HtmlDecode(await client.GetStringAsync(tao.Headers.Location));
         Assert.Contains("Đã thêm loại sân.", detail);
         Assert.Contains("Loai moi", detail);
-        Assert.Matches("nav-link active[^>]*aria-current=\"page\"[^>]*href=\"/LoaiSan/DanhSach\"", detail);
+        Assert.Matches("ql-side-link active[^>]*aria-current=\"page\"[^>]*href=\"/LoaiSan/DanhSach\"", detail);
         // Decimal đọc từ DB có thể mang scale .0; jQuery step=1 cần giá được render không có phần lẻ.
         var editHtml = await client.GetStringAsync($"/LoaiSan/Sua/{id}");
         var priceInput = Regex.Match(editHtml, "<input[^>]*id=\"DonGiaTheoGio\"[^>]*>").Value;

@@ -13,15 +13,6 @@ public class DonDatDongViewModel
     public TrangThaiDatSan TrangThai { get; set; }
 }
 
-public class DanhSachDonViewModel
-{
-    public List<DonDatDongViewModel> Dong { get; set; } = [];
-    public TrangThaiDatSan? TrangThai { get; set; }
-    public int Trang { get; set; } = 1;
-    public int TongTrang { get; set; } = 1;
-    public int TongSo { get; set; }
-}
-
 public class ChiTietDonViewModel
 {
     public int MaDatSan { get; set; }

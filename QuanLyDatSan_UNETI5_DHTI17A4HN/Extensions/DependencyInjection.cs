@@ -7,6 +7,7 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Extensions;
 
@@ -19,6 +20,7 @@ public static class DependencyInjection
         services.AddModuleSan();
         services.AddModuleKhachHang();
         // Module khác tự thêm dòng của mình ở đây
+        services.AddModuleDatSan();
         return services;
     }
 
@@ -49,6 +51,13 @@ public static class DependencyInjection
     private static IServiceCollection AddModuleKhachHang(this IServiceCollection services)
     {
         services.AddScoped<IKhachHangService, KhachHangService>();
+        return services;
+    }
+
+    // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Đăng ký service đặt sân.
+    private static IServiceCollection AddModuleDatSan(this IServiceCollection services)
+    {
+        services.AddScoped<IDatSanService, DatSanService>();
         return services;
     }
 }
