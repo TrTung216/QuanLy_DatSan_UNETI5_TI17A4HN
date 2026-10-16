@@ -10,7 +10,7 @@ public class DanhSachSanViewModel : TraCuuSanViewModel
     public int TrangHienTai { get; init; } = 1;
     public int TongSoTrang { get; init; } = 1;
     public int TongSoSan { get; init; }
-    public IReadOnlyList<LoaiSanLocViewModel> CacLoaiSan { get; init; } = Array.Empty<LoaiSanLocViewModel>();
+    public IReadOnlyList<LoaiSanTraCuuViewModel> CacLoaiSan { get; init; } = Array.Empty<LoaiSanTraCuuViewModel>();
 }
 
-public record LoaiSanLocViewModel(int MaLoaiSan, string TenLoai);
+public record LoaiSanTraCuuViewModel(int MaLoaiSan, string TenLoai);

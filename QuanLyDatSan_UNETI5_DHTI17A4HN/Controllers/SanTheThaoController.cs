@@ -130,7 +130,7 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
             TongSoSan = trangSan.TongSoSan,
             TuKhoa = dieuKien.TuKhoa, MaLoaiSan = dieuKien.MaLoaiSan, TrangThai = dieuKien.TrangThai,
             GiaTu = dieuKien.GiaTu, GiaDen = dieuKien.GiaDen, SapXep = dieuKien.SapXep, Trang = trangSan.Trang,
-            CacLoaiSan = cacLoai.Select(x => new LoaiSanLocViewModel(x.MaLoaiSan, x.TenLoai)).ToList()
+            CacLoaiSan = cacLoai.Select(x => new LoaiSanTraCuuViewModel(x.MaLoaiSan, x.TenLoai)).ToList()
         });
     }
 
