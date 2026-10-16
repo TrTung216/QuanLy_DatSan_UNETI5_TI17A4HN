@@ -8,6 +8,7 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.TrangChu;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Extensions;
 
@@ -16,6 +17,7 @@ public static class DependencyInjection
     public static IServiceCollection AddUngDungServices(this IServiceCollection services)
     {
         services.AddModuleTaiKhoanVaLoaiSan();
+        services.AddScoped<ITrangChuService, TrangChuService>();
         services.AddModuleDichVu();
         services.AddModuleSan();
         services.AddModuleKhachHang();
