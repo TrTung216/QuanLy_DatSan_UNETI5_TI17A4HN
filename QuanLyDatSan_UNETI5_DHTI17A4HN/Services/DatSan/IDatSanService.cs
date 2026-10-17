@@ -1,6 +1,7 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung: khai báo hợp đồng service dùng chung M3/M4 cho tạo đơn, kiểm tra trùng lịch, khóa sân và chuyển trạng thái.
-// Bao gồm đọc đơn cá nhân, tra cứu đơn quản lý có lọc/sắp xếp/phân trang và danh sách sân để chọn khi đặt.
+// Đọc đơn cá nhân/quản lý kèm RowVersion để hủy/xử lý an toàn; lọc, sắp xếp, phân trang và chọn sân.
+// Bên gọi xác thực vai trò; thao tác khách hủy lấy mã tài khoản từ phiên đăng nhập, service kiểm tra chủ đơn.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;

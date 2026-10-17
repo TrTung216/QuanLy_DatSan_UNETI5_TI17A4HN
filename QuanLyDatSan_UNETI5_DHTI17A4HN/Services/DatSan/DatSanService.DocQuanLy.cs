@@ -1,5 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: Truy vấn đơn quản lý với tìm kiếm, lọc ngày sử dụng, sắp xếp, phân trang và chi tiết khách/sân/tiền.
+// Nội dung: M4-02/03 - tìm, lọc, sắp xếp, phân trang đơn quản lý; đọc chi tiết khách/sân/tiền và RowVersion hiện tại.
 
 using Microsoft.EntityFrameworkCore;
 
@@ -62,6 +62,7 @@ public partial class DatSanService
         var result = await db.DatSans.AsNoTracking().Where(x => x.MaDatSan == id)
             .Select(x => new ChiTietDonQuanLyDto(new ChiTietDonDto
             {
+                PhienBan = x.RowVersion,
                 MaDatSan = x.MaDatSan, TenSan = x.SanTheThao.TenSan,
                 TenLoai = x.SanTheThao.LoaiSan.TenLoai, DiaChi = x.SanTheThao.DiaChi,
                 NgayDat = x.NgayDat, GioBatDau = x.GioBatDau, GioKetThuc = x.GioKetThuc,

@@ -1,6 +1,6 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung: xác nhận, từ chối, khách hàng hủy, nhân viên/Admin hủy và hoàn thành đơn theo điều kiện nghiệp vụ.
-// Kiểm tra quyền sở hữu khi khách hủy; điều phối khóa sân, RowVersion và transaction; lưu trạng thái, thời điểm, lý do và tiền chốt.
+// Chặn hủy/từ chối đơn có cọc; kiểm tra quyền sở hữu khi khách hủy; điều phối khóa sân, RowVersion và transaction; lưu trạng thái, thời điểm, lý do và tiền chốt.
 
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
@@ -52,6 +52,9 @@ public partial class DatSanService
             if (don.TrangThai != TrangThaiDatSan.ChoXuLy)
                 return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.ChiTuChoiDonCho);
 
+            if (don.TienCoc > 0m)
+                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.DaNhanCoc);
+
             don.TrangThai = TrangThaiDatSan.TuChoi;
             don.NgayHuy = dongHo.BayGio;
             don.LyDoHuy = lyDoChuan;
@@ -59,7 +62,7 @@ public partial class DatSanService
         }, cancellationToken);
     }
 
-    // Khách chỉ được hủy đơn của mình khi đơn còn chờ và giờ bắt đầu chưa tới.
+    // Khách chỉ hủy đơn của mình khi còn chờ, chưa nhận cọc và chưa tới giờ bắt đầu.
     public Task<KetQuaXuLyDon> KhachHangHuyDonAsync(HuyDonYeuCau yeuCau, int maTaiKhoan, CancellationToken cancellationToken)
     {
         var (maDatSan, lyDo, phienBan) = yeuCau;
@@ -78,6 +81,9 @@ public partial class DatSanService
             if (don.GioBatDau <= dongHo.BayGio)
                 return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.QuaGioHuy);
 
+            if (don.TienCoc > 0m)
+                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.DaNhanCoc);
+
             don.TrangThai = TrangThaiDatSan.DaHuy;
             don.NgayHuy = dongHo.BayGio;
             don.LyDoHuy = lyDoChuan;
@@ -85,7 +91,7 @@ public partial class DatSanService
         }, cancellationToken, maTaiKhoan);
     }
 
-    // Nhân viên/Admin có thể hủy đơn chờ; đơn đã xác nhận chỉ hủy trước giờ bắt đầu và khi chưa nhận cọc.
+    // Nhân viên/Admin hủy đơn chờ hoặc đã xác nhận khi chưa nhận cọc và chưa tới giờ bắt đầu.
     public Task<KetQuaXuLyDon> NhanVienHuyDonAsync(HuyDonYeuCau yeuCau,
         CancellationToken cancellationToken)
     {
@@ -100,7 +106,8 @@ public partial class DatSanService
                 return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.TrangThaiKhongChoHuy);
             if (don.GioBatDau <= dongHo.BayGio)
                 return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.QuaGioHuy);
-            if (don.TrangThai == TrangThaiDatSan.DangXuLy && don.TienCoc > 0m)
+
+            if (don.TienCoc > 0m)
                 return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.DaNhanCoc);
 
             don.TrangThai = TrangThaiDatSan.DaHuy;
