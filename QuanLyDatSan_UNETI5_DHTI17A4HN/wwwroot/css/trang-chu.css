@@ -1,0 +1,17 @@
+/* M1: Trần Trọng Tùng; MSSV: 23103100202. Chỉ áp dụng cho danh mục sân ở trang chủ. */
+.ql-home-courts .ql-home-group { margin-top: 1.75rem; }
+.ql-home-courts .ql-home-court {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.5rem;
+    background: #fff;
+    border: 1px solid var(--ql-border);
+    border-top: 3px solid var(--ql-primary, #1958ad);
+    border-radius: 1rem;
+    overflow-wrap: anywhere;
+}
+.ql-home-courts .ql-home-address { margin-bottom: 1rem; }
+.ql-home-courts dt { color: var(--ql-muted); font-size: .875rem; font-weight: 400; }
+.ql-home-courts dd { margin-bottom: .75rem; }
+.ql-home-courts .ql-home-price { color: #174b90; font-size: 1.25rem; font-weight: 700; }
