@@ -1,5 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: Khai báo bộ lọc, cách sắp xếp và DTO danh sách/chi tiết đơn dành cho nhân viên/Admin.
+// Nội dung: M4-02/03 - bộ lọc, sắp xếp và DTO danh sách/chi tiết quản lý; chuyển RowVersion để xử lý đơn an toàn.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 

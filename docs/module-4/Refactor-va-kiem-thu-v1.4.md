@@ -5,7 +5,7 @@ Ngày thực hiện: 13/10/2026. Codex hỗ trợ theo yêu cầu người dùng
 
 > Cập nhật sau đợt refactor: đã bổ sung màn hình nhân viên/Admin theo issue #22.
 > Xem [M4-02 — Danh sách và chi tiết đơn](M4-02-Danh-sach-va-chi-tiet-don.md)
-> để biết chức năng hiện tại và kết quả hồi quy 231 test. Phạm vi và số liệu dưới đây
+> để biết M4-02. M4-03 đã nối action xử lý đơn; xem [M4-03](M4-03-Xac-nhan-tu-choi-huy-don.md) và kết quả mới nhất: 114 M4, 4 JS; các module khác và giới hạn ghi rõ trong tài liệu. Phạm vi và số liệu dưới đây
 > ghi nhận thời điểm refactor ban đầu.
 
 ## 1. Phạm vi thực tế

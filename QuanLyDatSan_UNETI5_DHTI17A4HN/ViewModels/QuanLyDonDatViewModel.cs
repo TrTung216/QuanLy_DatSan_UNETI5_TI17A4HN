@@ -1,5 +1,6 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: Dữ liệu và validation bộ lọc; dữ liệu hiển thị danh sách/chi tiết đơn và tham số giữ trang.
+// Nội dung: M4-02/03 - bộ lọc và dữ liệu danh sách/chi tiết; điều kiện hiển thị các nút xử lý đơn.
+// Khai báo lý do từ chối/hủy, RowVersion, validation POST và dữ liệu nhập cần giữ lại khi có lỗi.
 
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -69,4 +70,26 @@ public sealed class ChiTietDonQuanLyViewModel : ChiTietDonViewModel
     public string SoDienThoai { get; init; } = "";
     public string Email { get; init; } = "";
     public string QuayLai { get; init; } = "";
+    public string PhienBan { get; init; } = "";
+    public bool CoTheXacNhan { get; init; }
+    public bool CoTheTuChoi { get; init; }
+    public bool CoTheNhanVienHuy { get; init; }
+    [BindNever] public string? LyDoTuChoiNhap { get; set; }
+    [BindNever] public string? LyDoHuyNhap { get; set; }
+}
+
+public sealed class HuyDonQuanLyViewModel
+{
+    [Range(1, int.MaxValue)]
+    public int MaDon { get; set; }
+
+    [Required(ErrorMessage = "Vui lòng nhập lý do.")]
+    [StringLength(1000, MinimumLength = 1, ErrorMessage = "Lý do tối đa 1000 ký tự.")]
+    [Display(Name = "Lý do")]
+    public string LyDo { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Thiếu phiên bản đơn. Vui lòng tải lại trang.")]
+    public string PhienBan { get; set; } = string.Empty;
+
+    public string? QuayLai { get; set; }
 }

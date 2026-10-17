@@ -1,6 +1,6 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung: định nghĩa mã lỗi, kết quả nghiệp vụ, DTO yêu cầu tạo/xử lý đơn và DTO dữ liệu danh sách, chi tiết, lựa chọn sân.
-// Các factory bảo đảm kết quả thành công không kèm lỗi và kết quả thất bại có mã lỗi hợp lệ.
+// Chi tiết trả RowVersion cho M3/M4 xử lý đơn; các factory kiểm tra tính hợp lệ của kết quả và mã lỗi.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
@@ -102,6 +102,7 @@ public class DonDatDongDto
 
 public class ChiTietDonDto
 {
+    public byte[] PhienBan { get; set; } = [];
     public int MaDatSan { get; set; }
     public string TenSan { get; set; } = string.Empty;
     public string TenLoai { get; set; } = string.Empty;
