@@ -1,4 +1,5 @@
-﻿namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Chung;
+﻿// M5: Nguyễn Hữu Quang; MSSV: 23103100184
+namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Chung;
 
 public record KetQuaNghiepVu(
     bool ThanhCong,

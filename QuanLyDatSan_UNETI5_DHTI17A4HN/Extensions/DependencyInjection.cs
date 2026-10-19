@@ -1,12 +1,14 @@
 ﻿using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
-
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon;
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ gom DI M1; giữ đăng ký M5 hiện có.
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. thêm đăng ký service hồ sơ khách hàng.
+//M5 :Nguyễn Hữu Quang MSSV : 23103100184 . Thêm đăng kí dịch vụ tính tiền
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyKhachHang;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.XacThuc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Extensions;
 
@@ -18,6 +20,9 @@ public static class DependencyInjection
         services.AddModuleDichVu();
         services.AddModuleSan();
         services.AddModuleKhachHang();
+        // trong AddUngDungServices(), dưới services.AddModuleDichVu();
+        services.AddModuleTinhTien();
+        services.AddModuleDichVuTrongDon();
         // Module khác tự thêm dòng của mình ở đây
         return services;
     }
@@ -28,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<ILoaiSanService, LoaiSanService>();
         services.AddScoped<IQuanLyTaiKhoanService, QuanLyTaiKhoanService>();
         services.AddScoped<IXacThucTaiKhoanService, XacThucTaiKhoanService>();
+
         return services;
     }
 
@@ -49,6 +55,18 @@ public static class DependencyInjection
     private static IServiceCollection AddModuleKhachHang(this IServiceCollection services)
     {
         services.AddScoped<IKhachHangService, KhachHangService>();
+        return services;
+    }
+    // M5: tính tiền
+    private static IServiceCollection AddModuleTinhTien(this IServiceCollection services)
+    {
+        services.AddScoped<ITinhTienService, TinhTienService>();
+        return services;
+    }
+    // M5: dịch vụ trong đơn
+    private static IServiceCollection AddModuleDichVuTrongDon(this IServiceCollection services)
+    {
+        services.AddScoped<IDichVuTrongDonService, DichVuTrongDonService>();
         return services;
     }
 }

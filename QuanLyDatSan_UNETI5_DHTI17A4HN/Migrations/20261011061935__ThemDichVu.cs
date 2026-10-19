@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿// M5: Nguyễn Hữu Quang; MSSV: 23103100184
+
+
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
