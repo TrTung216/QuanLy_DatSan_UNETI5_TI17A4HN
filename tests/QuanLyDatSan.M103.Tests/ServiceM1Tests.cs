@@ -164,8 +164,8 @@ public class ServiceM1Tests
 
     [Theory]
     [InlineData("/QuanLyTaiKhoan/DanhSach", "/QuanLyTaiKhoan/DanhSach")]
-    [InlineData("https://example.test/ngoai", "/TaiKhoan/ThongTin")]
-    [InlineData("//example.test/ngoai", "/TaiKhoan/ThongTin")]
+    [InlineData("https://example.test/ngoai", "/QuanTri")]
+    [InlineData("//example.test/ngoai", "/QuanTri")]
     public async Task DangNhapGiuReturnUrlNoiBoVaDangXuatXoaPhien(string returnUrl, string dich)
     {
         using var app = new UngDungKiemThu(); await app.KhoiTaoAsync();

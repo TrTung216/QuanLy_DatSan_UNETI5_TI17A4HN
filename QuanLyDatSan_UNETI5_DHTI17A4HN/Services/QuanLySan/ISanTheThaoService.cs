@@ -5,7 +5,8 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
 // Các thao tác ghi dành cho Admin/NhanVien, được Authorize tại Controller.
 public interface ISanTheThaoService
 {
-    Task<TrangSanDoc> LayDanhSachAsync(int trang, CancellationToken cancellationToken);
+    Task<KetQuaSan<TrangSanDoc>> LayDanhSachAsync(TraCuuSan dieuKien, CancellationToken cancellationToken);
+    Task<IReadOnlyList<LoaiSanLoc>> LayLoaiSanLocAsync(CancellationToken cancellationToken);
     Task<SanDoc?> LayChiTietAsync(int maSan, CancellationToken cancellationToken);
     Task<IReadOnlyList<LoaiSanLuaChon>> LayLuaChonAsync(int? maLoaiSanHienTai, CancellationToken cancellationToken);
     Task<bool> KiemTraLoaiSanAsync(int? maLoaiSan, int? maLoaiSanHienTai, CancellationToken cancellationToken);

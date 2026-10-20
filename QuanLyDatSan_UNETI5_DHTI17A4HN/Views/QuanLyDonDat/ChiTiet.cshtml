@@ -1,0 +1,112 @@
+@* M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+   Nội dung: M4-02/03 - chi tiết đơn quản lý; form xác nhận/từ chối/hủy theo trạng thái, giờ và cọc.
+   Gửi antiforgery/RowVersion, giữ lý do khi lỗi và nạp JS xác nhận thao tác/chống gửi lặp. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ChiTietDonQuanLyViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@{
+    ViewData["Title"] = $"Chi tiết đơn #{Model.MaDatSan}";
+    string ThoiDiem(DateTime? value) => value?.ToString("dd/MM/yyyy HH:mm") ?? "—";
+}
+<div class="ql-page-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div><h1>@ViewData["Title"]</h1>
+        <span class="badge @HienThiDatSan.LopMau(Model.TrangThai)">@HienThiDatSan.TenTrangThai(Model.TrangThai)</span>
+    </div>
+    <a href="@Model.QuayLai" class="btn btn-outline-secondary">Quay lại danh sách</a>
+</div>
+<div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
+<div class="row g-4">
+    <section class="col-lg-6" aria-label="Khách hàng và sân">
+        <div class="ql-panel h-100">
+            <h2 class="h5">Khách hàng</h2>
+            <dl class="row">
+                <dt class="col-sm-4">Mã khách</dt><dd class="col-sm-8">#@Model.MaKhachHang</dd>
+                <dt class="col-sm-4">Họ tên</dt><dd class="col-sm-8">@Model.TenKhachHang</dd>
+                <dt class="col-sm-4">Điện thoại</dt><dd class="col-sm-8">@Model.SoDienThoai</dd>
+                <dt class="col-sm-4">Email</dt><dd class="col-sm-8 text-break">@Model.Email</dd>
+            </dl>
+            <h2 class="h5">Thông tin sử dụng sân</h2>
+            <dl class="row">
+                <dt class="col-sm-4">Sân / loại sân</dt><dd class="col-sm-8">@Model.TenSan / @Model.TenLoai</dd>
+                <dt class="col-sm-4">Địa chỉ</dt><dd class="col-sm-8">@Model.DiaChi</dd>
+                <dt class="col-sm-4">Bắt đầu</dt><dd class="col-sm-8">@ThoiDiem(Model.GioBatDau)</dd>
+                <dt class="col-sm-4">Kết thúc</dt><dd class="col-sm-8">@ThoiDiem(Model.GioKetThuc)</dd>
+                <dt class="col-sm-4">Đơn giá trên đơn</dt><dd class="col-sm-8">@HienThiDatSan.Tien(Model.DonGia)/giờ</dd>
+            </dl>
+        </div>
+    </section>
+    <section class="col-lg-6" aria-label="Tiền và các mốc xử lý">
+        <div class="ql-panel h-100">
+            <h2 class="h5">Thông tin tiền</h2>
+            <dl class="row">
+                <dt class="col-sm-5">Tiền cọc đã ghi nhận</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienCoc)</dd>
+                @if (Model.TongTien.HasValue)
+                {
+                    <dt class="col-sm-5">Tiền sân đã chốt</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienSan ?? 0m)</dd>
+                    <dt class="col-sm-5">Tiền dịch vụ đã chốt</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienDichVu ?? 0m)</dd>
+                    <dt class="col-sm-5">Tổng tiền đã chốt</dt><dd class="col-sm-7"><strong>@HienThiDatSan.Tien(Model.TongTien.Value)</strong></dd>
+                }
+                else
+                {
+                    <dt class="col-sm-5">Tiền sân dự kiến</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
+                    <dt class="col-sm-5">Tổng tiền</dt><dd class="col-sm-7">Chưa chốt</dd>
+                }
+            </dl>
+            <h2 class="h5">Các mốc xử lý</h2>
+            <dl class="row">
+                <dt class="col-sm-5">Ngày tạo đơn</dt><dd class="col-sm-7">@ThoiDiem(Model.NgayDat)</dd>
+                <dt class="col-sm-5">Xác nhận</dt><dd class="col-sm-7">@ThoiDiem(Model.NgayXacNhan)</dd>
+                <dt class="col-sm-5">Hủy / từ chối</dt><dd class="col-sm-7">@ThoiDiem(Model.NgayHuy)</dd>
+                <dt class="col-sm-5">Hoàn thành</dt><dd class="col-sm-7">@ThoiDiem(Model.NgayHoanThanh)</dd>
+                @if (!string.IsNullOrWhiteSpace(Model.LyDoHuy))
+                {
+                    <dt class="col-sm-5">Lý do hủy / từ chối</dt><dd class="col-sm-7 text-break" style="white-space: pre-wrap">@Model.LyDoHuy</dd>
+                }
+            </dl>
+        </div>
+    </section>
+    @if (Model.CoTheXacNhan || Model.CoTheTuChoi || Model.CoTheNhanVienHuy)
+    {
+        <section class="col-12 ql-panel mt-4" aria-label="Thao tác đơn đặt sân">
+            <h2 class="h5">Xử lý đơn</h2>
+            <p>Các trường có dấu * là bắt buộc.</p>
+            <div class="d-flex flex-wrap gap-3">
+                @if (Model.CoTheXacNhan)
+                {
+                    <form asp-action="XacNhan" data-xu-ly-don method="post" asp-antiforgery="true">
+                        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+                        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+                        <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        <button type="submit" class="btn btn-primary">Xác nhận đơn</button>
+                    </form>
+                }
+                @if (Model.CoTheTuChoi)
+                {
+                    <form asp-action="TuChoi" data-xu-ly-don data-xac-nhan="Bạn có chắc muốn từ chối đơn này?" method="post" asp-antiforgery="true" class="d-flex flex-wrap align-items-end gap-2">
+                        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+                        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+                        <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        <div><label for="ly-do-tu-choi-@Model.MaDatSan" class="form-label">Lý do từ chối *</label>
+                            <input id="ly-do-tu-choi-@Model.MaDatSan" name="LyDo" value="@Model.LyDoTuChoiNhap" class="form-control" required maxlength="1000" /></div>
+                        <button type="submit" class="btn btn-outline-danger">Từ chối</button>
+                    </form>
+                }
+                @if (Model.CoTheNhanVienHuy)
+                {
+                    <form asp-action="Huy" data-xu-ly-don data-xac-nhan="Bạn có chắc muốn hủy đơn này?" method="post" asp-antiforgery="true" class="d-flex flex-wrap align-items-end gap-2">
+                        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+                        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+                        <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        <div><label for="ly-do-huy-@Model.MaDatSan" class="form-label">Lý do hủy *</label>
+                            <input id="ly-do-huy-@Model.MaDatSan" name="LyDo" value="@Model.LyDoHuyNhap" class="form-control" required maxlength="1000" /></div>
+                        <button type="submit" class="btn btn-danger">Hủy đơn</button>
+                    </form>
+                }
+            </div>
+        </section>
+    }
+
+</div>
+
+@section Scripts {
+    <script src="~/js/quan-ly-don-dat.js" asp-append-version="true"></script>
+}

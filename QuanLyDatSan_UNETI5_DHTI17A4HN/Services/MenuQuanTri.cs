@@ -1,4 +1,5 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. nguồn menu duy nhất của khu vực quản trị, dùng cho thanh bên và trang điều hành.
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Bổ sung lối vào tra cứu đơn cho Admin/Nhân viên.
 using System.Security.Claims;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
@@ -32,7 +33,12 @@ public static class MenuQuanTri
             vanHanh.Add(new MucMenu("Thêm sân", "SanTheThao", "Create", null,
                 "Tạo sân thể thao mới."));
         }
-        // Đơn đặt sân (M4) và khách hàng (M3) bổ sung tại đây khi có màn hình quản lý.
+        if (laAdmin || laNhanVien)
+        {
+            vanHanh.Add(new MucMenu("Đơn đặt sân", "QuanLyDonDat", "DanhSach", ["ChiTiet"],
+                "Tra cứu danh sách và chi tiết đơn đặt sân."));
+        }
+        // Khách hàng (M3) bổ sung tại đây khi có màn hình quản lý.
 
         var danhMuc = new List<MucMenu>();
         if (laAdmin)

@@ -6,12 +6,77 @@
     ViewData["Title"] = "Danh sách sân";
     var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
     var laQuanLy = User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien)));
+    var coDieuKien = !string.IsNullOrWhiteSpace(Model.TuKhoa) || Model.MaLoaiSan.HasValue
+        || Model.TrangThai.HasValue || Model.GiaTu.HasValue || Model.GiaDen.HasValue;
+    // Giữ mọi điều kiện ở các liên kết phân trang; tiền dùng định dạng URL không có dấu phân cách.
+    var thamSoTrang = new Dictionary<string, string>
+    {
+        ["tuKhoa"] = Model.TuKhoa ?? "",
+        ["maLoaiSan"] = Model.MaLoaiSan?.ToString(CultureInfo.InvariantCulture) ?? "",
+        ["trangThai"] = Model.TrangThai.HasValue ? ((int)Model.TrangThai.Value).ToString(CultureInfo.InvariantCulture) : "",
+        ["giaTu"] = Model.GiaTu?.ToString("0", CultureInfo.InvariantCulture) ?? "",
+        ["giaDen"] = Model.GiaDen?.ToString("0", CultureInfo.InvariantCulture) ?? "",
+        ["sapXep"] = Model.SapXep
+    };
 }
 <div class="ql-page-header">
     <h1>Danh sách sân</h1>
     <p class="ql-subtitle">Xem thông tin, giá thuê và giờ phục vụ của các sân thể thao.</p>
 </div>
 <section class="ql-panel" aria-label="Danh sách sân thể thao">
+    <form asp-action="Index" method="get" class="row g-3 mb-4" aria-label="Tìm và lọc sân">
+        <div asp-validation-summary="All" class="text-danger col-12" role="alert"></div>
+        <div class="col-md-6 col-lg-4">
+            <label asp-for="TuKhoa" class="form-label"></label>
+            <input asp-for="TuKhoa" class="form-control" maxlength="100" placeholder="Tên sân, tên loại sân hoặc địa chỉ" />
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label asp-for="MaLoaiSan" class="form-label"></label>
+            <select asp-for="MaLoaiSan" class="form-select">
+                <option value="">Tất cả loại sân</option>
+                @foreach (var loai in Model.CacLoaiSan)
+                {
+                    <option value="@loai.MaLoaiSan">@loai.TenLoai</option>
+                }
+            </select>
+        </div>
+        @if (laQuanLy)
+        {
+            <div class="col-md-6 col-lg-4">
+                <label asp-for="TrangThai" class="form-label"></label>
+                <select asp-for="TrangThai" class="form-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="1">Hoạt động</option>
+                    <option value="2">Bảo trì</option>
+                    <option value="3">Ngừng hoạt động</option>
+                </select>
+            </div>
+        }
+        <div class="col-md-6 col-lg-3">
+            <label asp-for="GiaTu" class="form-label"></label>
+            <input asp-for="GiaTu" type="number" asp-format="{0:0}" class="form-control" min="0" step="1" aria-describedby="gia-loc" />
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <label asp-for="GiaDen" class="form-label"></label>
+            <input asp-for="GiaDen" type="number" asp-format="{0:0}" class="form-control" min="0" step="1" aria-describedby="gia-loc" />
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label asp-for="SapXep" class="form-label"></label>
+            <select asp-for="SapXep" class="form-select">
+                <option value="ten_tang">Tên sân A → Z</option>
+                <option value="ten_giam">Tên sân Z → A</option>
+                <option value="gia_tang">Giá tăng dần</option>
+                <option value="gia_giam">Giá giảm dần</option>
+                <option value="gio_tang">Giờ mở cửa tăng dần</option>
+                <option value="gio_giam">Giờ mở cửa giảm dần</option>
+            </select>
+        </div>
+        <div class="col-lg-2 d-flex flex-wrap align-items-end gap-2">
+            <button type="submit" class="btn btn-outline-primary">Tìm / Lọc</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Đặt lại</a>
+        </div>
+        <p id="gia-loc" class="form-text col-12 mb-0">Lọc và sắp xếp giá theo giá giờ thường T2–T6 (đồng/giờ). Nhập số nguyên, ví dụ 200000.</p>
+    </form>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h2 class="h5 mb-0">Sân thể thao <span class="badge text-bg-primary">@Model.TongSoSan</span></h2>
         <div class="d-flex gap-2">
@@ -22,11 +87,15 @@
             <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm">Về trang chủ</a>
         </div>
     </div>
-    @if (Model.DanhSachSan.Count == 0)
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <p class="mb-0">Vui lòng sửa điều kiện tra cứu rồi bấm Tìm / Lọc.</p>
+    }
+    else if (Model.DanhSachSan.Count == 0)
     {
         <div class="ql-empty">
-            <h2 class="h5">Chưa có sân để hiển thị</h2>
-            <p class="mb-0">Danh sách sẽ xuất hiện khi có sân được cập nhật.</p>
+            <h2 class="h5">@(coDieuKien ? "Không có sân phù hợp" : "Chưa có sân để hiển thị")</h2>
+            <p class="mb-0">@(coDieuKien ? "Thử thay đổi điều kiện tìm kiếm hoặc bấm Đặt lại." : "Danh sách sẽ xuất hiện khi có sân được cập nhật.")</p>
         </div>
     }
     else
@@ -89,8 +158,8 @@
                 <ul class="pagination flex-wrap">
                     @if (Model.TrangHienTai > 1)
                     {
-                        <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="1">Đầu</a></li>
-                        <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="@(Model.TrangHienTai - 1)">Trước</a></li>
+                        <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="1">Đầu</a></li>
+                        <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@(Model.TrangHienTai - 1)">Trước</a></li>
                     }
                     @for (var trang = Math.Max(1, Model.TrangHienTai - 2); trang <= Math.Min(Model.TongSoTrang, Model.TrangHienTai + 2); trang++)
                     {
@@ -100,13 +169,13 @@
                         }
                         else
                         {
-                            <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="@trang">@trang</a></li>
+                            <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@trang">@trang</a></li>
                         }
                     }
                     @if (Model.TrangHienTai < Model.TongSoTrang)
                     {
-                        <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="@(Model.TrangHienTai + 1)">Sau</a></li>
-                        <li class="page-item"><a class="page-link" asp-action="Index" asp-route-trang="@Model.TongSoTrang">Cuối</a></li>
+                        <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@(Model.TrangHienTai + 1)">Sau</a></li>
+                        <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@Model.TongSoTrang">Cuối</a></li>
                     }
                 </ul>
             </nav>

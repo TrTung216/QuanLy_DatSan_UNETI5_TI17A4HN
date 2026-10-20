@@ -1,14 +1,20 @@
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Nạp danh mục sân công khai qua service cho trang chủ.
 using Microsoft.AspNetCore.Mvc;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.TrangChu;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using System.Diagnostics;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController(ITrangChuService trangChuService) : Controller
     {
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            return View();
+            var cacLoai = await trangChuService.LaySanTheoLoaiAsync(cancellationToken);
+            return View(new TrangChuViewModel(cacLoai.Select(loai => new NhomSanTrangChuViewModel(
+                loai.MaLoaiSan, loai.TenLoai, loai.San.Select(san => new TheSanTrangChuViewModel(
+                    san.MaSan, san.TenSan, san.DiaChi, san.DonGia, san.GioMoCua, san.GioDongCua)).ToList())).ToList()));
         }
 
         public IActionResult Privacy()
