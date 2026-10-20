@@ -76,7 +76,8 @@ public class QuanLyTaiKhoanTests
             var post = await client.PostAsync(path, new FormUrlEncodedContent(form));
             Assert.Equal(HttpStatusCode.Redirect, post.StatusCode);
         }
-        var home = await client.GetStringAsync("/");
+        // Kiểm tra menu chung trên trang tài khoản; fixture này chỉ có dữ liệu tài khoản/hồ sơ.
+        var home = await client.GetStringAsync(ten is null ? "/TaiKhoan/DangNhap" : "/TaiKhoan/ThongTin");
         Assert.DoesNotContain("/QuanLyTaiKhoan/", home);
         Assert.Equal(VaiTro.NhanVien, (await app.DocTaiKhoanAsync(2)).VaiTro);
         if (ten is not null)
@@ -293,7 +294,7 @@ public class QuanLyTaiKhoanTests
         await DangNhapAsync(app, admin, "admin");
         var cam = await admin.GetAsync(Goc + "/DanhSach");
         Assert.Contains("/TaiKhoan/TuChoiTruyCap", cam.Headers.Location!.OriginalString);
-        Assert.DoesNotContain("/QuanLyTaiKhoan/", await admin.GetStringAsync("/"));
+        Assert.DoesNotContain("/QuanLyTaiKhoan/", await admin.GetStringAsync("/TaiKhoan/ThongTin"));
         var token = await TokenAsync(admin, "/TaiKhoan/ThongTin");
         var result = await admin.PostAsync("/TaiKhoan/DangXuat", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = token }));
         Assert.Equal(HttpStatusCode.Redirect, result.StatusCode);

@@ -2,8 +2,11 @@
 
 Phụ trách: Phạm Thành Nghĩa — MSSV 23103100308. Codex hỗ trợ triển khai và kiểm thử.
 Nội dung: đối chiếu issue #23, hợp đồng M3/M4, kết quả kiểm thử và hướng dẫn review.
-Cập nhật: 13/10/2026. Issue: [#23](https://github.com/TrTung216/QuanLy_DatSan_UNETI5_TI17A4HN/issues/23).
+Cập nhật: 16/10/2026. Issue: [#23](https://github.com/TrTung216/QuanLy_DatSan_UNETI5_TI17A4HN/issues/23).
 Đối chiếu quy ước nhóm v1.4 và hướng dẫn layout chung.
+
+Nghiệm thu kỹ thuật mới nhất: **đạt**, M4 114/114, JS 4/4 và 9 nhóm kiểm tra Chrome.
+Xem [biên bản 16/10/2026](Nghiem-thu-M4-03-2026-10-16.md) để biết phạm vi, ảnh và giới hạn.
 
 ## Kết quả triển khai
 
@@ -54,7 +57,7 @@ Giao diện khách hủy thuộc #20 của M3; #23 cung cấp service và dữ l
 - Views/QuanLyDonDat/ChiTiet.cshtml và wwwroot/js/quan-ly-don-dat.js: form và xử lý tương tác.
 - tests/QuanLyDatSan.M4.Tests: QuanLyDonDatTests.cs, DatSanTests.cs, quan-ly-don-dat.test.cjs.
 
-## Kết quả kiểm thử
+## Kết quả kiểm thử trước đây (13/10/2026)
 
 - M4: **114 passed, 0 failed, 0 skipped**, SQL Server LocalDB thật trên instance riêng.
 - JavaScript: **4 passed, 0 failed**, kiểm tra handler với DOM mô phỏng bằng Node.
@@ -93,6 +96,7 @@ Có thể đặt M4_TEST_SQL_SERVER thành instance test riêng. Không đổi c
 ## Bàn giao
 
 Nội dung PR theo mẫu: [PR-M4-03.md](PR-M4-03.md).
-Phần code và kiểm thử tự động #23 hoàn tất. Chưa commit/push/tạo PR hoặc đóng issue.
-Còn review của thành viên khác và merge theo quy trình nhóm; kiểm tra trực quan khi review.
+Phần code tại HEAD `b58db79` đã được nghiệm thu kỹ thuật ngày 16/10/2026, gồm kiểm tra Chrome desktop/mobile.
+Lượt nghiệm thu chỉ cập nhật tài liệu/bằng chứng, chưa commit/push/tạo PR hoặc đóng issue.
+Còn đối chiếu main trước merge, review của thành viên khác và merge theo quy trình nhóm.
 Issue #24 (ghi cọc, hoàn thành gắn tính tiền M5-03) là công việc tiếp theo.

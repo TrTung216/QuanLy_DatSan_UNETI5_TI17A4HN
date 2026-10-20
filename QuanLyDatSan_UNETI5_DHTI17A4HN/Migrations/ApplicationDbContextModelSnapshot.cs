@@ -17,10 +17,46 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.ChiTietDatSan", b =>
+                {
+                    b.Property<int>("MaChiTiet")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaChiTiet"));
+
+                    b.Property<decimal>("DonGia")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MaDatSan")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaDichVu")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SoLuong")
+                        .HasColumnType("int");
+
+                    b.HasKey("MaChiTiet");
+
+                    b.HasIndex("MaDichVu");
+
+                    b.HasIndex("MaDatSan", "MaDichVu")
+                        .IsUnique();
+
+                    b.ToTable("ChiTietDatSan", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ChiTietDatSan_DonGia", "[DonGia] >= 0");
+
+                            t.HasCheckConstraint("CK_ChiTietDatSan_SoLuong", "[SoLuong] > 0");
+                        });
+                });
 
             modelBuilder.Entity("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.DatSan", b =>
                 {
@@ -425,6 +461,25 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
                         });
                 });
 
+            modelBuilder.Entity("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.ChiTietDatSan", b =>
+                {
+                    b.HasOne("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.DatSan", "DatSan")
+                        .WithMany("ChiTietDatSans")
+                        .HasForeignKey("MaDatSan")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.DichVu", "DichVu")
+                        .WithMany("ChiTietDatSans")
+                        .HasForeignKey("MaDichVu")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DatSan");
+
+                    b.Navigation("DichVu");
+                });
+
             modelBuilder.Entity("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.DatSan", b =>
                 {
                     b.HasOne("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.KhachHang", "KhachHang")
@@ -464,6 +519,16 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
                         .IsRequired();
 
                     b.Navigation("LoaiSan");
+                });
+
+            modelBuilder.Entity("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.DatSan", b =>
+                {
+                    b.Navigation("ChiTietDatSans");
+                });
+
+            modelBuilder.Entity("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.DichVu", b =>
+                {
+                    b.Navigation("ChiTietDatSans");
                 });
 
             modelBuilder.Entity("QuanLyDatSan_UNETI5_DHTI17A4HN.Models.KhachHang", b =>

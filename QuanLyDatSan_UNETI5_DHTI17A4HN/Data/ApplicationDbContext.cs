@@ -3,7 +3,7 @@
 // M2: Phan Giang Tâm; MSSV: 23103100196.
 // Nội dung: đăng ký sân, cấu hình bảng, quan hệ loại sân và chuẩn hóa dữ liệu.
 // M5: Nguyễn Hữu Quang; MSSV: 23103100184
-// Nội dung: đăng ký và cấu hình bảng DichVu.
+// Nội dung: đăng ký và cấu hình bảng DichVu., chi tiết dặt sân
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. ánh xạ, ràng buộc và chuẩn hóa dữ liệu KhachHang, ánh xạ DatSan.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
@@ -22,6 +22,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<DichVu> DichVus => Set<DichVu>();
     public DbSet<KhachHang> KhachHangs => Set<KhachHang>();
     public DbSet<DatSan> DatSans => Set<DatSan>();
+    public DbSet<ChiTietDatSan> ChiTietDatSans => Set<ChiTietDatSan>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -183,6 +184,26 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(x => x.DonViTinh).HasMaxLength(30).IsRequired();
             entity.Property(x => x.DonGia).HasPrecision(18, 2);
             entity.Property(x => x.MoTa).HasMaxLength(1000);
+        });
+
+        modelBuilder.Entity<ChiTietDatSan>(entity =>
+        {
+            entity.ToTable("ChiTietDatSan", table =>
+            {
+                table.HasCheckConstraint("CK_ChiTietDatSan_SoLuong", "[SoLuong] > 0");
+                table.HasCheckConstraint("CK_ChiTietDatSan_DonGia", "[DonGia] >= 0");
+            });
+            entity.HasKey(x => x.MaChiTiet);
+            entity.Property(x => x.DonGia).HasPrecision(18, 2);
+            entity.HasIndex(x => new { x.MaDatSan, x.MaDichVu }).IsUnique();
+            entity.HasOne(x => x.DatSan)
+                .WithMany(x => x.ChiTietDatSans)
+                .HasForeignKey(x => x.MaDatSan)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.DichVu)
+                .WithMany(x => x.ChiTietDatSans)
+                .HasForeignKey(x => x.MaDichVu)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

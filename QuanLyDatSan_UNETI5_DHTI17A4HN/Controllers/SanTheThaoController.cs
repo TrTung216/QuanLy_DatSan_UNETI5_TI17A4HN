@@ -104,15 +104,33 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(int trang = 1, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index([FromQuery] TraCuuSanViewModel dieuKien, CancellationToken cancellationToken = default)
     {
-        var ketQua = await sanService.LayDanhSachAsync(trang, cancellationToken);
+        var cacLoai = await sanService.LayLoaiSanLocAsync(cancellationToken);
+        var trangSan = new TrangSanDoc([], 1, 1, 0);
+        if (ModelState.IsValid)
+        {
+            dieuKien.TuKhoa = dieuKien.TuKhoa?.Trim();
+            var ketQua = await sanService.LayDanhSachAsync(new(dieuKien.TuKhoa, dieuKien.MaLoaiSan,
+                dieuKien.TrangThai, dieuKien.GiaTu, dieuKien.GiaDen, dieuKien.SapXep, dieuKien.Trang), cancellationToken);
+            switch (ketQua.MaLoi)
+            {
+                case MaLoiSan.ThanhCong: trangSan = ketQua.DuLieu; break;
+                case MaLoiSan.DuLieuKhongHopLe:
+                    ModelState.AddModelError(string.Empty, "Điều kiện tra cứu sân không hợp lệ.");
+                    break;
+                default: throw new InvalidOperationException("Mã lỗi tra cứu sân chưa được ánh xạ.");
+            }
+        }
         return View(new DanhSachSanViewModel
         {
-            DanhSachSan = ketQua.DanhSach.Select(ThanhViewModel).ToList(),
-            TrangHienTai = ketQua.Trang,
-            TongSoTrang = ketQua.TongTrang,
-            TongSoSan = ketQua.TongSoSan
+            DanhSachSan = trangSan.DanhSach.Select(ThanhViewModel).ToList(),
+            TrangHienTai = trangSan.Trang,
+            TongSoTrang = trangSan.TongTrang,
+            TongSoSan = trangSan.TongSoSan,
+            TuKhoa = dieuKien.TuKhoa, MaLoaiSan = dieuKien.MaLoaiSan, TrangThai = dieuKien.TrangThai,
+            GiaTu = dieuKien.GiaTu, GiaDen = dieuKien.GiaDen, SapXep = dieuKien.SapXep, Trang = trangSan.Trang,
+            CacLoaiSan = cacLoai.Select(x => new LoaiSanTraCuuViewModel(x.MaLoaiSan, x.TenLoai)).ToList()
         });
     }
 
