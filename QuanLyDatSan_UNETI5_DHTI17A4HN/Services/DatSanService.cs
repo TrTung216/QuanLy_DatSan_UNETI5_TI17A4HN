@@ -1,6 +1,6 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. kiểm tra nghiệp vụ, khóa theo sân và tạo đơn đặt sân; M4 dùng chung KhoaSanAsync/CoTrungLichAsync.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung M4: chuẩn hóa DTO và mã lỗi tạo đơn; dùng chung kiểm tra trùng lịch và khóa sân khi xử lý đơn.
+// Nội dung M4: chuẩn hóa DTO và mã lỗi tạo đơn; dùng chung quy tắc khả dụng M2/M3/M4, kiểm tra lại sau khóa sân.
 // File này còn cung cấp công thức tính tiền sân dự kiến theo thời lượng và đơn giá trên đơn.
 
 using Microsoft.EntityFrameworkCore;
@@ -23,12 +23,9 @@ public partial class DatSanService(ApplicationDbContext db, IDongHo dongHo) : ID
         if (!await KhachDuDieuKienAsync(maTaiKhoan, cancellationToken))
             return Loi(MaLoiDatSan.HoSoKhongHoatDong);
 
-        var gioBatDauChuan = new TimeOnly(gioBatDau.Hour, gioBatDau.Minute);
-        var gioKetThucChuan = new TimeOnly(gioKetThuc.Hour, gioKetThuc.Minute);
-        var batDau = ngaySuDung.ToDateTime(gioBatDauChuan);
-        var ketThuc = ngaySuDung.ToDateTime(gioKetThucChuan);
-        if (batDau <= dongHo.BayGio) return Loi(MaLoiDatSan.BatDauKhongTuongLai);
-        if (ketThuc <= batDau) return Loi(MaLoiDatSan.KetThucKhongHopLe);
+        var (batDau, ketThuc) = ChuanHoaKhoangGio(new(ngaySuDung, gioBatDau, gioKetThuc));
+        var loiGio = KiemTraKhoangGio(batDau, ketThuc, dongHo.BayGio);
+        if (loiGio is not null) return Loi(AnhXaLoiKhaDung(loiGio.Value, khiTao: true));
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await KhoaSanAsync(maSan, cancellationToken);
@@ -42,29 +39,20 @@ public partial class DatSanService(ApplicationDbContext db, IDongHo dongHo) : ID
             return Loi(MaLoiDatSan.HoSoKhongHoatDong);
 
         var bayGio = dongHo.BayGio;
-        if (batDau <= bayGio) return Loi(MaLoiDatSan.BatDauKhongTuongLai);
+        loiGio = KiemTraKhoangGio(batDau, ketThuc, bayGio);
+        if (loiGio is not null) return Loi(AnhXaLoiKhaDung(loiGio.Value, khiTao: true));
 
-        var san = await db.SanTheThaos.Include(x => x.LoaiSan)
+        var san = await TruyVanKhaDungSan(batDau, ketThuc, null)
             .SingleOrDefaultAsync(x => x.MaSan == maSan, cancellationToken);
-        if (san is null) return Loi(MaLoiDatSan.SanKhongTonTai);
-        if (san.TrangThai != TrangThaiSan.HoatDong || san.LoaiSan.TrangThai != TrangThaiLoaiSan.HoatDong)
-        {
-            return Loi(MaLoiDatSan.SanKhongNhanDat);
-        }
-        if (gioBatDauChuan < san.GioMoCua || gioKetThucChuan > san.GioDongCua)
-        {
-            return KetQuaTaoDon.ThatBai(new(MaLoiDatSan.NgoaiGioKhiTao, san.GioMoCua, san.GioDongCua));
-        }
-        if (san.NgayBaoTri == ngaySuDung) return Loi(MaLoiDatSan.SanBaoTriKhiTao);
-        if (await CoTrungLichAsync(maSan, batDau, ketThuc, null, cancellationToken))
-        {
-            return Loi(MaLoiDatSan.TrungLichKhiTao);
-        }
+        var loiSan = DanhGiaKhaDungSan(san, batDau, ketThuc);
+        if (loiSan is not null)
+            return KetQuaTaoDon.ThatBai(new(AnhXaLoiKhaDung(loiSan.Value, khiTao: true),
+                san?.GioMoCua, san?.GioDongCua));
 
         var don = new DatSan
         {
             MaKhachHang = khachHang.MaKhachHang,
-            MaSan = san.MaSan,
+            MaSan = san!.MaSan,
             NgayDat = bayGio,
             GioBatDau = batDau,
             GioKetThuc = ketThuc,
@@ -80,10 +68,8 @@ public partial class DatSanService(ApplicationDbContext db, IDongHo dongHo) : ID
 
     // Hai lịch giao nhau khi batDauMoi < ketThucCu và ketThucMoi > batDauCu; DaHuy và TuChoi không chiếm chỗ.
     public Task<bool> CoTrungLichAsync(int maSan, DateTime batDau, DateTime ketThuc, int? boQuaMaDatSan,
-        CancellationToken cancellationToken) => db.DatSans.AnyAsync(x => x.MaSan == maSan
-            && x.TrangThai != TrangThaiDatSan.DaHuy && x.TrangThai != TrangThaiDatSan.TuChoi
-            && (boQuaMaDatSan == null || x.MaDatSan != boQuaMaDatSan)
-            && batDau < x.GioKetThuc && ketThuc > x.GioBatDau, cancellationToken);
+        CancellationToken cancellationToken) => DonTrungLich(batDau, ketThuc, boQuaMaDatSan)
+            .AnyAsync(x => x.MaSan == maSan, cancellationToken);
 
     // Khóa dòng của sân đến hết transaction hiện tại; mọi luồng tạo/xác nhận đơn cùng sân phải gọi hàm này.
     public Task KhoaSanAsync(int maSan, CancellationToken cancellationToken) => db.Database.ExecuteSqlInterpolatedAsync(

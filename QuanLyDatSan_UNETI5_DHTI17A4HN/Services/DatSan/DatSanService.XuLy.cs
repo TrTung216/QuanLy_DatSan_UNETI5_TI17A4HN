@@ -1,5 +1,6 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung: xác nhận, từ chối, khách hàng hủy, nhân viên/Admin hủy và hoàn thành đơn theo điều kiện nghiệp vụ.
+// Xác nhận dùng chung quy tắc khả dụng với M2/M3, đọc lại dữ liệu sân sau khóa.
 // Chặn hủy/từ chối đơn có cọc; kiểm tra quyền sở hữu khi khách hủy; điều phối khóa sân, RowVersion và transaction; lưu trạng thái, thời điểm, lý do và tiền chốt.
 
 using Microsoft.EntityFrameworkCore;
@@ -18,20 +19,12 @@ public partial class DatSanService
                 return MaLoiDatSan.ChiXacNhanDonCho;
 
             var now = dongHo.BayGio;
-            var san = don.SanTheThao;
-            if (don.GioBatDau <= now)
-                return MaLoiDatSan.QuaGioXacNhan;
-            if (san.TrangThai != TrangThaiSan.HoatDong
-                || san.LoaiSan.TrangThai != TrangThaiLoaiSan.HoatDong)
-                return MaLoiDatSan.SanKhongHoatDong;
-            if (TimeOnly.FromDateTime(don.GioBatDau) < san.GioMoCua
-                || TimeOnly.FromDateTime(don.GioKetThuc) > san.GioDongCua)
-                return MaLoiDatSan.NgoaiGioHoatDong;
-            if (san.NgayBaoTri == DateOnly.FromDateTime(don.GioBatDau))
-                return MaLoiDatSan.SanBaoTri;
-            if (await CoTrungLichAsync(don.MaSan, don.GioBatDau, don.GioKetThuc,
-                    don.MaDatSan, token))
-                return MaLoiDatSan.TrungLich;
+            var loiGio = KiemTraKhoangGio(don.GioBatDau, don.GioKetThuc, now);
+            if (loiGio is not null) return AnhXaLoiKhaDung(loiGio.Value, khiTao: false);
+            var san = await TruyVanKhaDungSan(don.GioBatDau, don.GioKetThuc, don.MaDatSan)
+                .SingleOrDefaultAsync(x => x.MaSan == don.MaSan, token);
+            var loiSan = DanhGiaKhaDungSan(san, don.GioBatDau, don.GioKetThuc);
+            if (loiSan is not null) return AnhXaLoiKhaDung(loiSan.Value, khiTao: false);
 
             don.TrangThai = TrangThaiDatSan.DangXuLy;
             don.NgayXacNhan = now;
