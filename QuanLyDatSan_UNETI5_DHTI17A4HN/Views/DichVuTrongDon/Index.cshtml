@@ -1,0 +1,109 @@
+﻿@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon
+@model ChiTietDichVuTrongDon
+@{
+    ViewData["Title"] = $"Dịch vụ của đơn #{Model.MaDatSan}";
+}
+
+<h2>Dịch vụ của đơn #@Model.MaDatSan</h2>
+<p>
+    Trạng thái đơn:
+    <span class="badge @HienThiDatSan.LopMau(Model.TrangThai)">@HienThiDatSan.TenTrangThai(Model.TrangThai)</span>
+</p>
+
+@if (TempData["Error"] is string loi)
+{
+    <div class="alert alert-danger">@loi</div>
+}
+@if (!Model.ChoPhepSua)
+{
+    <div class="alert alert-warning">Đơn ở trạng thái này không được thay đổi dịch vụ.</div>
+}
+
+<table class="table align-middle">
+    <thead>
+        <tr>
+            <th>Dịch vụ</th>
+            <th>Đơn vị</th>
+            <th class="text-end">Đơn giá</th>
+            <th style="width: 180px">Số lượng</th>
+            <th class="text-end">Thành tiền</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var dong in Model.Dong)
+        {
+            <tr>
+                <td>@dong.TenDichVu</td>
+                <td>@dong.DonViTinh</td>
+                <td class="text-end">@HienThiDatSan.Tien(dong.DonGia)</td>
+                <td>
+                    @if (Model.ChoPhepSua)
+                    {
+                        <form asp-action="SuaSoLuong" method="post" class="d-flex gap-1">
+                            <input type="hidden" name="MaDatSan" value="@Model.MaDatSan" />
+                            <input type="hidden" name="MaChiTiet" value="@dong.MaChiTiet" />
+                            <input type="number" name="SoLuong" value="@dong.SoLuong" min="1" max="100"
+                                   class="form-control form-control-sm" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Lưu</button>
+                        </form>
+                    }
+                    else
+                    {
+                        @dong.SoLuong
+                    }
+                </td>
+                <td class="text-end">@HienThiDatSan.Tien(dong.ThanhTien)</td>
+                <td class="text-end">
+                    @if (Model.ChoPhepSua)
+                    {
+                        <form asp-action="Huy" method="post" onsubmit="return confirm('Hủy dịch vụ này khỏi đơn?');">
+                            <input type="hidden" name="maDatSan" value="@Model.MaDatSan" />
+                            <input type="hidden" name="maChiTiet" value="@dong.MaChiTiet" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Hủy</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        @if (Model.Dong.Count == 0)
+        {
+            <tr><td colspan="6" class="text-center text-muted">Đơn chưa có dịch vụ nào.</td></tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <th colspan="4" class="text-end">Tổng tiền dịch vụ</th>
+            <th class="text-end">@HienThiDatSan.Tien(Model.TongTienDichVu)</th>
+            <th></th>
+        </tr>
+    </tfoot>
+</table>
+
+@if (Model.ChoPhepSua)
+{
+    <h5>Thêm dịch vụ</h5>
+    <form asp-action="Them" method="post" class="row g-2 align-items-end">
+        <input type="hidden" name="MaDatSan" value="@Model.MaDatSan" />
+        <div class="col-md-5">
+            <label class="form-label" for="MaDichVu">Dịch vụ</label>
+            <select name="MaDichVu" id="MaDichVu" class="form-select">
+                <option value="0">-- Chọn dịch vụ --</option>
+                @foreach (var dichVu in Model.DichVuCoTheThem)
+                {
+                    <option value="@dichVu.MaDichVu">
+                        @dichVu.TenDichVu (@HienThiDatSan.Tien(dichVu.DonGia) / @dichVu.DonViTinh)
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="SoLuong">Số lượng</label>
+            <input type="number" name="SoLuong" id="SoLuong" value="1" min="1" max="100" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Thêm</button>
+        </div>
+    </form>
+}

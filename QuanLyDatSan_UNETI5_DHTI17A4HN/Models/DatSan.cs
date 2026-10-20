@@ -1,4 +1,5 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. đơn đặt sân (M3 tạo đơn, M4 xử lý trạng thái); chưa có ChiTietDatSan của M5.
+//M5 : Nguyễn Hữu Quang MSSV :  23103100184 thêm Navigation ChiTietDatSans..
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
@@ -24,4 +25,5 @@ public class DatSan
     public decimal? TienDichVu { get; set; }
     public decimal? TongTien { get; set; }
     public byte[] RowVersion { get; set; } = [];
+    public List<ChiTietDatSan> ChiTietDatSans { get; set; } = [];
 }
