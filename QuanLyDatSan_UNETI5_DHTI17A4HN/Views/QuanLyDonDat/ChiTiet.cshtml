@@ -1,6 +1,11 @@
 @* M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-   Nội dung: M4-02/03 - chi tiết đơn quản lý; form xác nhận/từ chối/hủy theo trạng thái, giờ và cọc.
-   Gửi antiforgery/RowVersion, giữ lý do khi lỗi và nạp JS xác nhận thao tác/chống gửi lặp. *@
+   Nội dung: M4-02/03 - chi tiết đơn quản lý; form xác nhận/từ chối/hủy theo trạng thái, giờ và cọc. 
+   Gửi antiforgery/RowVersion, giữ lý do khi lỗi và nạp JS xác nhận thao tác/chống gửi lặp.
+   
+   M5 Nguyen Huu Quang : MSSV :23103100184 them link dich vu cua don 
+   *@
+
+
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ChiTietDonQuanLyViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
 @{
@@ -101,6 +106,8 @@
                         <button type="submit" class="btn btn-danger">Hủy đơn</button>
                     </form>
                 }
+                <a asp-controller="DichVuTrongDon" asp-action="Index" asp-route-maDatSan="@Model.MaDatSan"
+                          class="btn btn-outline-primary">Dịch vụ của đơn</a>
             </div>
         </section>
     }
