@@ -1,5 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: khai báo hợp đồng service dùng chung M3/M4 cho tạo đơn, kiểm tra trùng lịch, khóa sân và chuyển trạng thái.
+// Nội dung: khai báo hợp đồng service dùng chung M2/M3/M4 cho tra cứu khả dụng theo lô, tạo đơn, kiểm tra trùng lịch, khóa sân và chuyển trạng thái.
 // Đọc đơn cá nhân/quản lý kèm RowVersion để hủy/xử lý an toàn; lọc, sắp xếp, phân trang và chọn sân.
 // Bên gọi xác thực vai trò; thao tác khách hủy lấy mã tài khoản từ phiên đăng nhập, service kiểm tra chủ đơn.
 
@@ -8,6 +8,10 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
 public interface IDatSanService
 {
+    // M2 tra cứu tối đa 200 mã sân/lần; kết quả không giữ chỗ. Lọc sân khả dụng trước khi phân trang.
+    Task<KetQuaKhaDungSan> KiemTraKhaDungAsync(IReadOnlyCollection<int> maSans,
+        KhoangGioTraCuuSan khoangGio, CancellationToken cancellationToken);
+
     Task<KetQuaTaoDon> TaoDonAsync(TaoDonYeuCau yeuCau, CancellationToken cancellationToken);
 
     Task<bool> CoTrungLichAsync(int maSan, DateTime batDau, DateTime ketThuc, int? boQuaMaDatSan,
