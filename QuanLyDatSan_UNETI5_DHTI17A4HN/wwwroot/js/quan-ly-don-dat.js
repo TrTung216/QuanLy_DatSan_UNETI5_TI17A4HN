@@ -1,5 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: M4-03 - xác nhận trước khi từ chối/hủy; chặn gửi lặp các form xử lý đơn và khôi phục nút khi quay lại.
+// Nội dung: M4-03/04 - xác nhận từ chối/hủy/ghi cọc/hoàn thành; chặn gửi lặp và khôi phục nút khi quay lại.
 (() => {
     const forms = document.querySelectorAll('[data-xu-ly-don]');
     let dangGui = false;

@@ -1,5 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: M4-02/03 - tra cứu đơn và POST xác nhận, từ chối, hủy cho Admin/NhanVien.
+// Nội dung: M4-02/03/04 - tra cứu, xử lý, ghi cọc và hoàn thành đơn cho Admin/NhanVien.
 // Ánh xạ DTO/ViewModel, kiểm tra dữ liệu và RowVersion; giữ lý do khi lỗi, nạp lại trạng thái và chuyển hướng nội bộ.
 
 using Microsoft.AspNetCore.Authorization;
@@ -63,10 +63,14 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
             NgayXacNhan = don.NgayXacNhan, NgayHuy = don.NgayHuy, NgayHoanThanh = don.NgayHoanThanh,
             LyDoHuy = don.LyDoHuy, TienSan = don.TienSan, TienDichVu = don.TienDichVu,
             TongTien = don.TongTien, TienSanDuKien = don.TienSanDuKien,
+            TienDichVuDuKien = don.TienDichVuDuKien, TongTienDuKien = don.TongTienDuKien,
             PhienBan = Convert.ToBase64String(don.PhienBan),
             CoTheXacNhan = laDonCho && chuaBatDau,
             CoTheTuChoi = laDonCho && don.TienCoc == 0m,
             CoTheNhanVienHuy = chuaBatDau && don.TienCoc == 0m && (laDonCho || laDonXacNhan),
+            CoTheGhiCoc = laDonXacNhan && don.TienCoc < don.TongTienDuKien,
+            CoTheHoanThanh = laDonXacNhan && don.GioKetThuc <= dongHo.BayGio
+                && don.TienCoc <= don.TongTienDuKien,
             QuayLai = Url.IsLocalUrl(quayLai) ? quayLai! : Url.Action(nameof(DanhSach))!
         };
     }
@@ -103,6 +107,26 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         return await XuLyKetQuaAsync(model.MaDon, model.QuayLai, result, null, model.LyDo, cancellationToken);
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> GhiCoc(GhiCocViewModel model, CancellationToken cancellationToken)
+    {
+        if (!KiemTraPhienBan(model.PhienBan, out var phienBan))
+            return await HienThiLoiAsync(model.MaDon, model.QuayLai, null, null, cancellationToken);
+        var result = await datSanService.GhiCocAsync(
+            new GhiCocYeuCau(model.MaDon, model.TongCoc!.Value, phienBan), cancellationToken);
+        return await XuLyKetQuaAsync(model.MaDon, model.QuayLai, result, null, null, cancellationToken);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> HoanThanh(HoanThanhDonViewModel model, CancellationToken cancellationToken)
+    {
+        if (!KiemTraPhienBan(model.PhienBan, out var phienBan))
+            return await HienThiLoiAsync(model.MaDon, model.QuayLai, null, null, cancellationToken);
+        var result = await datSanService.HoanThanhDonAsync(
+            new HoanThanhDonYeuCau(model.MaDon, model.DaThuDu, phienBan), cancellationToken);
+        return await XuLyKetQuaAsync(model.MaDon, model.QuayLai, result, null, null, cancellationToken);
+    }
+
     private async Task<IActionResult> XuLyKetQuaAsync(int maDon, string? quayLai, KetQuaXuLyDon result,
         string? lyDoTuChoi, string? lyDoHuy, CancellationToken cancellationToken)
     {
@@ -125,6 +149,8 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         if (model is null) return NotFound();
         model.LyDoTuChoiNhap = lyDoTuChoi;
         model.LyDoHuyNhap = lyDoHuy;
+        model.TongCocNhap = ModelState.TryGetValue(nameof(GhiCocViewModel.TongCoc), out var coc)
+            ? coc.AttemptedValue : null;
         // View dùng phiên bản vừa đọc từ database; dữ liệu nhập chỉ giữ lại để người dùng sửa.
         return View(nameof(ChiTiet), model);
     }

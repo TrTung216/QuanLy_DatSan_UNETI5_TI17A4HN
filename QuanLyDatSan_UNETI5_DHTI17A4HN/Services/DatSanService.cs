@@ -1,15 +1,16 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. kiểm tra nghiệp vụ, khóa theo sân và tạo đơn đặt sân; M4 dùng chung KhoaSanAsync/CoTrungLichAsync.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung M4: chuẩn hóa DTO và mã lỗi tạo đơn; dùng chung quy tắc khả dụng M2/M3/M4, kiểm tra lại sau khóa sân.
-// File này còn cung cấp công thức tính tiền sân dự kiến theo thời lượng và đơn giá trên đơn.
+// M4-04: dùng ITinhTienService của M5 cho tiền dự kiến và chốt tiền.
 
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
-public partial class DatSanService(ApplicationDbContext db, IDongHo dongHo) : IDatSanService
+public partial class DatSanService(ApplicationDbContext db, IDongHo dongHo, ITinhTienService tinhTien) : IDatSanService
 {
     private Task<bool> KhachDuDieuKienAsync(int maTaiKhoan, CancellationToken cancellationToken) =>
         db.KhachHangs.AsNoTracking().AnyAsync(x => x.MaTaiKhoan == maTaiKhoan
@@ -74,13 +75,6 @@ public partial class DatSanService(ApplicationDbContext db, IDongHo dongHo) : ID
     // Khóa dòng của sân đến hết transaction hiện tại; mọi luồng tạo/xác nhận đơn cùng sân phải gọi hàm này.
     public Task KhoaSanAsync(int maSan, CancellationToken cancellationToken) => db.Database.ExecuteSqlInterpolatedAsync(
         $"SELECT 1 FROM SanTheThao WITH (UPDLOCK, ROWLOCK) WHERE MaSan = {maSan}", cancellationToken);
-
-    // Công thức tiền sân theo mục 5 quy ước: số phút / 60 x đơn giá, làm tròn đến đồng.
-    public static decimal TinhTienSanDuKien(decimal donGia, DateTime batDau, DateTime ketThuc)
-    {
-        decimal soPhut = (ketThuc - batDau).Ticks / TimeSpan.TicksPerMinute;
-        return Math.Round(soPhut * donGia / 60m, 0, MidpointRounding.AwayFromZero);
-    }
 
     private static KetQuaTaoDon Loi(MaLoiDatSan ma) => KetQuaTaoDon.ThatBai(new(ma));
 }

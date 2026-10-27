@@ -30,7 +30,7 @@ public sealed class MigrationDatSanTests
             await db.DatSans.AsNoTracking().Take(1).ToListAsync();
             await db.SanTheThaos.AsNoTracking().Include(x => x.LoaiSan).Take(1).ToListAsync();
             var clock = new DongHoTest();
-            var result = await new DatSanService(db, clock).KiemTraKhaDungAsync(
+            var result = await new DatSanService(db, clock, new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService()).KiemTraKhaDungAsync(
                 [int.MaxValue], new(clock.HomNay, new(10, 0), new(11, 0)), default);
             Assert.Equal(MaLoiKhaDungSan.SanKhongTonTai, Assert.Single(result.DanhSach).Loi);
         }

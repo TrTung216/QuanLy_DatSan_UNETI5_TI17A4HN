@@ -1,5 +1,5 @@
 @* M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-   Nội dung: M4-02/03 - chi tiết đơn quản lý; form xác nhận/từ chối/hủy theo trạng thái, giờ và cọc.
+   Nội dung: M4-02/03/04 - chi tiết, tiền dự kiến, form xử lý/ghi cọc/hoàn thành đơn.
    Gửi antiforgery/RowVersion, giữ lý do khi lỗi và nạp JS xác nhận thao tác/chống gửi lặp.
    
    M5 Nguyen Huu Quang : MSSV :23103100184 them link dich vu cua don 
@@ -53,9 +53,20 @@
                 else
                 {
                     <dt class="col-sm-5">Tiền sân dự kiến</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
+                    <dt class="col-sm-5">Tiền dịch vụ hiện tại</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienDichVuDuKien)</dd>
+                    <dt class="col-sm-5">Tổng tiền dự kiến</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TongTienDuKien)</dd>
                     <dt class="col-sm-5">Tổng tiền</dt><dd class="col-sm-7">Chưa chốt</dd>
                 }
+                @if (Model.TrangThai == QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.TrangThaiDatSan.DangXuLy
+                    || Model.TrangThai == QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.TrangThaiDatSan.HoanThanh)
+                {
+                    <dt class="col-sm-5">Còn phải thu</dt><dd class="col-sm-7"><strong>@HienThiDatSan.Tien(Model.ConPhaiThu)</strong></dd>
+                }
             </dl>
+            @if (!Model.TongTien.HasValue && Model.TienCoc > Model.TongTienDuKien)
+            {
+                <p class="text-danger" role="alert">Tiền cọc vượt tổng tiền hiện tại. Cần kiểm tra lại dịch vụ trước khi hoàn thành; chưa hỗ trợ hoàn cọc.</p>
+            }
             <h2 class="h5">Các mốc xử lý</h2>
             <dl class="row">
                 <dt class="col-sm-5">Ngày tạo đơn</dt><dd class="col-sm-7">@ThoiDiem(Model.NgayDat)</dd>
@@ -69,7 +80,7 @@
             </dl>
         </div>
     </section>
-    @if (Model.CoTheXacNhan || Model.CoTheTuChoi || Model.CoTheNhanVienHuy)
+    @if (Model.CoTheXacNhan || Model.CoTheTuChoi || Model.CoTheNhanVienHuy || Model.CoTheGhiCoc || Model.CoTheHoanThanh)
     {
         <section class="col-12 ql-panel mt-4" aria-label="Thao tác đơn đặt sân">
             <h2 class="h5">Xử lý đơn</h2>
@@ -106,11 +117,40 @@
                         <button type="submit" class="btn btn-danger">Hủy đơn</button>
                     </form>
                 }
-                <a asp-controller="DichVuTrongDon" asp-action="Index" asp-route-maDatSan="@Model.MaDatSan"
-                          class="btn btn-outline-primary">Dịch vụ của đơn</a>
+                @if (Model.CoTheGhiCoc)
+                {
+                    <form asp-action="GhiCoc" data-xu-ly-don data-xac-nhan="Xác nhận tổng cọc đã thực nhận?" method="post" asp-antiforgery="true" class="d-flex flex-wrap align-items-end gap-2">
+                        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+                        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+                        <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        <div>
+                            <label for="tong-coc" class="form-label">Tổng cọc đã nhận (đồng) *</label>
+                            <input id="tong-coc" name="TongCoc" value="@Model.TongCocNhap" type="number" min="1" step="1" max="9999999999999999" required class="form-control" aria-describedby="huong-dan-coc" />
+                            <small id="huong-dan-coc" class="form-text">Nhập tổng cọc sau lần thu này, gồm cả cọc đã ghi nhận.</small>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary">Ghi nhận cọc</button>
+                    </form>
+                }
+                @if (Model.CoTheHoanThanh)
+                {
+                    <form asp-action="HoanThanh" data-xu-ly-don data-xac-nhan="Xác nhận đã thu đủ và hoàn thành đơn? Đơn hoàn thành không thể sửa dịch vụ." method="post" asp-antiforgery="true">
+                        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+                        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+                        <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        <div class="form-check mb-2">
+                            <input id="da-thu-du" name="DaThuDu" value="true" type="checkbox" required class="form-check-input" />
+                            <label for="da-thu-du" class="form-check-label">Đã thu đủ phần còn lại: @HienThiDatSan.Tien(Model.ConPhaiThu) *</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">Hoàn thành đơn</button>
+                    </form>
+                }
             </div>
         </section>
     }
+    <div class="col-12 mt-3">
+        <a asp-controller="DichVuTrongDon" asp-action="Index" asp-route-maDatSan="@Model.MaDatSan"
+           class="btn btn-outline-primary">Dịch vụ của đơn</a>
+    </div>
 
 </div>
 

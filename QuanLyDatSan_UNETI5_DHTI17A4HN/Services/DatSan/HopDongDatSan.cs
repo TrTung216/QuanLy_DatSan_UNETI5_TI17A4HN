@@ -1,5 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: định nghĩa mã lỗi, kết quả nghiệp vụ, DTO yêu cầu tạo/xử lý đơn và DTO dữ liệu danh sách, chi tiết, lựa chọn sân.
+// Nội dung: mã lỗi, DTO tạo/xử lý/ghi cọc/hoàn thành đơn; dữ liệu tra cứu và tiền dự kiến M4-04.
 // Chi tiết trả RowVersion cho M3/M4 xử lý đơn; các factory kiểm tra tính hợp lệ của kết quả và mã lỗi.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
@@ -40,6 +40,11 @@ public enum MaLoiDatSan
     SanDaThayDoi = 30,
     PhienBanDaCu = 31,
     XungDotDuLieu = 32,
+    ChiGhiCocDonXacNhan = 33,
+    TienCocKhongHopLe = 34,
+    CocKhongTang = 35,
+    CocVuotTongTien = 36,
+    TienVuotGioiHan = 37,
     NgoaiGioKhiTao = 100
 }
 
@@ -76,9 +81,10 @@ public sealed record TaoDonYeuCau(int MaTaiKhoan, int MaSan, DateOnly NgaySuDung
     TimeOnly GioBatDau, TimeOnly GioKetThuc);
 public sealed record XuLyDonYeuCau(int MaDatSan, byte[] PhienBan);
 public sealed record HuyDonYeuCau(int MaDatSan, string? LyDo, byte[] PhienBan);
-// Giá chốt do M5 cung cấp nội bộ; không bind các khoản tiền này từ form HTTP.
-public sealed record HoanThanhDonYeuCau(int MaDatSan, decimal TienSan, decimal TienDichVu,
-    bool DaThuDu, byte[] PhienBan);
+// M4-04: tổng cọc đã nhận, không phải khoản cộng thêm; không hỗ trợ giảm/hoàn cọc.
+public sealed record GhiCocYeuCau(int MaDatSan, decimal TongCoc, byte[] PhienBan);
+// Tiền được tính từ dữ liệu server qua M5, yêu cầu hoàn thành không nhận giá từ form.
+public sealed record HoanThanhDonYeuCau(int MaDatSan, bool DaThuDu, byte[] PhienBan);
 public sealed record SanChonDto(int MaSan, string TenSan, string TenLoai, decimal DonGia,
     TimeOnly GioMoCua, TimeOnly GioDongCua);
 public sealed class DanhSachDonDto
@@ -121,4 +127,6 @@ public class ChiTietDonDto
     public decimal? TienDichVu { get; set; }
     public decimal? TongTien { get; set; }
     public decimal TienSanDuKien { get; set; }
+    public decimal TienDichVuDuKien { get; set; }
+    public decimal TongTienDuKien { get; set; }
 }

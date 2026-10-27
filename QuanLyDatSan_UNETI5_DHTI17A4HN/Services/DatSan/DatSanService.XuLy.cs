@@ -1,5 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: xác nhận, từ chối, khách hàng hủy, nhân viên/Admin hủy và hoàn thành đơn theo điều kiện nghiệp vụ.
+// Nội dung: xác nhận, từ chối, khách hàng hủy, nhân viên/Admin hủy; M4-04 ghi cọc và hoàn thành qua M5.
 // Xác nhận dùng chung quy tắc khả dụng với M2/M3, đọc lại dữ liệu sân sau khóa.
 // Chặn hủy/từ chối đơn có cọc; kiểm tra quyền sở hữu khi khách hủy; điều phối khóa sân, RowVersion và transaction; lưu trạng thái, thời điểm, lý do và tiền chốt.
 
@@ -110,31 +110,51 @@ public partial class DatSanService
         }, cancellationToken);
     }
 
-    // Giá tiền phải do tầng tính tiền (M5) cung cấp; service này chỉ chốt tiền và trạng thái trong cùng transaction.
-    public Task<KetQuaXuLyDon> HoanThanhDonAsync(HoanThanhDonYeuCau yeuCau, CancellationToken cancellationToken)
+    // M4-04: ghi tổng cọc, không cộng lại khi gửi lặp và không cho giảm cọc.
+    public Task<KetQuaXuLyDon> GhiCocAsync(GhiCocYeuCau yeuCau, CancellationToken cancellationToken)
     {
-        var (maDatSan, tienSan, tienDichVu, daThuDu, phienBan) = yeuCau;
-        if (!daThuDu)
-            return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.ChuaThuDu));
-        if (tienSan < 0m || tienDichVu < 0m)
-            return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.TienAm));
-        var tongTien = tienSan + tienDichVu;
+        if (yeuCau.TongCoc <= 0 || yeuCau.TongCoc > TienToiDa
+            || decimal.Truncate(yeuCau.TongCoc) != yeuCau.TongCoc)
+            return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.TienCocKhongHopLe));
 
-        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, (don, _) =>
+        return XuLyDonCoKhoaSanAsync(yeuCau.MaDatSan, yeuCau.PhienBan, async (don, token) =>
         {
             if (don.TrangThai != TrangThaiDatSan.DangXuLy)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.ChiHoanThanhDonXacNhan);
-            if (don.GioKetThuc > dongHo.BayGio)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.ChuaDenGioKetThuc);
-            if (don.TienCoc > tongTien)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.TongTienThapHonCoc);
+                return MaLoiDatSan.ChiGhiCocDonXacNhan;
+            if (yeuCau.TongCoc <= don.TienCoc)
+                return MaLoiDatSan.CocKhongTang;
+            var tien = await TinhTienDonAsync(don, token);
+            if (tien.Tong > TienToiDa) return MaLoiDatSan.TienVuotGioiHan;
+            if (yeuCau.TongCoc > tien.Tong) return MaLoiDatSan.CocVuotTongTien;
+            don.TienCoc = yeuCau.TongCoc;
+            return null;
+        }, cancellationToken);
+    }
 
-            don.TienSan = tienSan;
-            don.TienDichVu = tienDichVu;
-            don.TongTien = tongTien;
+    // M4-04: tính lại từ giá trên đơn và dòng dịch vụ sau khóa; chốt cùng trạng thái trong transaction.
+    public Task<KetQuaXuLyDon> HoanThanhDonAsync(HoanThanhDonYeuCau yeuCau, CancellationToken cancellationToken)
+    {
+        var (maDatSan, daThuDu, phienBan) = yeuCau;
+        if (!daThuDu)
+            return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.ChuaThuDu));
+
+        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, async (don, token) =>
+        {
+            if (don.TrangThai != TrangThaiDatSan.DangXuLy)
+                return MaLoiDatSan.ChiHoanThanhDonXacNhan;
+            if (don.GioKetThuc > dongHo.BayGio)
+                return MaLoiDatSan.ChuaDenGioKetThuc;
+            var tien = await TinhTienDonAsync(don, token);
+            if (tien.Tong > TienToiDa) return MaLoiDatSan.TienVuotGioiHan;
+            if (don.TienCoc > tien.Tong)
+                return MaLoiDatSan.TongTienThapHonCoc;
+
+            don.TienSan = tien.San;
+            don.TienDichVu = tien.DichVu;
+            don.TongTien = tien.Tong;
             don.NgayHoanThanh = dongHo.BayGio;
             don.TrangThai = TrangThaiDatSan.HoanThanh;
-            return Task.FromResult<MaLoiDatSan?>(null);
+            return null;
         }, cancellationToken);
     }
 

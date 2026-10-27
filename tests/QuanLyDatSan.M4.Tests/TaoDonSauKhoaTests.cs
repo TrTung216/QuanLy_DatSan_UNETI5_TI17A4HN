@@ -39,7 +39,7 @@ public sealed class TaoDonSauKhoaTests(SqlFixture f) : IClassFixture<SqlFixture>
             await using var db = f.Db(interceptor);
             // Cố tình có dữ liệu đã track trước khi điều kiện thay đổi.
             await db.KhachHangs.Include(x => x.TaiKhoan).SingleAsync(x => x.MaKhachHang == f.CustomerId);
-            var service = new DatSanService(db, clock);
+            var service = new DatSanService(db, clock, new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService());
             var result = await service.TaoDonAsync(new(f.CustomerAccountId, order.MaSan,
                 DateOnly.FromDateTime(order.GioBatDau), TimeOnly.FromDateTime(order.GioBatDau),
                 TimeOnly.FromDateTime(order.GioKetThuc)), default);

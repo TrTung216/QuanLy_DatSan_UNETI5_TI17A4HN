@@ -1,7 +1,8 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: M4-02/03 - tìm, lọc, sắp xếp, phân trang đơn quản lý; đọc chi tiết khách/sân/tiền và RowVersion hiện tại.
+// Nội dung: M4-02/03/04 - tra cứu đơn, đọc RowVersion cùng dòng dịch vụ và tính tiền dự kiến qua M5.
 
 using Microsoft.EntityFrameworkCore;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
@@ -59,20 +60,27 @@ public partial class DatSanService
     public async Task<ChiTietDonQuanLyDto?> LayChiTietQuanLyAsync(int id, CancellationToken cancellationToken)
     {
         // Projection chỉ lấy dữ liệu màn hình cần; không trả entity hay thông tin đăng nhập.
-        var result = await db.DatSans.AsNoTracking().Where(x => x.MaDatSan == id)
-            .Select(x => new ChiTietDonQuanLyDto(new ChiTietDonDto
+        var duLieu = await db.DatSans.AsNoTracking().Where(x => x.MaDatSan == id)
+            .Select(x => new
             {
-                PhienBan = x.RowVersion,
-                MaDatSan = x.MaDatSan, TenSan = x.SanTheThao.TenSan,
-                TenLoai = x.SanTheThao.LoaiSan.TenLoai, DiaChi = x.SanTheThao.DiaChi,
-                NgayDat = x.NgayDat, GioBatDau = x.GioBatDau, GioKetThuc = x.GioKetThuc,
-                DonGia = x.DonGia, TienCoc = x.TienCoc, TrangThai = x.TrangThai,
-                NgayXacNhan = x.NgayXacNhan, NgayHuy = x.NgayHuy, NgayHoanThanh = x.NgayHoanThanh,
-                LyDoHuy = x.LyDoHuy, TienSan = x.TienSan, TienDichVu = x.TienDichVu, TongTien = x.TongTien
-            }, x.MaKhachHang, x.KhachHang.HoTen, x.KhachHang.SoDienThoai, x.KhachHang.Email))
+                ChiTiet = new ChiTietDonQuanLyDto(new ChiTietDonDto
+                {
+                    PhienBan = x.RowVersion,
+                    MaDatSan = x.MaDatSan, TenSan = x.SanTheThao.TenSan,
+                    TenLoai = x.SanTheThao.LoaiSan.TenLoai, DiaChi = x.SanTheThao.DiaChi,
+                    NgayDat = x.NgayDat, GioBatDau = x.GioBatDau, GioKetThuc = x.GioKetThuc,
+                    DonGia = x.DonGia, TienCoc = x.TienCoc, TrangThai = x.TrangThai,
+                    NgayXacNhan = x.NgayXacNhan, NgayHuy = x.NgayHuy, NgayHoanThanh = x.NgayHoanThanh,
+                    LyDoHuy = x.LyDoHuy, TienSan = x.TienSan, TienDichVu = x.TienDichVu, TongTien = x.TongTien
+                }, x.MaKhachHang, x.KhachHang.HoTen, x.KhachHang.SoDienThoai, x.KhachHang.Email),
+                DichVu = x.ChiTietDatSans.Select(d => new DongDichVu(d.SoLuong, d.DonGia)).ToList()
+            })
             .SingleOrDefaultAsync(cancellationToken);
-        if (result is not null)
-            result.Don.TienSanDuKien = TinhTienSanDuKien(result.Don.DonGia, result.Don.GioBatDau, result.Don.GioKetThuc);
+        if (duLieu is null) return null;
+        var result = duLieu.ChiTiet;
+        result.Don.TienSanDuKien = tinhTien.TinhTienSan(result.Don.DonGia, result.Don.GioBatDau, result.Don.GioKetThuc);
+        result.Don.TienDichVuDuKien = tinhTien.TinhTienDichVu(duLieu.DichVu);
+        result.Don.TongTienDuKien = tinhTien.TinhTongTien(result.Don.TienSanDuKien, result.Don.TienDichVuDuKien);
         return result;
     }
 

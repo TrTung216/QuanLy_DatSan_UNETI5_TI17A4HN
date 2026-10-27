@@ -40,7 +40,7 @@ public sealed class SqlFixture : IAsyncLifetime
     public ApplicationDbContext Db(params IInterceptor[] interceptors) => new(
         new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(ConnectionString)
             .AddInterceptors(interceptors).Options);
-    public DatSanService Service(ApplicationDbContext db) => new(db, Clock);
+    public DatSanService Service(ApplicationDbContext db) => new(db, Clock, new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService());
 
     public async Task InitializeAsync()
     {

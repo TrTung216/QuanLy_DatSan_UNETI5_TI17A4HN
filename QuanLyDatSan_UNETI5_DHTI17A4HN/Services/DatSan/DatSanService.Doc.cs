@@ -70,7 +70,7 @@ public partial class DatSanService
             .SingleOrDefaultAsync(cancellationToken);
         if (don is null) return null;
 
-        don.TienSanDuKien = DatSanService.TinhTienSanDuKien(don.DonGia, don.GioBatDau, don.GioKetThuc);
+        don.TienSanDuKien = tinhTien.TinhTienSan(don.DonGia, don.GioBatDau, don.GioKetThuc);
         return don;
     }
 
