@@ -1,4 +1,9 @@
-﻿using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ đăng ký repository và Unit of Work scoped.
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyLoaiSan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.TrangChu;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon;
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ gom DI M1; giữ đăng ký M5 hiện có.
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. thêm đăng ký service hồ sơ khách hàng.
@@ -18,7 +23,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddUngDungServices(this IServiceCollection services)
     {
+        services.AddScoped<IDonViCongViec, DonViCongViec>();
         services.AddModuleTaiKhoanVaLoaiSan();
+        services.AddScoped<ITrangChuRepository, TrangChuRepository>();
         services.AddScoped<ITrangChuService, TrangChuService>();
         services.AddModuleDichVu();
         services.AddModuleSan();
@@ -34,6 +41,8 @@ public static class DependencyInjection
     // M1: nghiệp vụ tài khoản, xác thực và loại sân; hạ tầng cookie/Session giữ trong Program.cs.
     private static IServiceCollection AddModuleTaiKhoanVaLoaiSan(this IServiceCollection services)
     {
+        services.AddScoped<ILoaiSanRepository, LoaiSanRepository>();
+        services.AddScoped<ITaiKhoanRepository, TaiKhoanRepository>();
         services.AddScoped<ILoaiSanService, LoaiSanService>();
         services.AddScoped<IQuanLyTaiKhoanService, QuanLyTaiKhoanService>();
         services.AddScoped<IXacThucTaiKhoanService, XacThucTaiKhoanService>();
