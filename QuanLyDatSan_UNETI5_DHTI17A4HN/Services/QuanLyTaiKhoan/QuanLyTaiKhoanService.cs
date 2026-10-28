@@ -2,38 +2,20 @@
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
 
-public class QuanLyTaiKhoanService(ApplicationDbContext db, IPasswordHasher<TaiKhoan> hasher,
+public class QuanLyTaiKhoanService(ITaiKhoanRepository repository, IDonViCongViec donViCongViec, IPasswordHasher<TaiKhoan> hasher,
     ITaiKhoanHienTai hienTai, PhienBanQuyenTaiKhoan phienBanQuyen) : IQuanLyTaiKhoanService
 {
-    private const int SoDongMoiTrang = 10;
+    public Task<TrangTaiKhoan> LayDanhSachAsync(string? tuKhoa, VaiTro? vaiTro, TrangThaiTaiKhoan? trangThai, int trang, CancellationToken cancellationToken) =>
+        repository.LayDanhSachAsync(tuKhoa?.Trim(), vaiTro, trangThai, trang, cancellationToken);
 
-    public async Task<TrangTaiKhoan> LayDanhSachAsync(string? tuKhoa, VaiTro? vaiTro,
-        TrangThaiTaiKhoan? trangThai, int trang, CancellationToken cancellationToken)
-    {
-        tuKhoa = tuKhoa?.Trim();
-        var query = db.TaiKhoans.AsNoTracking();
-        if (!string.IsNullOrEmpty(tuKhoa))
-            query = query.Where(x => x.TenDangNhap.Contains(tuKhoa) || x.HoTen.Contains(tuKhoa) || x.Email.Contains(tuKhoa));
-        if (vaiTro.HasValue) query = query.Where(x => x.VaiTro == vaiTro.Value);
-        if (trangThai.HasValue) query = query.Where(x => x.TrangThai == trangThai.Value);
-        var tongSo = await query.CountAsync(cancellationToken);
-        var tongTrang = Math.Max(1, (int)Math.Ceiling(tongSo / (double)SoDongMoiTrang));
-        trang = Math.Clamp(trang, 1, tongTrang);
-        var danhSach = await Chieu(query.OrderBy(x => x.TenDangNhap).ThenBy(x => x.MaTaiKhoan)
-            .Skip((trang - 1) * SoDongMoiTrang).Take(SoDongMoiTrang)).ToListAsync(cancellationToken);
-        return new(danhSach, trang, tongTrang, tongSo);
-    }
-
-    public Task<TaiKhoanDoc?> LayChiTietAsync(int id, CancellationToken cancellationToken) =>
-        Chieu(db.TaiKhoans.AsNoTracking().Where(x => x.MaTaiKhoan == id)).SingleOrDefaultAsync(cancellationToken);
+    public Task<TaiKhoanDoc?> LayChiTietAsync(int id, CancellationToken cancellationToken) => repository.LayChiTietAsync(id, cancellationToken);
 
     public Task<KetQuaQuanLyTaiKhoan> TaoAsync(TaoTaiKhoan yeuCau, CancellationToken cancellationToken)
     {
@@ -44,7 +26,7 @@ public class QuanLyTaiKhoanService(ApplicationDbContext db, IPasswordHasher<TaiK
         var ten = yeuCau.TenDangNhap.Trim();
         return LuuAsync(async _ =>
         {
-            if (await db.TaiKhoans.AnyAsync(x => x.TenDangNhap == ten, cancellationToken))
+            if (await repository.TrungTenAsync(ten, cancellationToken))
                 return new([MaLoiTaiKhoan.TrungTen]);
             var taiKhoan = new TaiKhoan
             {
@@ -52,7 +34,7 @@ public class QuanLyTaiKhoanService(ApplicationDbContext db, IPasswordHasher<TaiK
                 VaiTro = yeuCau.VaiTro, TrangThai = TrangThaiTaiKhoan.HoatDong
             };
             taiKhoan.MatKhau = hasher.HashPassword(taiKhoan, yeuCau.MatKhau);
-            db.TaiKhoans.Add(taiKhoan);
+            repository.Them(taiKhoan);
             return new([]);
         }, cancellationToken);
     }
@@ -64,7 +46,7 @@ public class QuanLyTaiKhoanService(ApplicationDbContext db, IPasswordHasher<TaiK
         var doiQuyenHoacTrangThai = false;
         return LuuAsync(async adminIds =>
         {
-            var taiKhoan = await db.TaiKhoans.SingleOrDefaultAsync(x => x.MaTaiKhoan == id, cancellationToken);
+            var taiKhoan = await repository.LayDeCapNhatAsync(id, cancellationToken);
             if (taiKhoan is null) return new([MaLoiTaiKhoan.KhongTonTai]);
             var conLaAdminHoatDong = yeuCau.VaiTro == VaiTro.Admin && yeuCau.TrangThai == TrangThaiTaiKhoan.HoatDong;
             List<MaLoiTaiKhoan> loi = [];
@@ -87,29 +69,30 @@ public class QuanLyTaiKhoanService(ApplicationDbContext db, IPasswordHasher<TaiK
     private async Task<KetQuaQuanLyTaiKhoan> LuuAsync(Func<List<int>, Task<KetQuaQuanLyTaiKhoan>> capNhat,
         CancellationToken cancellationToken, Action? sauKhiLuu = null)
     {
+        KetQuaQuanLyTaiKhoan ketQua;
         try
         {
-            // Cùng transaction giữ tập Admin hoạt động và kiểm tra lại quyền người đang thao tác.
-            await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
-            var adminIds = await db.TaiKhoans.Where(x => x.VaiTro == VaiTro.Admin && x.TrangThai == TrangThaiTaiKhoan.HoatDong)
-                .Select(x => x.MaTaiKhoan).ToListAsync(cancellationToken);
-            if (!hienTai.MaTaiKhoan.HasValue || !adminIds.Contains(hienTai.MaTaiKhoan.Value)) return new([MaLoiTaiKhoan.KhongDuQuyen]);
-            var ketQua = await capNhat(adminIds);
-            if (!ketQua.ThanhCong) return ketQua;
-            await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            sauKhiLuu?.Invoke();
-            return ketQua;
+            ketQua = await donViCongViec.ThucHienTrongGiaoDichAsync(async ct =>
+            {
+                // Giữ kiểm tra quyền và Admin cuối cùng trong Serializable.
+                var adminIds = await repository.LayMaTheoQuyenAsync(VaiTro.Admin, TrangThaiTaiKhoan.HoatDong, ct);
+                if (!hienTai.MaTaiKhoan.HasValue || !adminIds.Contains(hienTai.MaTaiKhoan.Value))
+                    return new QuyetDinhLuu<KetQuaQuanLyTaiKhoan>(false, new([MaLoiTaiKhoan.KhongDuQuyen]));
+                var ketQuaCapNhat = await capNhat(adminIds);
+                return new QuyetDinhLuu<KetQuaQuanLyTaiKhoan>(ketQuaCapNhat.ThanhCong, ketQuaCapNhat);
+            }, IsolationLevel.Serializable, cancellationToken);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 })
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.TrungTenDangNhap)
         {
             return new([MaLoiTaiKhoan.TrungTen]);
         }
-        catch (Exception ex) when (ex is SqlException { Number: 1205 }
-            || ex is DbUpdateException { InnerException: SqlException { Number: 1205 } })
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.Deadlock)
         {
             return new([MaLoiTaiKhoan.XungDotDuLieu]);
         }
+        // Ngoài phạm vi bắt lỗi lưu: tác vụ sau commit không được báo là DB đã rollback.
+        if (ketQua.ThanhCong) sauKhiLuu?.Invoke();
+        return ketQua;
     }
 
     private static bool ThongTinHopLe(string hoTen, string email, VaiTro vaiTro) =>
@@ -117,6 +100,4 @@ public class QuanLyTaiKhoanService(ApplicationDbContext db, IPasswordHasher<TaiK
         && !string.IsNullOrWhiteSpace(email) && email.Length <= 254 && new EmailAddressAttribute().IsValid(email)
         && Enum.IsDefined(vaiTro);
 
-    private static IQueryable<TaiKhoanDoc> Chieu(IQueryable<TaiKhoan> query) => query.Select(x => new TaiKhoanDoc(
-        x.MaTaiKhoan, x.TenDangNhap, x.HoTen, x.Email, x.VaiTro, x.TrangThai));
 }
