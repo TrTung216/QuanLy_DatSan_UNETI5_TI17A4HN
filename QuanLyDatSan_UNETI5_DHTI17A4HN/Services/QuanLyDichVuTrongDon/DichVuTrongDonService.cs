@@ -1,7 +1,8 @@
-﻿// M5: Nguyễn Hữu Quang; MSSV: 23103100184
+// Codex: tách truy cập dữ liệu sang Repository, giữ nghiệp vụ và tác giả gốc.
+// M5: Nguyễn Hữu Quang; MSSV: 23103100184
 // Nội dung: nghiệp vụ dịch vụ trong đơn; mỗi thao tác tính lại DatSan.TienDichVu và kiểm tra RowVersion của đơn.
-using Microsoft.EntityFrameworkCore;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDichVuTrongDon;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Chung;
@@ -9,8 +10,7 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon;
 
-public class DichVuTrongDonService(ApplicationDbContext db, ITinhTienService tinhTien,
-    ILogger<DichVuTrongDonService> logger) : IDichVuTrongDonService
+public class DichVuTrongDonService(IDichVuTrongDonRepository repository, IDonViCongViec donViCongViec, ITinhTienService tinhTien) : IDichVuTrongDonService
 {
     private const int SoLuongToiDa = 100;
 
@@ -20,27 +20,13 @@ public class DichVuTrongDonService(ApplicationDbContext db, ITinhTienService tin
 
     public async Task<ChiTietDichVuTrongDon?> LayTheoDonAsync(int maDatSan, CancellationToken cancellationToken)
     {
-        var don = await db.DatSans.AsNoTracking()
-            .Where(x => x.MaDatSan == maDatSan)
-            .Select(x => new { x.MaDatSan, x.TrangThai })
-            .SingleOrDefaultAsync(cancellationToken);
-        if (don is null) return null;
-
-        var dong = await db.ChiTietDatSans.AsNoTracking()
-            .Where(x => x.MaDatSan == maDatSan)
-            .OrderBy(x => x.MaChiTiet)
-            .Select(x => new DongDichVuTrongDon(x.MaChiTiet, x.MaDichVu, x.DichVu.TenDichVu, x.DichVu.DonViTinh,
-                x.SoLuong, x.DonGia))
-            .ToListAsync(cancellationToken);
-
-        var choPhepSua = ChoPhepSua(don.TrangThai);
-        var coTheThem = choPhepSua
-            ? await db.DichVus.AsNoTracking().Where(x => x.TrangThai == TrangThaiDichVu.HoatDong)
-                .OrderBy(x => x.TenDichVu).ToListAsync(cancellationToken)
-            : new List<DichVu>();
-
+        var trangThai = await repository.LayTrangThaiAsync(maDatSan, cancellationToken);
+        if (trangThai is null) return null;
+        var dong = await repository.LayDongAsync(maDatSan, cancellationToken);
+        var choPhepSua = ChoPhepSua(trangThai.Value);
+        var coTheThem = choPhepSua ? await repository.LayDichVuHoatDongAsync(cancellationToken) : [];
         var tongTien = tinhTien.TinhTienDichVu(dong.Select(x => new DongDichVu(x.SoLuong, x.DonGia)));
-        return new ChiTietDichVuTrongDon(don.MaDatSan, don.TrangThai, choPhepSua, tongTien, dong, coTheThem);
+        return new ChiTietDichVuTrongDon(maDatSan, trangThai.Value, choPhepSua, tongTien, dong, coTheThem);
     }
 
     public async Task<KetQuaNghiepVu> ThemAsync(int maDatSan, int maDichVu, int soLuong,
@@ -52,7 +38,7 @@ public class DichVuTrongDonService(ApplicationDbContext db, ITinhTienService tin
         var (don, loi) = await TaiDonAsync(maDatSan, cancellationToken);
         if (don is null) return loi!;
 
-        var dichVu = await db.DichVus.SingleOrDefaultAsync(x => x.MaDichVu == maDichVu, cancellationToken);
+        var dichVu = await repository.LayDichVuAsync(maDichVu, cancellationToken);
         if (dichVu is null) return KetQuaNghiepVu.BaoLoi("Dịch vụ không tồn tại.", "MaDichVu");
         if (dichVu.TrangThai != TrangThaiDichVu.HoatDong)
             return KetQuaNghiepVu.BaoLoi("Dịch vụ đã ngừng hoạt động.", "MaDichVu");
@@ -99,15 +85,14 @@ public class DichVuTrongDonService(ApplicationDbContext db, ITinhTienService tin
         var dong = don.ChiTietDatSans.SingleOrDefault(x => x.MaChiTiet == maChiTiet);
         if (dong is null) return KetQuaNghiepVu.KhongThay();
 
-        db.ChiTietDatSans.Remove(dong);
+        repository.XoaDong(dong);
         return await LuuAsync(don, "Đã hủy dịch vụ khỏi đơn.", cancellationToken);
     }
 
     private async Task<(DatSan? Don, KetQuaNghiepVu? Loi)> TaiDonAsync(int maDatSan,
         CancellationToken cancellationToken)
     {
-        var don = await db.DatSans.Include(x => x.ChiTietDatSans)
-            .SingleOrDefaultAsync(x => x.MaDatSan == maDatSan, cancellationToken);
+        var don = await repository.LayDonDeCapNhatAsync(maDatSan, cancellationToken);
         if (don is null) return (null, KetQuaNghiepVu.KhongThay());
         if (!ChoPhepSua(don.TrangThai))
             return (null, KetQuaNghiepVu.BaoLoi("Đơn ở trạng thái hiện tại không được sửa dịch vụ."));
@@ -116,25 +101,18 @@ public class DichVuTrongDonService(ApplicationDbContext db, ITinhTienService tin
 
     private async Task<KetQuaNghiepVu> LuuAsync(DatSan don, string thongBao, CancellationToken cancellationToken)
     {
-        var cacDong = don.ChiTietDatSans
-            .Where(x => db.Entry(x).State != EntityState.Deleted)
-            .Select(x => new DongDichVu(x.SoLuong, x.DonGia));
+        var cacDong = repository.LayDongTinhTien(don);
         don.TienDichVu = tinhTien.TinhTienDichVu(cacDong);
         // Luôn UPDATE đơn để RowVersion được kiểm tra, tránh ghi đè khi M4 đổi trạng thái cùng lúc.
-        db.Entry(don).Property(x => x.TienDichVu).IsModified = true;
+        repository.DanhDauCapNhatTienDichVu(don);
 
         try
         {
-            await db.SaveChangesAsync(cancellationToken);
+            await donViCongViec.LuuAsync(cancellationToken);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan)
         {
             return KetQuaNghiepVu.BaoLoi("Đơn vừa được cập nhật bởi người khác. Vui lòng tải lại và thử lại.");
-        }
-        catch (DbUpdateException exception)
-        {
-            logger.LogError(exception, "Không lưu được dịch vụ của đơn {MaDatSan}.", don.MaDatSan);
-            return KetQuaNghiepVu.BaoLoi("Không lưu được dịch vụ. Vui lòng thử lại.");
         }
         return KetQuaNghiepVu.ThanhCongVoi(thongBao);
     }

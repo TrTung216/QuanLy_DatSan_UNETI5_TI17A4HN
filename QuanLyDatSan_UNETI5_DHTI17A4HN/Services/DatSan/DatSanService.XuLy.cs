@@ -1,16 +1,14 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: xác nhận, từ chối, khách hàng hủy, nhân viên/Admin hủy và hoàn thành đơn theo điều kiện nghiệp vụ.
-// Xác nhận dùng chung quy tắc khả dụng với M2/M3, đọc lại dữ liệu sân sau khóa.
-// Chặn hủy/từ chối đơn có cọc; kiểm tra quyền sở hữu khi khách hủy; điều phối khóa sân, RowVersion và transaction; lưu trạng thái, thời điểm, lý do và tiền chốt.
+// Xác nhận, từ chối, hủy, ghi cọc và hoàn thành đơn; kiểm tra trạng thái và RowVersion.
+// Khóa sân và lưu trong transaction; cọc là tổng đã nhận, tiền hoàn thành được tính lại qua M5.
 
-using Microsoft.EntityFrameworkCore;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
 public partial class DatSanService
 {
-    // Chỉ chuyển đơn đang chờ; khóa sân và kiểm tra lại điều kiện đặt trước khi xác nhận.
     public Task<KetQuaXuLyDon> XacNhanDonAsync(XuLyDonYeuCau yeuCau,
         CancellationToken cancellationToken) =>
         XuLyDonCoKhoaSanAsync(yeuCau.MaDatSan, yeuCau.PhienBan, async (don, token) =>
@@ -21,8 +19,7 @@ public partial class DatSanService
             var now = dongHo.BayGio;
             var loiGio = KiemTraKhoangGio(don.GioBatDau, don.GioKetThuc, now);
             if (loiGio is not null) return AnhXaLoiKhaDung(loiGio.Value, khiTao: false);
-            var san = await TruyVanKhaDungSan(don.GioBatDau, don.GioKetThuc, don.MaDatSan)
-                .SingleOrDefaultAsync(x => x.MaSan == don.MaSan, token);
+            var san = await repository.LayKhaDungAsync(don.MaSan, don.GioBatDau, don.GioKetThuc, don.MaDatSan, token);
             var loiSan = DanhGiaKhaDungSan(san, don.GioBatDau, don.GioKetThuc);
             if (loiSan is not null) return AnhXaLoiKhaDung(loiSan.Value, khiTao: false);
 
@@ -31,7 +28,6 @@ public partial class DatSanService
             return null;
         }, cancellationToken);
 
-    // Chỉ nhân viên/Admin được gọi action này ở controller; service bắt buộc lý do và chỉ từ chối đơn chờ.
     public Task<KetQuaXuLyDon> TuChoiDonAsync(HuyDonYeuCau yeuCau,
         CancellationToken cancellationToken)
     {
@@ -55,7 +51,6 @@ public partial class DatSanService
         }, cancellationToken);
     }
 
-    // Khách chỉ hủy đơn của mình khi còn chờ, chưa nhận cọc và chưa tới giờ bắt đầu.
     public Task<KetQuaXuLyDon> KhachHangHuyDonAsync(HuyDonYeuCau yeuCau, int maTaiKhoan, CancellationToken cancellationToken)
     {
         var (maDatSan, lyDo, phienBan) = yeuCau;
@@ -84,7 +79,6 @@ public partial class DatSanService
         }, cancellationToken, maTaiKhoan);
     }
 
-    // Nhân viên/Admin hủy đơn chờ hoặc đã xác nhận khi chưa nhận cọc và chưa tới giờ bắt đầu.
     public Task<KetQuaXuLyDon> NhanVienHuyDonAsync(HuyDonYeuCau yeuCau,
         CancellationToken cancellationToken)
     {
@@ -110,31 +104,49 @@ public partial class DatSanService
         }, cancellationToken);
     }
 
-    // Giá tiền phải do tầng tính tiền (M5) cung cấp; service này chỉ chốt tiền và trạng thái trong cùng transaction.
-    public Task<KetQuaXuLyDon> HoanThanhDonAsync(HoanThanhDonYeuCau yeuCau, CancellationToken cancellationToken)
+    public Task<KetQuaXuLyDon> GhiCocAsync(GhiCocYeuCau yeuCau, CancellationToken cancellationToken)
     {
-        var (maDatSan, tienSan, tienDichVu, daThuDu, phienBan) = yeuCau;
-        if (!daThuDu)
-            return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.ChuaThuDu));
-        if (tienSan < 0m || tienDichVu < 0m)
-            return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.TienAm));
-        var tongTien = tienSan + tienDichVu;
+        if (yeuCau.TongCoc <= 0 || yeuCau.TongCoc > TienToiDa
+            || decimal.Truncate(yeuCau.TongCoc) != yeuCau.TongCoc)
+            return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.TienCocKhongHopLe));
 
-        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, (don, _) =>
+        return XuLyDonCoKhoaSanAsync(yeuCau.MaDatSan, yeuCau.PhienBan, async (don, token) =>
         {
             if (don.TrangThai != TrangThaiDatSan.DangXuLy)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.ChiHoanThanhDonXacNhan);
-            if (don.GioKetThuc > dongHo.BayGio)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.ChuaDenGioKetThuc);
-            if (don.TienCoc > tongTien)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.TongTienThapHonCoc);
+                return MaLoiDatSan.ChiGhiCocDonXacNhan;
+            if (yeuCau.TongCoc <= don.TienCoc)
+                return MaLoiDatSan.CocKhongTang;
+            var tien = await TinhTienDonAsync(don, token);
+            if (tien.Tong > TienToiDa) return MaLoiDatSan.TienVuotGioiHan;
+            if (yeuCau.TongCoc > tien.Tong) return MaLoiDatSan.CocVuotTongTien;
+            don.TienCoc = yeuCau.TongCoc;
+            return null;
+        }, cancellationToken);
+    }
 
-            don.TienSan = tienSan;
-            don.TienDichVu = tienDichVu;
-            don.TongTien = tongTien;
+    public Task<KetQuaXuLyDon> HoanThanhDonAsync(HoanThanhDonYeuCau yeuCau, CancellationToken cancellationToken)
+    {
+        var (maDatSan, daThuDu, phienBan) = yeuCau;
+        if (!daThuDu)
+            return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.ChuaThuDu));
+
+        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, async (don, token) =>
+        {
+            if (don.TrangThai != TrangThaiDatSan.DangXuLy)
+                return MaLoiDatSan.ChiHoanThanhDonXacNhan;
+            if (don.GioKetThuc > dongHo.BayGio)
+                return MaLoiDatSan.ChuaDenGioKetThuc;
+            var tien = await TinhTienDonAsync(don, token);
+            if (tien.Tong > TienToiDa) return MaLoiDatSan.TienVuotGioiHan;
+            if (don.TienCoc > tien.Tong)
+                return MaLoiDatSan.TongTienThapHonCoc;
+
+            don.TienSan = tien.San;
+            don.TienDichVu = tien.DichVu;
+            don.TongTien = tien.Tong;
             don.NgayHoanThanh = dongHo.BayGio;
             don.TrangThai = TrangThaiDatSan.HoanThanh;
-            return Task.FromResult<MaLoiDatSan?>(null);
+            return null;
         }, cancellationToken);
     }
 
@@ -147,44 +159,33 @@ public partial class DatSanService
         if (phienBan is not { Length: 8 })
             return KetQuaXuLyDon.ThatBai(MaLoiDatSan.PhienBanKhongHopLe);
 
-        var truyVan = db.DatSans.Where(x => !maTaiKhoanChuDon.HasValue
-            || x.KhachHang.MaTaiKhoan == maTaiKhoanChuDon.Value);
-        var maSan = await truyVan.AsNoTracking()
-            .Where(x => x.MaDatSan == maDatSan)
-            .Select(x => (int?)x.MaSan)
-            .SingleOrDefaultAsync(cancellationToken);
+        var maSan = await repository.LayMaSanCuaDonAsync(maDatSan, maTaiKhoanChuDon, cancellationToken);
         if (!maSan.HasValue)
             return KetQuaXuLyDon.ThatBai(MaLoiDatSan.KhongTonTai);
 
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await KhoaSanAsync(maSan.Value, cancellationToken);
-
-        var don = await truyVan
-            .Include(x => x.SanTheThao).ThenInclude(x => x.LoaiSan)
-            .Include(x => x.KhachHang)
-            .SingleOrDefaultAsync(x => x.MaDatSan == maDatSan, cancellationToken);
-        if (don is null)
-            return KetQuaXuLyDon.ThatBai(MaLoiDatSan.KhongTonTai);
-        if (don.MaSan != maSan.Value)
-            return KetQuaXuLyDon.ThatBai(MaLoiDatSan.SanDaThayDoi);
-        if (!don.RowVersion.AsSpan().SequenceEqual(phienBan))
-            return KetQuaXuLyDon.ThatBai(MaLoiDatSan.PhienBanDaCu);
-
-        var loi = await apDung(don, cancellationToken);
-        if (loi is not null)
-            return KetQuaXuLyDon.ThatBai(loi.Value);
-
         try
         {
-            await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return KetQuaXuLyDon.ThanhCongResult();
+            return await donViCongViec.TrongGiaoDichAsync(async token =>
+            {
+                await KhoaSanAsync(maSan.Value, cancellationToken);
+
+                var don = await repository.LayDonDeCapNhatAsync(maDatSan, maTaiKhoanChuDon, token);
+                if (don is null)
+                    return KetQuaXuLyDon.ThatBai(MaLoiDatSan.KhongTonTai);
+                if (don.MaSan != maSan.Value)
+                    return KetQuaXuLyDon.ThatBai(MaLoiDatSan.SanDaThayDoi);
+                if (!don.RowVersion.AsSpan().SequenceEqual(phienBan))
+                    return KetQuaXuLyDon.ThatBai(MaLoiDatSan.PhienBanDaCu);
+
+                var loi = await apDung(don, cancellationToken);
+                if (loi is not null)
+                    return KetQuaXuLyDon.ThatBai(loi.Value);
+
+                return KetQuaXuLyDon.ThanhCongResult();
+            }, x => x.ThanhCong, System.Data.IsolationLevel.ReadCommitted, cancellationToken);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan)
         {
-            await transaction.RollbackAsync(cancellationToken);
-            // Không để thao tác đã báo thất bại được SaveChanges ở lần gọi sau trong cùng scope.
-            db.Entry(don).State = EntityState.Detached;
             return KetQuaXuLyDon.ThatBai(MaLoiDatSan.XungDotDuLieu);
         }
     }

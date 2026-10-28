@@ -7,7 +7,8 @@ public enum MaLoiLuuTru
     TrungTenLoaiSan,
     TrungTenDangNhap,
     LoaiSanDangDuocThamChieu,
-    Deadlock
+    Deadlock,
+    ThamChieuSan
 }
 
 // Không đưa Message/InnerException ra HTTP. Service chỉ ánh xạ MaLoi sang hợp đồng nghiệp vụ.

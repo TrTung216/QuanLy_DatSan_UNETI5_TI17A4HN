@@ -9,6 +9,9 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 
 public sealed class DonViCongViec(ApplicationDbContext db, ILogger<DonViCongViec> logger) : IDonViCongViec
 {
+    public DonViCongViec(ApplicationDbContext db)
+        : this(db, Microsoft.Extensions.Logging.Abstractions.NullLogger<DonViCongViec>.Instance) { }
+
     private bool dangThucHien;
     private bool khongTheTaiSuDung;
 
@@ -122,6 +125,8 @@ public sealed class DonViCongViec(ApplicationDbContext db, ILogger<DonViCongViec
         }
         if (sql.Number == 547 && sql.Message.Contains("FK_SanTheThao_LoaiSan_MaLoaiSan", StringComparison.Ordinal))
             return MaLoiLuuTru.LoaiSanDangDuocThamChieu;
+        if (sql.Number == 547 && sql.Message.Contains("FK_DatSan_SanTheThao_MaSan", StringComparison.Ordinal))
+            return MaLoiLuuTru.ThamChieuSan;
         return null;
     }
 }

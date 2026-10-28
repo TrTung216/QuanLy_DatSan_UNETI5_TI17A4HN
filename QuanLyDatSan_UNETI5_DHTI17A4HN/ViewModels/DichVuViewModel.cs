@@ -2,7 +2,7 @@
 // Nội dung: ViewModel thêm, sửa và danh sách dịch vụ.
 using System.ComponentModel.DataAnnotations;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 
@@ -35,7 +35,7 @@ public class DichVuSuaViewModel : DichVuTaoViewModel
 
 public class DichVuDanhSachViewModel
 {
-    public List<DichVu> DanhSach { get; set; } = new();
+    public List<DichVuDoc> DanhSach { get; set; } = new();
     public string? TuKhoa { get; set; }
     public TrangThaiDichVu? TrangThai { get; set; }
     public string? SapXep { get; set; }

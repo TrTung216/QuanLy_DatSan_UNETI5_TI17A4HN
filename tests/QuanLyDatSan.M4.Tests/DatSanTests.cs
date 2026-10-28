@@ -229,14 +229,27 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
     [InlineData(-1, true, 200000, 20000, 0, true)]
     [InlineData(0, true, 200000, 0, 0, false)]
     [InlineData(-1, false, 200000, 0, 0, false)]
-    [InlineData(-1, true, -1, 0, 0, false)]
+    [InlineData(-1, true, 0, 0, 0, true)]
     [InlineData(-1, true, 100, 0, 200, false)]
     public async Task HoanThanhLuuTienVaThoiDiemCungGiaoDich(int hours, bool paid, int court, int service, int deposit, bool allowed)
     {
         var o = await f.Booking(TrangThaiDatSan.DangXuLy, hours, deposit);
+        await using (var seed = f.Db())
+        {
+            var don = await seed.DatSans.SingleAsync(x => x.MaDatSan == o.MaDatSan);
+            don.DonGia = court;
+            if (service > 0)
+                don.ChiTietDatSans.Add(new ChiTietDatSan
+                {
+                    DichVu = new DichVu { TenDichVu = "Nước", DonViTinh = "Chai", DonGia = 99999 },
+                    SoLuong = 1, DonGia = service
+                });
+            await seed.SaveChangesAsync();
+        }
+        o = await f.Read(o.MaDatSan);
         await using var db = f.Db();
         Assert.Equal(allowed, (await f.Service(db).HoanThanhDonAsync(
-            new(o.MaDatSan, court, service, paid, o.RowVersion), default)).ThanhCong);
+            new(o.MaDatSan, paid, o.RowVersion), default)).ThanhCong);
         var saved = await f.Read(o.MaDatSan);
         if (allowed)
         {
@@ -269,7 +282,7 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
         var o = await f.Booking(state, -1);
         await using var db = f.Db();
         Assert.Equal(MaLoiDatSan.ChiHoanThanhDonXacNhan,
-            (await f.Service(db).HoanThanhDonAsync(new(o.MaDatSan, 200000, 0, true, o.RowVersion), default)).Loi);
+            (await f.Service(db).HoanThanhDonAsync(new(o.MaDatSan, true, o.RowVersion), default)).Loi);
         var saved = await f.Read(o.MaDatSan);
         Assert.Equal(state, saved.TrangThai);
         Assert.Null(saved.TongTien);
@@ -355,7 +368,7 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
         var o = await f.Booking(TrangThaiDatSan.DangXuLy, -1);
         await using var db = f.Db(new ThrowAfterWrite());
         await Assert.ThrowsAsync<InvalidOperationException>(() => f.Service(db).HoanThanhDonAsync(
-            new(o.MaDatSan, 200000, 10000, true, o.RowVersion), default));
+            new(o.MaDatSan, true, o.RowVersion), default));
         var saved = await f.Read(o.MaDatSan);
         Assert.Equal(TrangThaiDatSan.DangXuLy, saved.TrangThai);
         Assert.Null(saved.TongTien); Assert.Null(saved.TienSan); Assert.Null(saved.TienDichVu);

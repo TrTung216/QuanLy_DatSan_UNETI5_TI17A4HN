@@ -1,11 +1,9 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: định nghĩa mã lỗi, kết quả nghiệp vụ, DTO yêu cầu tạo/xử lý đơn và DTO dữ liệu danh sách, chi tiết, lựa chọn sân.
-// Chi tiết trả RowVersion cho M3/M4 xử lý đơn; các factory kiểm tra tính hợp lệ của kết quả và mã lỗi.
+// DTO, yêu cầu xử lý và mã lỗi đặt sân; dùng RowVersion để phát hiện dữ liệu cũ.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
-// Mã lỗi là hợp đồng; thông báo/field MVC được ánh xạ tại Controller.
 public enum MaLoiDatSan
 {
     HoSoKhongHoatDong = 1,
@@ -40,6 +38,11 @@ public enum MaLoiDatSan
     SanDaThayDoi = 30,
     PhienBanDaCu = 31,
     XungDotDuLieu = 32,
+    ChiGhiCocDonXacNhan = 33,
+    TienCocKhongHopLe = 34,
+    CocKhongTang = 35,
+    CocVuotTongTien = 36,
+    TienVuotGioiHan = 37,
     NgoaiGioKhiTao = 100
 }
 
@@ -71,14 +74,12 @@ public sealed class KetQuaXuLyDon
         ? new(loi) : throw new ArgumentOutOfRangeException(nameof(loi));
 }
 
-// MaTaiKhoan phải lấy từ phiên đăng nhập tại Controller, không bind từ form.
 public sealed record TaoDonYeuCau(int MaTaiKhoan, int MaSan, DateOnly NgaySuDung,
     TimeOnly GioBatDau, TimeOnly GioKetThuc);
 public sealed record XuLyDonYeuCau(int MaDatSan, byte[] PhienBan);
 public sealed record HuyDonYeuCau(int MaDatSan, string? LyDo, byte[] PhienBan);
-// Giá chốt do M5 cung cấp nội bộ; không bind các khoản tiền này từ form HTTP.
-public sealed record HoanThanhDonYeuCau(int MaDatSan, decimal TienSan, decimal TienDichVu,
-    bool DaThuDu, byte[] PhienBan);
+public sealed record GhiCocYeuCau(int MaDatSan, decimal TongCoc, byte[] PhienBan);
+public sealed record HoanThanhDonYeuCau(int MaDatSan, bool DaThuDu, byte[] PhienBan);
 public sealed record SanChonDto(int MaSan, string TenSan, string TenLoai, decimal DonGia,
     TimeOnly GioMoCua, TimeOnly GioDongCua);
 public sealed class DanhSachDonDto
@@ -121,4 +122,6 @@ public class ChiTietDonDto
     public decimal? TienDichVu { get; set; }
     public decimal? TongTien { get; set; }
     public decimal TienSanDuKien { get; set; }
+    public decimal TienDichVuDuKien { get; set; }
+    public decimal TongTienDuKien { get; set; }
 }
