@@ -49,7 +49,7 @@ public sealed class RepositoryServiceTests
     [Fact]
     public async Task KhongNhanNhamLoiUniqueCuaModuleKhac()
     {
-        var uow = new LuuGia { Loi = new LoiLuuTruException(MaLoiLuuTru.TrungTenTaiKhoan, new Exception()) };
+        var uow = new LuuGia { Loi = new LoiLuuTruException(MaLoiLuuTru.TrungTenDangNhap, new Exception()) };
         await Assert.ThrowsAsync<LoiLuuTruException>(() => new LoaiSanService(new KhoGia(), uow).TaoAsync(HopLe, default));
     }
 
@@ -73,7 +73,7 @@ public sealed class RepositoryServiceTests
             SoLanLuu++; Token = cancellationToken;
             return Loi is null ? Task.CompletedTask : Task.FromException(Loi);
         }
-        public Task<T> TrongGiaoDichAsync<T>(Func<CancellationToken, Task<T>> xuLy, Func<T, bool> duocLuu,
+        public Task<T> ThucHienTrongGiaoDichAsync<T>(Func<CancellationToken, Task<QuyetDinhLuu<T>>> xuLy,
             IsolationLevel isolationLevel, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 

@@ -148,11 +148,11 @@ public sealed class DonViCongViecTests(SqlFixture fixture) : IClassFixture<SqlFi
         var loai = new LoaiSan { TenLoai = tenLoai, SoNguoiToiDa = 10, DonGiaTheoGio = 1000 };
         db.Add(loai);
         var loiLoai = await Assert.ThrowsAsync<LoiLuuTruException>(() => uow.LuuAsync(default));
-        Assert.Equal(MaLoiLuuTru.TrungTenLoaiSan, loiLoai.Ma);
+        Assert.Equal(MaLoiLuuTru.TrungTenLoaiSan, loiLoai.MaLoi);
         Assert.Equal(EntityState.Detached, db.Entry(loai).State);
         db.Add(new TaiKhoan { TenDangNhap = "admin", MatKhau = "hash-test", HoTen = "Test", Email = "test@example.test" });
         var loiTaiKhoan = await Assert.ThrowsAsync<LoiLuuTruException>(() => uow.LuuAsync(default));
-        Assert.Equal(MaLoiLuuTru.TrungTenTaiKhoan, loiTaiKhoan.Ma);
+        Assert.Equal(MaLoiLuuTru.TrungTenDangNhap, loiTaiKhoan.MaLoi);
         db.Add(new LoaiSan { TenLoai = "", SoNguoiToiDa = 10, DonGiaTheoGio = 1000 });
         await Assert.ThrowsAsync<DbUpdateException>(() => uow.LuuAsync(default));
         Assert.False(db.ChangeTracker.HasChanges());
@@ -167,7 +167,7 @@ public sealed class DonViCongViecTests(SqlFixture fixture) : IClassFixture<SqlFi
         db.Remove(loai);
         var uow = new DonViCongViec(db);
         var loi = await Assert.ThrowsAsync<LoiLuuTruException>(() => uow.LuuAsync(default));
-        Assert.Equal(MaLoiLuuTru.ThamChieuLoaiSan, loi.Ma);
+        Assert.Equal(MaLoiLuuTru.LoaiSanDangDuocThamChieu, loi.MaLoi);
         await uow.LuuAsync(default);
         Assert.True(await db.LoaiSans.AnyAsync(x => x.MaLoaiSan == loai.MaLoaiSan));
     }
@@ -212,7 +212,7 @@ public sealed class DonViCongViecTests(SqlFixture fixture) : IClassFixture<SqlFi
             {
                 Assert.Null(db.Database.CurrentTransaction);
                 await uow.LuuAsync(timeout.Token);
-                return ex.Ma;
+                return ex.MaLoi;
             }
         }
         var ketQua = await Task.WhenAll(

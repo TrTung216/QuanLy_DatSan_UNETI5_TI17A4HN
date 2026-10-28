@@ -1,15 +1,15 @@
-// Codex: tách truy vấn từ service LoaiSan, giữ nguyên bộ lọc và tracking.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ tách truy cập dữ liệu, giữ hợp đồng nghiệp vụ.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
-
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyLoaiSan;
 
 public class LoaiSanRepository(ApplicationDbContext db) : ILoaiSanRepository
 {
     private const int SoDongMoiTrang = 10;
+
     public async Task<TrangLoaiSan> LayDanhSachAsync(string? tuKhoa, TrangThaiLoaiSan? trangThai,
         string sapXep, int trang, CancellationToken cancellationToken)
     {
@@ -29,19 +29,11 @@ public class LoaiSanRepository(ApplicationDbContext db) : ILoaiSanRepository
     public Task<LoaiSanDoc?> LayChiTietAsync(int id, CancellationToken cancellationToken) =>
         Chieu(db.LoaiSans.AsNoTracking().Where(x => x.MaLoaiSan == id)).SingleOrDefaultAsync(cancellationToken);
 
-    private static IQueryable<LoaiSanDoc> Chieu(IQueryable<LoaiSan> query) => query.Select(x => new LoaiSanDoc(
-        x.MaLoaiSan, x.TenLoai, x.MoTa, x.SoNguoiToiDa, x.DonGiaTheoGio, x.TrangThai, x.DanhSachSan.Count));
-    public Task<bool> TrungTenAsync(string ten, int? id, CancellationToken cancellationToken)
-    {
-        ten = ten.Trim();
-        // Dùng cùng collation và unique index hiện có tại database.
-        return db.LoaiSans.AnyAsync(x => x.TenLoai == ten && (!id.HasValue || x.MaLoaiSan != id.Value), cancellationToken);
-    }
-
-    public Task<LoaiSan?> LayDeCapNhatAsync(int id, CancellationToken cancellationToken) =>
-        db.LoaiSans.SingleOrDefaultAsync(x => x.MaLoaiSan == id, cancellationToken);
-    public Task<bool> CoSanThamChieuAsync(int id, CancellationToken cancellationToken) =>
-        db.SanTheThaos.AnyAsync(x => x.MaLoaiSan == id, cancellationToken);
+    public Task<LoaiSan?> LayDeCapNhatAsync(int id, CancellationToken ct) => db.LoaiSans.SingleOrDefaultAsync(x => x.MaLoaiSan == id, ct);
+    public Task<bool> TrungTenAsync(string ten, int? id, CancellationToken ct) => db.LoaiSans.AnyAsync(x => x.TenLoai == ten && (!id.HasValue || x.MaLoaiSan != id.Value), ct);
+    public Task<bool> CoSanThamChieuAsync(int id, CancellationToken ct) => db.SanTheThaos.AnyAsync(x => x.MaLoaiSan == id, ct);
     public void Them(LoaiSan loaiSan) => db.LoaiSans.Add(loaiSan);
     public void Xoa(LoaiSan loaiSan) => db.LoaiSans.Remove(loaiSan);
+    private static IQueryable<LoaiSanDoc> Chieu(IQueryable<LoaiSan> query) => query.Select(x => new LoaiSanDoc(
+        x.MaLoaiSan, x.TenLoai, x.MoTa, x.SoNguoiToiDa, x.DonGiaTheoGio, x.TrangThai, x.DanhSachSan.Count));
 }

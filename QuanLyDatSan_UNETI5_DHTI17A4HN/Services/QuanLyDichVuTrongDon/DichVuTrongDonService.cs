@@ -110,7 +110,7 @@ public class DichVuTrongDonService(IDichVuTrongDonRepository repository, IDonViC
         {
             await donViCongViec.LuuAsync(cancellationToken);
         }
-        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.XungDotPhienBan)
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan)
         {
             return KetQuaNghiepVu.BaoLoi("Đơn vừa được cập nhật bởi người khác. Vui lòng tải lại và thử lại.");
         }

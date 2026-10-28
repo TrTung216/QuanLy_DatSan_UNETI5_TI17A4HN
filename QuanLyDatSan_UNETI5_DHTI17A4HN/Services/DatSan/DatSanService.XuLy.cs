@@ -184,7 +184,7 @@ public partial class DatSanService
                 return KetQuaXuLyDon.ThanhCongResult();
             }, x => x.ThanhCong, System.Data.IsolationLevel.ReadCommitted, cancellationToken);
         }
-        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.XungDotPhienBan)
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan)
         {
             return KetQuaXuLyDon.ThatBai(MaLoiDatSan.XungDotDuLieu);
         }

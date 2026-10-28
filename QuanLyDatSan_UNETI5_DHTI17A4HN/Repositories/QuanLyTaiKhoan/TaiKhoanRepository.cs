@@ -1,15 +1,15 @@
-// Codex: tách truy vấn từ service TaiKhoan, giữ nguyên bộ lọc và tracking.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ tách truy cập dữ liệu, giữ hợp đồng nghiệp vụ.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
-
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
 
 public class TaiKhoanRepository(ApplicationDbContext db) : ITaiKhoanRepository
 {
     private const int SoDongMoiTrang = 10;
+
     public async Task<TrangTaiKhoan> LayDanhSachAsync(string? tuKhoa, VaiTro? vaiTro,
         TrangThaiTaiKhoan? trangThai, int trang, CancellationToken cancellationToken)
     {
@@ -30,16 +30,11 @@ public class TaiKhoanRepository(ApplicationDbContext db) : ITaiKhoanRepository
     public Task<TaiKhoanDoc?> LayChiTietAsync(int id, CancellationToken cancellationToken) =>
         Chieu(db.TaiKhoans.AsNoTracking().Where(x => x.MaTaiKhoan == id)).SingleOrDefaultAsync(cancellationToken);
 
+    public Task<TaiKhoan?> LayDeCapNhatAsync(int id, CancellationToken ct) => db.TaiKhoans.SingleOrDefaultAsync(x => x.MaTaiKhoan == id, ct);
+    public Task<TaiKhoan?> LayDeXacThucAsync(string ten, CancellationToken ct) => db.TaiKhoans.SingleOrDefaultAsync(x => x.TenDangNhap == ten, ct);
+    public Task<bool> TrungTenAsync(string ten, CancellationToken ct) => db.TaiKhoans.AnyAsync(x => x.TenDangNhap == ten, ct);
+    public Task<List<int>> LayMaTheoQuyenAsync(VaiTro vaiTro, TrangThaiTaiKhoan trangThai, CancellationToken ct) => db.TaiKhoans.Where(x => x.VaiTro == vaiTro && x.TrangThai == trangThai).Select(x => x.MaTaiKhoan).ToListAsync(ct);
+    public void Them(TaiKhoan taiKhoan) => db.TaiKhoans.Add(taiKhoan);
     private static IQueryable<TaiKhoanDoc> Chieu(IQueryable<TaiKhoan> query) => query.Select(x => new TaiKhoanDoc(
         x.MaTaiKhoan, x.TenDangNhap, x.HoTen, x.Email, x.VaiTro, x.TrangThai));
-    public Task<TaiKhoan?> LayDeCapNhatAsync(int id, CancellationToken cancellationToken) =>
-        db.TaiKhoans.SingleOrDefaultAsync(x => x.MaTaiKhoan == id, cancellationToken);
-    public Task<TaiKhoan?> LayTheoTenDeCapNhatAsync(string ten, CancellationToken cancellationToken) =>
-        db.TaiKhoans.SingleOrDefaultAsync(x => x.TenDangNhap == ten, cancellationToken);
-    public Task<bool> TrungTenAsync(string ten, CancellationToken cancellationToken) =>
-        db.TaiKhoans.AnyAsync(x => x.TenDangNhap == ten, cancellationToken);
-    public Task<List<int>> LayAdminHoatDongAsync(CancellationToken cancellationToken) =>
-        db.TaiKhoans.Where(x => x.VaiTro == VaiTro.Admin && x.TrangThai == TrangThaiTaiKhoan.HoatDong)
-            .Select(x => x.MaTaiKhoan).ToListAsync(cancellationToken);
-    public void Them(TaiKhoan taiKhoan) => db.TaiKhoans.Add(taiKhoan);
 }

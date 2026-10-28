@@ -1,4 +1,9 @@
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ kiểm thử ranh giới service và hồi quy xác thực.
+using Microsoft.Extensions.Logging.Abstractions;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyLoaiSan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.TrangChu;
 using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
@@ -25,6 +30,10 @@ public class ServiceM1Tests
     [InlineData(typeof(IQuanLyTaiKhoanService))]
     [InlineData(typeof(IXacThucTaiKhoanService))]
     [InlineData(typeof(IDichVuService))]
+    [InlineData(typeof(IDonViCongViec))]
+    [InlineData(typeof(ITaiKhoanRepository))]
+    [InlineData(typeof(ILoaiSanRepository))]
+    [InlineData(typeof(ITrangChuRepository))]
     public void DiUngDungDangKyMotLanVaDungVongDoiScoped(Type kieuService)
     {
         using var app = new UngDungKiemThu();
@@ -52,7 +61,7 @@ public class ServiceM1Tests
         using var app = new UngDungKiemThu(); await app.KhoiTaoAsync();
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var service = new QuanLyTaiKhoanService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan.TaiKhoanRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), scope.ServiceProvider.GetRequiredService<IPasswordHasher<TaiKhoan>>(),
+        var service = new QuanLyTaiKhoanService(new TaiKhoanRepository(db), new DonViCongViec(db, NullLogger<DonViCongViec>.Instance), scope.ServiceProvider.GetRequiredService<IPasswordHasher<TaiKhoan>>(),
             new NguoiThaoTac(maNguoiThaoTac), scope.ServiceProvider.GetRequiredService<PhienBanQuyenTaiKhoan>());
         var ketQua = await service.SuaAsync(3, new("Không được lưu", "test@example.test", VaiTro.Admin, TrangThaiTaiKhoan.HoatDong), default);
         Assert.Contains(MaLoiTaiKhoan.KhongDuQuyen, ketQua.Loi);
@@ -60,11 +69,8 @@ public class ServiceM1Tests
         Assert.Null(db.Database.CurrentTransaction);
         var tao = await service.TaoAsync(new TaoTaiKhoan
         {
-            TenDangNhap = "khong_duoc_tao",
-            MatKhau = app.MatKhau,
-            HoTen = "Không được lưu",
-            Email = "test@example.test",
-            VaiTro = VaiTro.Admin
+            TenDangNhap = "khong_duoc_tao", MatKhau = app.MatKhau,
+            HoTen = "Không được lưu", Email = "test@example.test", VaiTro = VaiTro.Admin
         }, default);
         Assert.Contains(MaLoiTaiKhoan.KhongDuQuyen, tao.Loi);
         Assert.Equal(3, await db.TaiKhoans.CountAsync());
@@ -81,7 +87,7 @@ public class ServiceM1Tests
         await using var db = new ApplicationDbContext(options);
         var phienBan = scope.ServiceProvider.GetRequiredService<PhienBanQuyenTaiKhoan>();
         var truoc = phienBan.Lay(2);
-        var service = new QuanLyTaiKhoanService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan.TaiKhoanRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), scope.ServiceProvider.GetRequiredService<IPasswordHasher<TaiKhoan>>(), new NguoiThaoTac(1), phienBan);
+        var service = new QuanLyTaiKhoanService(new TaiKhoanRepository(db), new DonViCongViec(db, NullLogger<DonViCongViec>.Instance), scope.ServiceProvider.GetRequiredService<IPasswordHasher<TaiKhoan>>(), new NguoiThaoTac(1), phienBan);
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.SuaAsync(2,
             new("Không được lưu", "test@example.test", VaiTro.KhachHang, TrangThaiTaiKhoan.BiKhoa), default));
         Assert.Equal(truoc, phienBan.Lay(2));
@@ -110,11 +116,7 @@ public class ServiceM1Tests
         var service = scope.ServiceProvider.GetRequiredService<IQuanLyTaiKhoanService>();
         var ketQua = await service.TaoAsync(new TaoTaiKhoan
         {
-            TenDangNhap = "moi",
-            MatKhau = "ngan",
-            HoTen = "Họ tên",
-            Email = "sai",
-            VaiTro = (VaiTro)99
+            TenDangNhap = "moi", MatKhau = "ngan", HoTen = "Họ tên", Email = "sai", VaiTro = (VaiTro)99
         }, default);
         Assert.Contains(MaLoiTaiKhoan.DuLieuKhongHopLe, ketQua.Loi);
         Assert.Equal(3, await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().TaiKhoans.CountAsync());
@@ -179,9 +181,7 @@ public class ServiceM1Tests
         using var client = app.TaoClient();
         var response = await client.PostAsync("/TaiKhoan/DangNhap", new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["TenDangNhap"] = "admin",
-            ["MatKhau"] = app.MatKhau,
-            ["ReturnUrl"] = returnUrl,
+            ["TenDangNhap"] = "admin", ["MatKhau"] = app.MatKhau, ["ReturnUrl"] = returnUrl,
             ["__RequestVerificationToken"] = Token(await client.GetStringAsync("/TaiKhoan/DangNhap"))
         }));
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
@@ -217,9 +217,7 @@ public class ServiceM1Tests
         var matKhau = tinhHuong == "sai_mat_khau" ? app.MatKhau + "sai" : app.MatKhau;
         var response = await client.PostAsync("/TaiKhoan/DangNhap", new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["TenDangNhap"] = ten,
-            ["MatKhau"] = matKhau,
-            ["ReturnUrl"] = "/LoaiSan/DanhSach",
+            ["TenDangNhap"] = ten, ["MatKhau"] = matKhau, ["ReturnUrl"] = "/LoaiSan/DanhSach",
             ["__RequestVerificationToken"] = Token(await client.GetStringAsync("/TaiKhoan/DangNhap"))
         }));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -255,8 +253,7 @@ public class ServiceM1Tests
         using var client = app.TaoClient();
         var form = new Dictionary<string, string>
         {
-            ["TenDangNhap"] = "khongco",
-            ["MatKhau"] = app.MatKhau,
+            ["TenDangNhap"] = "khongco", ["MatKhau"] = app.MatKhau,
             ["__RequestVerificationToken"] = Token(await client.GetStringAsync("/TaiKhoan/DangNhap"))
         };
         for (var lan = 0; lan < 10; lan++)

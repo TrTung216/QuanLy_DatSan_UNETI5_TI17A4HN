@@ -1,4 +1,3 @@
-// Codex: tách truy cập dữ liệu sang Repository, giữ nghiệp vụ và tác giả gốc.
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ tách kiểm tra đăng nhập và nâng cấp hash mật khẩu.
 using Microsoft.AspNetCore.Identity;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
@@ -16,7 +15,7 @@ public class XacThucTaiKhoanService(ITaiKhoanRepository repository, IDonViCongVi
             || string.IsNullOrWhiteSpace(yeuCau.MatKhau) || yeuCau.MatKhau.Length > 128)
             return new(MaLoiXacThuc.ThongTinKhongHopLe);
         var tenDangNhap = yeuCau.TenDangNhap.Trim();
-        var taiKhoan = await repository.LayTheoTenDeCapNhatAsync(tenDangNhap, cancellationToken);
+        var taiKhoan = await repository.LayDeXacThucAsync(tenDangNhap, cancellationToken);
         var ketQua = PasswordVerificationResult.Failed;
         if (taiKhoan is not null && taiKhoan.TrangThai == TrangThaiTaiKhoan.HoatDong && Enum.IsDefined(taiKhoan.VaiTro))
         {

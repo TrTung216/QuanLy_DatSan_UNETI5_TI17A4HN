@@ -1,10 +1,9 @@
-// Codex: tách truy cập dữ liệu sang Repository, giữ nghiệp vụ và tác giả gốc.
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ tách nghiệp vụ tài khoản, transaction và thu hồi phiên.
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using Microsoft.AspNetCore.Identity;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 
@@ -13,12 +12,11 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
 public class QuanLyTaiKhoanService(ITaiKhoanRepository repository, IDonViCongViec donViCongViec, IPasswordHasher<TaiKhoan> hasher,
     ITaiKhoanHienTai hienTai, PhienBanQuyenTaiKhoan phienBanQuyen) : IQuanLyTaiKhoanService
 {
-
-    public Task<TrangTaiKhoan> LayDanhSachAsync(string? tuKhoa, VaiTro? vaiTro,
-        TrangThaiTaiKhoan? trangThai, int trang, CancellationToken cancellationToken) =>
+    public Task<TrangTaiKhoan> LayDanhSachAsync(string? tuKhoa, VaiTro? vaiTro, TrangThaiTaiKhoan? trangThai, int trang, CancellationToken cancellationToken) =>
         repository.LayDanhSachAsync(tuKhoa?.Trim(), vaiTro, trangThai, trang, cancellationToken);
-    public Task<TaiKhoanDoc?> LayChiTietAsync(int id, CancellationToken cancellationToken) =>
-        repository.LayChiTietAsync(id, cancellationToken);
+
+    public Task<TaiKhoanDoc?> LayChiTietAsync(int id, CancellationToken cancellationToken) => repository.LayChiTietAsync(id, cancellationToken);
+
     public Task<KetQuaQuanLyTaiKhoan> TaoAsync(TaoTaiKhoan yeuCau, CancellationToken cancellationToken)
     {
         if (!ThongTinHopLe(yeuCau.HoTen, yeuCau.Email, yeuCau.VaiTro)
@@ -32,11 +30,8 @@ public class QuanLyTaiKhoanService(ITaiKhoanRepository repository, IDonViCongVie
                 return new([MaLoiTaiKhoan.TrungTen]);
             var taiKhoan = new TaiKhoan
             {
-                TenDangNhap = ten,
-                HoTen = yeuCau.HoTen,
-                Email = yeuCau.Email,
-                VaiTro = yeuCau.VaiTro,
-                TrangThai = TrangThaiTaiKhoan.HoatDong
+                TenDangNhap = ten, HoTen = yeuCau.HoTen, Email = yeuCau.Email,
+                VaiTro = yeuCau.VaiTro, TrangThai = TrangThaiTaiKhoan.HoatDong
             };
             taiKhoan.MatKhau = hasher.HashPassword(taiKhoan, yeuCau.MatKhau);
             repository.Them(taiKhoan);
@@ -77,26 +72,29 @@ public class QuanLyTaiKhoanService(ITaiKhoanRepository repository, IDonViCongVie
         KetQuaQuanLyTaiKhoan ketQua;
         try
         {
-            ketQua = await donViCongViec.TrongGiaoDichAsync(async token =>
+            ketQua = await donViCongViec.ThucHienTrongGiaoDichAsync(async ct =>
             {
-                var adminIds = await repository.LayAdminHoatDongAsync(token);
+                // Giữ kiểm tra quyền và Admin cuối cùng trong Serializable.
+                var adminIds = await repository.LayMaTheoQuyenAsync(VaiTro.Admin, TrangThaiTaiKhoan.HoatDong, ct);
                 if (!hienTai.MaTaiKhoan.HasValue || !adminIds.Contains(hienTai.MaTaiKhoan.Value))
-                    return new KetQuaQuanLyTaiKhoan([MaLoiTaiKhoan.KhongDuQuyen]);
-                return await capNhat(adminIds);
-            }, x => x.ThanhCong, IsolationLevel.Serializable, cancellationToken);
+                    return new QuyetDinhLuu<KetQuaQuanLyTaiKhoan>(false, new([MaLoiTaiKhoan.KhongDuQuyen]));
+                var ketQuaCapNhat = await capNhat(adminIds);
+                return new QuyetDinhLuu<KetQuaQuanLyTaiKhoan>(ketQuaCapNhat.ThanhCong, ketQuaCapNhat);
+            }, IsolationLevel.Serializable, cancellationToken);
         }
-        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.TrungTenTaiKhoan)
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.TrungTenDangNhap)
         {
             return new([MaLoiTaiKhoan.TrungTen]);
         }
-        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.Deadlock)
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.Deadlock)
         {
             return new([MaLoiTaiKhoan.XungDotDuLieu]);
         }
-        // Nằm ngoài transaction và catch lưu trữ: lỗi thu hồi phiên không bị coi là rollback.
+        // Ngoài phạm vi bắt lỗi lưu: tác vụ sau commit không được báo là DB đã rollback.
         if (ketQua.ThanhCong) sauKhiLuu?.Invoke();
         return ketQua;
     }
+
     private static bool ThongTinHopLe(string hoTen, string email, VaiTro vaiTro) =>
         !string.IsNullOrWhiteSpace(hoTen) && hoTen.Length <= 100
         && !string.IsNullOrWhiteSpace(email) && email.Length <= 254 && new EmailAddressAttribute().IsValid(email)

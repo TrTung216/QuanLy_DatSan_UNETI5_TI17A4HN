@@ -1,10 +1,10 @@
-// Codex: tách truy vấn từ service TrangChu, giữ nguyên bộ lọc và tracking.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ tách truy cập dữ liệu, giữ hợp đồng nghiệp vụ.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Đọc sân theo loại cho trang chủ, không thay nghiệp vụ M2.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.TrangChu;
 
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.TrangChu;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.TrangChu;
 
 public class TrangChuRepository(ApplicationDbContext db) : ITrangChuRepository
@@ -24,5 +24,4 @@ public class TrangChuRepository(ApplicationDbContext db) : ITrangChuRepository
                         san.DonGia, san.GioMoCua, san.GioDongCua)).ToList()))
             .ToListAsync(cancellationToken);
     }
-
 }

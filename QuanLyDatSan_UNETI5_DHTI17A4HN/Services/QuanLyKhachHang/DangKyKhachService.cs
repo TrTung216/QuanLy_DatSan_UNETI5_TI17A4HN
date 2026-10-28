@@ -55,7 +55,7 @@ public sealed class DangKyKhachService(ITaiKhoanRepository taiKhoanRepository, I
 
         taiKhoanRepository.Them(taiKhoan);
         try { await donViCongViec.LuuAsync(cancellationToken); }
-        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.TrungTenTaiKhoan) { return MaLoiDangKyKhach.TrungTen; }
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.TrungTenDangNhap) { return MaLoiDangKyKhach.TrungTen; }
         return MaLoiDangKyKhach.ThanhCong;
     }
 }

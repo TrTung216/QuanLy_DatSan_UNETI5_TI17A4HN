@@ -50,7 +50,7 @@ public class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec 
         GanDuLieu(san, yeuCau);
         repository.Them(san);
         try { await donViCongViec.LuuAsync(cancellationToken); }
-        catch (LoiLuuTruException ex) when (ex.Ma is MaLoiLuuTru.ThamChieuLoaiSan or MaLoiLuuTru.ThamChieuSan)
+        catch (LoiLuuTruException ex) when (ex.MaLoi is MaLoiLuuTru.LoaiSanDangDuocThamChieu or MaLoiLuuTru.ThamChieuSan)
         {
             return KetQuaSan<int>.Loi(MaLoiSan.DuLieuLienQuanThayDoi);
         }
@@ -66,11 +66,11 @@ public class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec 
             return KetQuaSan<int>.Loi(MaLoiSan.LoaiSanKhongHopLe);
         GanDuLieu(san, yeuCau);
         try { await donViCongViec.LuuAsync(cancellationToken); }
-        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.XungDotPhienBan)
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan)
         {
             return KetQuaSan<int>.Loi(MaLoiSan.KhongTonTai);
         }
-        catch (LoiLuuTruException ex) when (ex.Ma is MaLoiLuuTru.ThamChieuLoaiSan or MaLoiLuuTru.ThamChieuSan)
+        catch (LoiLuuTruException ex) when (ex.MaLoi is MaLoiLuuTru.LoaiSanDangDuocThamChieu or MaLoiLuuTru.ThamChieuSan)
         {
             return KetQuaSan<int>.Loi(MaLoiSan.DuLieuLienQuanThayDoi);
         }
@@ -83,11 +83,11 @@ public class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec 
         if (san is null) return KetQuaSan<int>.Loi(MaLoiSan.KhongTonTai);
         repository.Xoa(san);
         try { await donViCongViec.LuuAsync(cancellationToken); }
-        catch (LoiLuuTruException ex) when (ex.Ma is MaLoiLuuTru.ThamChieuLoaiSan or MaLoiLuuTru.ThamChieuSan)
+        catch (LoiLuuTruException ex) when (ex.MaLoi is MaLoiLuuTru.LoaiSanDangDuocThamChieu or MaLoiLuuTru.ThamChieuSan)
         {
             return KetQuaSan<int>.Loi(MaLoiSan.DangDuocThamChieu);
         }
-        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.XungDotPhienBan)
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan)
         {
             return KetQuaSan<int>.Loi(MaLoiSan.DaBiXoa);
         }

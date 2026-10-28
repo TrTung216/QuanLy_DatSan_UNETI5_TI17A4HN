@@ -1,106 +1,132 @@
-// Lưu và commit/rollback transaction; dọn thay đổi khi thất bại và ánh xạ lỗi lưu trữ.
-
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ transaction, rollback và lỗi lưu dùng chung.
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 
-public sealed class DonViCongViec(ApplicationDbContext db, ILogger<DonViCongViec>? logger = null) : IDonViCongViec
+public sealed class DonViCongViec(ApplicationDbContext db, ILogger<DonViCongViec> logger) : IDonViCongViec
 {
-    private bool dangThucThi;
+    public DonViCongViec(ApplicationDbContext db)
+        : this(db, Microsoft.Extensions.Logging.Abstractions.NullLogger<DonViCongViec>.Instance) { }
 
-    public async Task LuuAsync(CancellationToken cancellationToken)
-    {
-        if (dangThucThi || db.Database.CurrentTransaction is not null)
-            throw new InvalidOperationException("Không được lưu độc lập trong giao dịch đang thực thi.");
-        var thayDoi = db.ChangeTracker.Entries().Where(x => x.State != EntityState.Unchanged).ToArray();
-        try { await db.SaveChangesAsync(cancellationToken); }
-        catch (Exception ex)
-        {
-            foreach (var entry in thayDoi) entry.State = EntityState.Detached;
-            if (AnhXa(ex) is { } loi) throw loi;
-            throw;
-        }
-    }
+    private bool dangThucHien;
+    private bool khongTheTaiSuDung;
 
-    public async Task<T> TrongGiaoDichAsync<T>(Func<CancellationToken, Task<T>> xuLy, Func<T, bool> duocLuu,
-        IsolationLevel isolationLevel, CancellationToken cancellationToken)
+    public async Task LuuAsync(CancellationToken cancellationToken) =>
+        await ThucHienAsync(_ => Task.FromResult(new QuyetDinhLuu<bool>(true, true)),
+            null, choPhepThayDoiTruoc: true, cancellationToken);
+
+    public Task<T> ThucHienTrongGiaoDichAsync<T>(Func<CancellationToken, Task<QuyetDinhLuu<T>>> congViec,
+        IsolationLevel mucCoLap, CancellationToken cancellationToken) =>
+        ThucHienAsync(congViec, mucCoLap, choPhepThayDoiTruoc: false, cancellationToken);
+
+    private async Task<T> ThucHienAsync<T>(Func<CancellationToken, Task<QuyetDinhLuu<T>>> congViec,
+        IsolationLevel? mucCoLap, bool choPhepThayDoiTruoc, CancellationToken ct)
     {
-        if (dangThucThi || db.Database.CurrentTransaction is not null)
-            throw new InvalidOperationException("Không hỗ trợ giao dịch lồng.");
-        if (db.ChangeTracker.HasChanges())
-            throw new InvalidOperationException("Phải hoàn tất thay đổi trước khi bắt đầu một ca sử dụng mới.");
-        var truoc = db.ChangeTracker.Entries().ToDictionary(x => x.Entity, x => x.CurrentValues.Clone(), ReferenceEqualityComparer.Instance);
+        if (khongTheTaiSuDung)
+            throw new InvalidOperationException("Scope lưu dữ liệu đã lỗi khi dọn transaction; phải tạo scope mới.");
+        if (dangThucHien || db.Database.CurrentTransaction is not null || System.Transactions.Transaction.Current is not null)
+            throw new InvalidOperationException("Không mở hoặc lưu transaction lồng nhau.");
+        if (!choPhepThayDoiTruoc && db.ChangeTracker.HasChanges())
+            throw new InvalidOperationException("Phải hoàn tất thay đổi đang chờ trước khi mở ca nghiệp vụ mới.");
+
+        dangThucHien = true;
+        // Lưu tham chiếu trước SaveChanges: sau khi ghi thành công EF có thể đổi state thành Unchanged/Detached.
+        var daTacDong = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        IDbContextTransaction? transaction = null;
         var daCommit = false;
-        dangThucThi = true;
         try
         {
-            await using var transaction = await db.Database.BeginTransactionAsync(isolationLevel, cancellationToken);
-            Exception? loiGoc = null;
-            try
+            GhiNhanThayDoi(daTacDong);
+            transaction = mucCoLap.HasValue
+                ? await db.Database.BeginTransactionAsync(mucCoLap.Value, ct)
+                : await db.Database.BeginTransactionAsync(ct);
+            var quyetDinh = await congViec(ct);
+            GhiNhanThayDoi(daTacDong);
+            if (!quyetDinh.DuocLuu)
             {
-                var ketQua = await xuLy(cancellationToken);
-                if (!duocLuu(ketQua)) return ketQua;
-                await db.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                daCommit = true;
-                return ketQua;
+                await transaction.RollbackAsync(CancellationToken.None);
+                GoTheoDoi(daTacDong);
+                return quyetDinh.KetQua;
             }
-            catch (Exception ex)
-            {
-                loiGoc = ex;
-                throw;
-            }
-            finally
-            {
-                if (!daCommit)
-                {
-                    try { await transaction.RollbackAsync(CancellationToken.None); }
-                    catch (Exception rollbackError) when (loiGoc is not null)
-                    {
-                        logger?.LogWarning(rollbackError, "Không hoàn tất rollback sau lỗi giao dịch.");
-                    }
-                }
-            }
+
+            await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+            daCommit = true;
+            return quyetDinh.KetQua;
         }
         catch (Exception ex)
         {
-            if (AnhXa(ex) is { } loi) throw loi;
+            if (!daCommit)
+            {
+                try
+                {
+                    if (transaction is not null) await transaction.RollbackAsync(CancellationToken.None);
+                }
+                catch (Exception cleanupException)
+                {
+                    khongTheTaiSuDung = true;
+                    logger.LogError("Không rollback được transaction; loại lỗi: {LoaiLoi}", cleanupException.GetType().Name);
+                }
+                GhiNhanThayDoi(daTacDong);
+                GoTheoDoi(daTacDong);
+            }
+            if (NhanDienLoi(ex) is { } maLoi) throw new LoiLuuTruException(maLoi, ex);
+            // Giữ nguyên cancellation và lỗi ngoài dự kiến cho handler; không chuyển thành thành công/lỗi trùng.
             throw;
         }
         finally
         {
-            if (!daCommit)
+            try
             {
-                foreach (var entry in db.ChangeTracker.Entries().ToArray())
-                {
-                    if (!truoc.TryGetValue(entry.Entity, out var values) || entry.State != EntityState.Unchanged
-                        || entry.Properties.Any(p => !Equals(p.CurrentValue, values[p.Metadata.Name])))
-                        entry.State = EntityState.Detached;
-                }
+                if (transaction is not null) await transaction.DisposeAsync();
             }
-            dangThucThi = false;
+            catch
+            {
+                khongTheTaiSuDung = true;
+                throw;
+            }
+            finally { dangThucHien = false; }
         }
     }
 
-    private static LoiLuuTruException? AnhXa(Exception ex)
+    private void GhiNhanThayDoi(HashSet<object> entities)
     {
-        if (ex is DbUpdateConcurrencyException) return new(MaLoiLuuTru.XungDotPhienBan, ex);
-        var sql = ex as SqlException ?? ex.InnerException as SqlException;
+        foreach (var entry in db.ChangeTracker.Entries().Where(x =>
+                     x.State is EntityState.Added or EntityState.Modified or EntityState.Deleted))
+            entities.Add(entry.Entity);
+    }
+
+    private void GoTheoDoi(HashSet<object> entities)
+    {
+        // Không Clear context: giữ các entity chỉ đọc/không liên quan.
+        foreach (var entity in entities) db.Entry(entity).State = EntityState.Detached;
+    }
+
+    private static MaLoiLuuTru? NhanDienLoi(Exception exception)
+    {
+        if (exception is DbUpdateConcurrencyException) return MaLoiLuuTru.XungDotPhienBan;
+        // EF execution strategy có thể bọc deadlock trong InvalidOperationException → DbUpdateException → SqlException.
+        SqlException? sql = null;
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is SqlException sqlException) { sql = sqlException; break; }
+        }
         if (sql is null) return null;
-        if (sql.Number == 1205) return new(MaLoiLuuTru.Deadlock, ex);
+        if (sql.Number == 1205) return MaLoiLuuTru.Deadlock;
+        // SQL Server không cung cấp tên constraint thành trường riêng; chỉ khớp tên cụ thể của model hiện hành.
         if (sql.Number is 2601 or 2627)
         {
-            if (sql.Message.Contains("IX_LoaiSan_TenLoai", StringComparison.Ordinal)) return new(MaLoiLuuTru.TrungTenLoaiSan, ex);
-            if (sql.Message.Contains("IX_TaiKhoan_TenDangNhap", StringComparison.Ordinal)) return new(MaLoiLuuTru.TrungTenTaiKhoan, ex);
+            if (sql.Message.Contains("'IX_LoaiSan_TenLoai'", StringComparison.Ordinal)) return MaLoiLuuTru.TrungTenLoaiSan;
+            if (sql.Message.Contains("'IX_TaiKhoan_TenDangNhap'", StringComparison.Ordinal)) return MaLoiLuuTru.TrungTenDangNhap;
         }
-        if (sql.Number == 547)
-        {
-            if (sql.Message.Contains("FK_SanTheThao_LoaiSan_MaLoaiSan", StringComparison.Ordinal)) return new(MaLoiLuuTru.ThamChieuLoaiSan, ex);
-            if (sql.Message.Contains("FK_DatSan_SanTheThao_MaSan", StringComparison.Ordinal)) return new(MaLoiLuuTru.ThamChieuSan, ex);
-        }
+        if (sql.Number == 547 && sql.Message.Contains("FK_SanTheThao_LoaiSan_MaLoaiSan", StringComparison.Ordinal))
+            return MaLoiLuuTru.LoaiSanDangDuocThamChieu;
+        if (sql.Number == 547 && sql.Message.Contains("FK_DatSan_SanTheThao_MaSan", StringComparison.Ordinal))
+            return MaLoiLuuTru.ThamChieuSan;
         return null;
     }
 }
