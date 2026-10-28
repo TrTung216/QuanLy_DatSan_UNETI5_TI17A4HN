@@ -22,7 +22,7 @@ public class TraCuuSanSqlServerTests(TraCuuSanSqlServerFixture fixture) : IClass
         public VaiTro? VaiTro => QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.VaiTro.Admin;
     }
 
-    private SanTheThaoService TaoService(ApplicationDbContext db) => new(db, new TaiKhoanQuanLy());
+    private SanTheThaoService TaoService(ApplicationDbContext db) => new(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan.SanTheThaoRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TaiKhoanQuanLy());
 
     [M2SqlServerTheory]
     [InlineData("gia_tang", "80000,100000,150000,200000,250000,300000,350000,400000,450000,500000")]
@@ -105,9 +105,15 @@ public sealed class TraCuuSanSqlServerFixture : IAsyncLifetime
             var gia = i == 1 ? 9999999999999998m : i == 2 ? 9999999999999999m : i == 3 ? 80000m : (i - 2) * 50000m;
             db.SanTheThaos.Add(new SanTheThao
             {
-                TenSan = $"Sân kiểm thử {i:00}", MaLoaiSan = 1, DiaChi = i == 4 ? "Đà Nẵng" : "Hà Nội",
-                DonGia = gia, DonGiaCaoDiem = gia, DonGiaCuoiTuan = gia,
-                TrangThai = TrangThaiSan.HoatDong, GioMoCua = new(6 + i % 3, 0), GioDongCua = new(22, 0)
+                TenSan = $"Sân kiểm thử {i:00}",
+                MaLoaiSan = 1,
+                DiaChi = i == 4 ? "Đà Nẵng" : "Hà Nội",
+                DonGia = gia,
+                DonGiaCaoDiem = gia,
+                DonGiaCuoiTuan = gia,
+                TrangThai = TrangThaiSan.HoatDong,
+                GioMoCua = new(6 + i % 3, 0),
+                GioDongCua = new(22, 0)
             });
         }
         await db.SaveChangesAsync();

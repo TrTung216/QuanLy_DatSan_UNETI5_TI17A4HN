@@ -1,4 +1,15 @@
-﻿using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyLoaiSan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyKhachHang;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDichVu;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDichVuTrongDon;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.TrangChu;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.DieuHanh;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.DieuHanh;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon;
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ gom DI M1; giữ đăng ký M5 hiện có.
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. thêm đăng ký service hồ sơ khách hàng.
@@ -18,8 +29,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddUngDungServices(this IServiceCollection services)
     {
+        services.AddScoped<IDonViCongViec, DonViCongViec>();
         services.AddModuleTaiKhoanVaLoaiSan();
-        services.AddScoped<ITrangChuService, TrangChuService>();
+        services.AddModuleTrangChu();
         services.AddModuleDichVu();
         services.AddModuleSan();
         services.AddModuleKhachHang();
@@ -34,7 +46,9 @@ public static class DependencyInjection
     // M1: nghiệp vụ tài khoản, xác thực và loại sân; hạ tầng cookie/Session giữ trong Program.cs.
     private static IServiceCollection AddModuleTaiKhoanVaLoaiSan(this IServiceCollection services)
     {
+        services.AddScoped<ILoaiSanRepository, LoaiSanRepository>();
         services.AddScoped<ILoaiSanService, LoaiSanService>();
+        services.AddScoped<ITaiKhoanRepository, TaiKhoanRepository>();
         services.AddScoped<IQuanLyTaiKhoanService, QuanLyTaiKhoanService>();
         services.AddScoped<IXacThucTaiKhoanService, XacThucTaiKhoanService>();
 
@@ -44,6 +58,7 @@ public static class DependencyInjection
     // M5: dịch vụ
     private static IServiceCollection AddModuleDichVu(this IServiceCollection services)
     {
+        services.AddScoped<IDichVuRepository, DichVuRepository>();
         services.AddScoped<IDichVuService, DichVuService>();
         return services;
     }
@@ -51,20 +66,25 @@ public static class DependencyInjection
     // M2: Phan Giang Tâm - 23103100196. Đăng ký service quản lý sân.
     private static IServiceCollection AddModuleSan(this IServiceCollection services)
     {
+        services.AddScoped<ISanTheThaoRepository, SanTheThaoRepository>();
         services.AddScoped<ISanTheThaoService, SanTheThaoService>();
         return services;
     }
-    
+
     // M3: hồ sơ khách hàng
     private static IServiceCollection AddModuleKhachHang(this IServiceCollection services)
     {
+        services.AddScoped<IKhachHangRepository, KhachHangRepository>();
         services.AddScoped<IKhachHangService, KhachHangService>();
+        services.AddScoped<ITrangChuKhachRepository, TrangChuKhachRepository>();
+        services.AddScoped<IDangKyKhachService, DangKyKhachService>();
         return services;
     }
 
     // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Đăng ký service đặt sân.
     private static IServiceCollection AddModuleDatSan(this IServiceCollection services)
     {
+        services.AddScoped<IDatSanRepository, DatSanRepository>();
         services.AddScoped<IDatSanService, DatSanService>();
         return services;
     }
@@ -77,7 +97,16 @@ public static class DependencyInjection
     // M5: dịch vụ trong đơn
     private static IServiceCollection AddModuleDichVuTrongDon(this IServiceCollection services)
     {
+        services.AddScoped<IDichVuTrongDonRepository, DichVuTrongDonRepository>();
         services.AddScoped<IDichVuTrongDonService, DichVuTrongDonService>();
+        return services;
+    }
+    private static IServiceCollection AddModuleTrangChu(this IServiceCollection services)
+    {
+        services.AddScoped<ITrangChuRepository, TrangChuRepository>();
+        services.AddScoped<ITrangChuService, TrangChuService>();
+        services.AddScoped<IDieuHanhRepository, DieuHanhRepository>();
+        services.AddScoped<IDieuHanhService, DieuHanhService>();
         return services;
     }
 }

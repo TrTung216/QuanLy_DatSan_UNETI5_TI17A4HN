@@ -1,8 +1,7 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: tra cứu khả dụng tối đa 200 mã sân/lần bằng một truy vấn, không theo dõi entity.
-// Dùng chung quy tắc giờ, trạng thái sân/loại sân, bảo trì và giao lịch cho M2, tạo đơn M3 và xác nhận M4.
-// Tra cứu không giữ chỗ; luồng ghi phải khóa sân và kiểm tra lại trong transaction.
-using Microsoft.EntityFrameworkCore;
+// Kiểm tra giờ, trạng thái sân, bảo trì và trùng lịch; kết quả tra cứu không giữ chỗ.
+
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 
@@ -27,8 +26,7 @@ public partial class DatSanService
         if (ids.Length == 0)
             return new(batDau, ketThuc, null, Array.Empty<KhaDungSanDto>());
 
-        var cacSan = await TruyVanKhaDungSan(batDau, ketThuc, null)
-            .Where(x => ids.Contains(x.MaSan)).ToDictionaryAsync(x => x.MaSan, cancellationToken);
+        var cacSan = await repository.LayKhaDungTheoLoAsync(ids, batDau, ketThuc, cancellationToken);
         var ketQua = ids.Select(id =>
         {
             cacSan.TryGetValue(id, out var san);
@@ -50,30 +48,6 @@ public partial class DatSanService
         return null;
     }
 
-    private IQueryable<DatSan> DonTrungLich(DateTime batDau, DateTime ketThuc, int? boQuaMaDatSan) =>
-        db.DatSans.AsNoTracking().Where(x =>
-            x.TrangThai != TrangThaiDatSan.DaHuy && x.TrangThai != TrangThaiDatSan.TuChoi
-            && (boQuaMaDatSan == null || x.MaDatSan != boQuaMaDatSan)
-            && batDau < x.GioKetThuc && ketThuc > x.GioBatDau);
-
-    private IQueryable<DuLieuKhaDungSan> TruyVanKhaDungSan(
-        DateTime batDau, DateTime ketThuc, int? boQuaMaDatSan)
-    {
-        var donTrung = DonTrungLich(batDau, ketThuc, boQuaMaDatSan);
-        return db.SanTheThaos.AsNoTracking().Select(san => new DuLieuKhaDungSan
-        {
-            MaSan = san.MaSan,
-            DonGia = san.DonGia,
-            HoatDong = san.TrangThai == TrangThaiSan.HoatDong
-                && san.LoaiSan.TrangThai == TrangThaiLoaiSan.HoatDong,
-            GioMoCua = san.GioMoCua,
-            GioDongCua = san.GioDongCua,
-            NgayBaoTri = san.NgayBaoTri,
-            TrungLich = donTrung.Any(don => don.MaSan == san.MaSan)
-        });
-    }
-
-    // Thứ tự ưu tiên lỗi giữ nguyên hành vi tạo/xác nhận đơn hiện hành.
     private static MaLoiKhaDungSan? DanhGiaKhaDungSan(
         DuLieuKhaDungSan? san, DateTime batDau, DateTime ketThuc)
     {
@@ -99,14 +73,4 @@ public partial class DatSanService
         _ => throw new ArgumentOutOfRangeException(nameof(loi))
     };
 
-    private sealed class DuLieuKhaDungSan
-    {
-        public int MaSan { get; init; }
-        public decimal DonGia { get; init; }
-        public bool HoatDong { get; init; }
-        public TimeOnly GioMoCua { get; init; }
-        public TimeOnly GioDongCua { get; init; }
-        public DateOnly? NgayBaoTri { get; init; }
-        public bool TrungLich { get; init; }
-    }
 }

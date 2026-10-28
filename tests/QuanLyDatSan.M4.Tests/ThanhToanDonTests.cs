@@ -197,15 +197,18 @@ public sealed partial class QuanLyDonDatTests
     }
 
     private static DichVuTrongDonService DichVuService(QuanLyDatSan_UNETI5_DHTI17A4HN.Data.ApplicationDbContext db)
-        => new(db, new TinhTienService(), NullLogger<DichVuTrongDonService>.Instance);
+        => new(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDichVuTrongDon.DichVuTrongDonRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TinhTienService());
 
     private static Task<HttpResponseMessage> PostPayment(HttpClient client, int id, string action,
         string token, string version, Dictionary<string, string>? extra = null)
     {
         var values = new Dictionary<string, string>
         {
-            ["__RequestVerificationToken"] = token, ["MaDon"] = id.ToString(),
-            ["PhienBan"] = version, ["TongCoc"] = "50000", ["DaThuDu"] = "true",
+            ["__RequestVerificationToken"] = token,
+            ["MaDon"] = id.ToString(),
+            ["PhienBan"] = version,
+            ["TongCoc"] = "50000",
+            ["DaThuDu"] = "true",
             ["QuayLai"] = "/QuanLyDonDat/DanhSach"
         };
         if (extra is not null) foreach (var (key, value) in extra) values[key] = value;

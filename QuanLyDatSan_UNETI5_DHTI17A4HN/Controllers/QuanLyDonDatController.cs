@@ -1,6 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: M4-02/03/04 - tra cứu, xử lý, ghi cọc và hoàn thành đơn cho Admin/NhanVien.
-// Ánh xạ DTO/ViewModel, kiểm tra dữ liệu và RowVersion; giữ lý do khi lỗi, nạp lại trạng thái và chuyển hướng nội bộ.
+// Nhận yêu cầu quản lý đơn, kiểm tra dữ liệu/RowVersion và gọi service; giữ nội dung nhập khi lỗi.
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -151,7 +150,6 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         model.LyDoHuyNhap = lyDoHuy;
         model.TongCocNhap = ModelState.TryGetValue(nameof(GhiCocViewModel.TongCoc), out var coc)
             ? coc.AttemptedValue : null;
-        // View dùng phiên bản vừa đọc từ database; dữ liệu nhập chỉ giữ lại để người dùng sửa.
         return View(nameof(ChiTiet), model);
     }
 

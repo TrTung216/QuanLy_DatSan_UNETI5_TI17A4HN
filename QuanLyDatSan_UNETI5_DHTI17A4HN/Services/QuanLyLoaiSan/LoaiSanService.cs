@@ -1,51 +1,36 @@
+// Codex: tách truy cập dữ liệu sang Repository, giữ nghiệp vụ và tác giả gốc.
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ tách CRUD, validation và bảo toàn tham chiếu loại sân.
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyLoaiSan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 
-public class LoaiSanService(ApplicationDbContext db) : ILoaiSanService
+public class LoaiSanService(ILoaiSanRepository repository, IDonViCongViec donViCongViec) : ILoaiSanService
 {
-    private const int SoDongMoiTrang = 10;
 
-    public async Task<TrangLoaiSan> LayDanhSachAsync(string? tuKhoa, TrangThaiLoaiSan? trangThai,
-        string sapXep, int trang, CancellationToken cancellationToken)
-    {
-        tuKhoa = tuKhoa?.Trim();
-        var query = db.LoaiSans.AsNoTracking();
-        if (!string.IsNullOrEmpty(tuKhoa)) query = query.Where(x => x.TenLoai.Contains(tuKhoa));
-        if (trangThai.HasValue) query = query.Where(x => x.TrangThai == trangThai.Value);
-        var tongSo = await query.CountAsync(cancellationToken);
-        var tongTrang = Math.Max(1, (int)Math.Ceiling(tongSo / (double)SoDongMoiTrang));
-        trang = Math.Clamp(trang, 1, tongTrang);
-        var sapXepQuery = sapXep == "ten_giam" ? query.OrderByDescending(x => x.TenLoai) : query.OrderBy(x => x.TenLoai);
-        var danhSach = await Chieu(sapXepQuery.ThenBy(x => x.MaLoaiSan)
-            .Skip((trang - 1) * SoDongMoiTrang).Take(SoDongMoiTrang)).ToListAsync(cancellationToken);
-        return new(danhSach, trang, tongTrang, tongSo);
-    }
-
+    public Task<TrangLoaiSan> LayDanhSachAsync(string? tuKhoa, TrangThaiLoaiSan? trangThai,
+        string sapXep, int trang, CancellationToken cancellationToken) =>
+        repository.LayDanhSachAsync(tuKhoa?.Trim(), trangThai, sapXep, trang, cancellationToken);
     public Task<LoaiSanDoc?> LayChiTietAsync(int id, CancellationToken cancellationToken) =>
-        Chieu(db.LoaiSans.AsNoTracking().Where(x => x.MaLoaiSan == id)).SingleOrDefaultAsync(cancellationToken);
-
+        repository.LayChiTietAsync(id, cancellationToken);
     public async Task<KetQuaLoaiSan> TaoAsync(GhiLoaiSan yeuCau, CancellationToken cancellationToken)
     {
         if (!HopLe(yeuCau)) return new(MaLoiLoaiSan.DuLieuKhongHopLe);
-        if (await TrungTenAsync(yeuCau.TenLoai, null, cancellationToken)) return new(MaLoiLoaiSan.TrungTen);
+        if (await repository.TrungTenAsync(yeuCau.TenLoai.Trim(), null, cancellationToken)) return new(MaLoiLoaiSan.TrungTen);
         var loaiSan = new LoaiSan();
         GanThongTin(loaiSan, yeuCau);
-        db.LoaiSans.Add(loaiSan);
+        repository.Them(loaiSan);
         return await LuuAsync(loaiSan, cancellationToken);
     }
 
     public async Task<KetQuaLoaiSan> SuaAsync(int id, GhiLoaiSan yeuCau, CancellationToken cancellationToken)
     {
-        var loaiSan = await db.LoaiSans.SingleOrDefaultAsync(x => x.MaLoaiSan == id, cancellationToken);
+        var loaiSan = await repository.LayDeCapNhatAsync(id, cancellationToken);
         if (loaiSan is null) return new(MaLoiLoaiSan.KhongTonTai);
         if (!HopLe(yeuCau)) return new(MaLoiLoaiSan.DuLieuKhongHopLe);
-        if (await TrungTenAsync(yeuCau.TenLoai, id, cancellationToken)) return new(MaLoiLoaiSan.TrungTen);
+        if (await repository.TrungTenAsync(yeuCau.TenLoai.Trim(), id, cancellationToken)) return new(MaLoiLoaiSan.TrungTen);
         // Không cập nhật giá hoặc trạng thái các sân đang tham chiếu.
         GanThongTin(loaiSan, yeuCau);
         return await LuuAsync(loaiSan, cancellationToken);
@@ -53,43 +38,36 @@ public class LoaiSanService(ApplicationDbContext db) : ILoaiSanService
 
     public async Task<KetQuaLoaiSan> XoaAsync(int id, CancellationToken cancellationToken)
     {
-        var loaiSan = await db.LoaiSans.SingleOrDefaultAsync(x => x.MaLoaiSan == id, cancellationToken);
+        var loaiSan = await repository.LayDeCapNhatAsync(id, cancellationToken);
         if (loaiSan is null) return new(MaLoiLoaiSan.KhongTonTai);
-        if (await db.SanTheThaos.AnyAsync(x => x.MaLoaiSan == id, cancellationToken))
+        if (await repository.CoSanThamChieuAsync(id, cancellationToken))
             return new(MaLoiLoaiSan.DangDuocThamChieu);
-        db.LoaiSans.Remove(loaiSan);
+        repository.Xoa(loaiSan);
         try
         {
             // FK NoAction vẫn bảo vệ tham chiếu phát sinh sau AnyAsync.
-            await db.SaveChangesAsync(cancellationToken);
+            await donViCongViec.LuuAsync(cancellationToken);
             return new(MaLoiLoaiSan.ThanhCong, id);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 547 })
+        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.ThamChieuLoaiSan)
         {
             return new(MaLoiLoaiSan.DangDuocThamChieu);
         }
-        catch (DbUpdateConcurrencyException) { return new(MaLoiLoaiSan.KhongTonTai); }
-    }
-
-    private Task<bool> TrungTenAsync(string ten, int? id, CancellationToken cancellationToken)
-    {
-        ten = ten.Trim();
-        // Dùng cùng collation và unique index hiện có tại database.
-        return db.LoaiSans.AnyAsync(x => x.TenLoai == ten && (!id.HasValue || x.MaLoaiSan != id.Value), cancellationToken);
+        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.XungDotPhienBan) { return new(MaLoiLoaiSan.KhongTonTai); }
     }
 
     private async Task<KetQuaLoaiSan> LuuAsync(LoaiSan loaiSan, CancellationToken cancellationToken)
     {
         try
         {
-            await db.SaveChangesAsync(cancellationToken);
+            await donViCongViec.LuuAsync(cancellationToken);
             return new(MaLoiLoaiSan.ThanhCong, loaiSan.MaLoaiSan);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 })
+        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.TrungTenLoaiSan)
         {
             return new(MaLoiLoaiSan.TrungTen);
         }
-        catch (DbUpdateConcurrencyException) { return new(MaLoiLoaiSan.XungDotDuLieu); }
+        catch (LoiLuuTruException ex) when (ex.Ma == MaLoiLuuTru.XungDotPhienBan) { return new(MaLoiLoaiSan.XungDotDuLieu); }
     }
 
     private static bool HopLe(GhiLoaiSan x) => !string.IsNullOrWhiteSpace(x.TenLoai) && x.TenLoai.Length <= 100
@@ -106,6 +84,4 @@ public class LoaiSanService(ApplicationDbContext db) : ILoaiSanService
         loaiSan.TrangThai = x.TrangThai;
     }
 
-    private static IQueryable<LoaiSanDoc> Chieu(IQueryable<LoaiSan> query) => query.Select(x => new LoaiSanDoc(
-        x.MaLoaiSan, x.TenLoai, x.MoTa, x.SoNguoiToiDa, x.DonGiaTheoGio, x.TrangThai, x.DanhSachSan.Count));
 }

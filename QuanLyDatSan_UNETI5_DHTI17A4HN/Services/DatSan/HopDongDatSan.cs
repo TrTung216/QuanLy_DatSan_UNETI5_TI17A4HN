@@ -1,11 +1,9 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: mã lỗi, DTO tạo/xử lý/ghi cọc/hoàn thành đơn; dữ liệu tra cứu và tiền dự kiến M4-04.
-// Chi tiết trả RowVersion cho M3/M4 xử lý đơn; các factory kiểm tra tính hợp lệ của kết quả và mã lỗi.
+// DTO, yêu cầu xử lý và mã lỗi đặt sân; dùng RowVersion để phát hiện dữ liệu cũ.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
-// Mã lỗi là hợp đồng; thông báo/field MVC được ánh xạ tại Controller.
 public enum MaLoiDatSan
 {
     HoSoKhongHoatDong = 1,
@@ -76,14 +74,11 @@ public sealed class KetQuaXuLyDon
         ? new(loi) : throw new ArgumentOutOfRangeException(nameof(loi));
 }
 
-// MaTaiKhoan phải lấy từ phiên đăng nhập tại Controller, không bind từ form.
 public sealed record TaoDonYeuCau(int MaTaiKhoan, int MaSan, DateOnly NgaySuDung,
     TimeOnly GioBatDau, TimeOnly GioKetThuc);
 public sealed record XuLyDonYeuCau(int MaDatSan, byte[] PhienBan);
 public sealed record HuyDonYeuCau(int MaDatSan, string? LyDo, byte[] PhienBan);
-// M4-04: tổng cọc đã nhận, không phải khoản cộng thêm; không hỗ trợ giảm/hoàn cọc.
 public sealed record GhiCocYeuCau(int MaDatSan, decimal TongCoc, byte[] PhienBan);
-// Tiền được tính từ dữ liệu server qua M5, yêu cầu hoàn thành không nhận giá từ form.
 public sealed record HoanThanhDonYeuCau(int MaDatSan, bool DaThuDu, byte[] PhienBan);
 public sealed record SanChonDto(int MaSan, string TenSan, string TenLoai, decimal DonGia,
     TimeOnly GioMoCua, TimeOnly GioDongCua);

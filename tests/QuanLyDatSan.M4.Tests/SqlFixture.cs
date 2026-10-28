@@ -32,7 +32,9 @@ public sealed class SqlFixture : IAsyncLifetime
         ConnectionString = new SqlConnectionStringBuilder
         {
             DataSource = Environment.GetEnvironmentVariable("M4_TEST_SQL_SERVER") ?? @"(localdb)\MSSQLLocalDB",
-            InitialCatalog = database, IntegratedSecurity = true, TrustServerCertificate = true,
+            InitialCatalog = database,
+            IntegratedSecurity = true,
+            TrustServerCertificate = true,
             ConnectTimeout = 15
         }.ConnectionString;
     }
@@ -40,7 +42,7 @@ public sealed class SqlFixture : IAsyncLifetime
     public ApplicationDbContext Db(params IInterceptor[] interceptors) => new(
         new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(ConnectionString)
             .AddInterceptors(interceptors).Options);
-    public DatSanService Service(ApplicationDbContext db) => new(db, Clock, new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService());
+    public DatSanService Service(ApplicationDbContext db) => new(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan.DatSanRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), Clock, new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService());
 
     public async Task InitializeAsync()
     {
@@ -54,8 +56,13 @@ public sealed class SqlFixture : IAsyncLifetime
             var account = new TaiKhoan { TenDangNhap = name, HoTen = name, Email = name + "@example.test", VaiTro = role };
             account.MatKhau = hasher.HashPassword(account, Password);
             if (role == VaiTro.KhachHang)
-                account.KhachHang = new KhachHang { HoTen = name, Email = account.Email,
-                    SoDienThoai = "0900000000", NgayDangKy = Clock.BayGio };
+                account.KhachHang = new KhachHang
+                {
+                    HoTen = name,
+                    Email = account.Email,
+                    SoDienThoai = "0900000000",
+                    NgayDangKy = Clock.BayGio
+                };
             db.Add(account);
             await db.SaveChangesAsync();
             if (name == "customer") { CustomerId = account.KhachHang!.MaKhachHang; CustomerAccountId = account.MaTaiKhoan; }
@@ -67,12 +74,27 @@ public sealed class SqlFixture : IAsyncLifetime
         int startHours = 2, decimal deposit = 0)
     {
         await using var db = Db();
-        var court = new SanTheThao { TenSan = "M4 " + Guid.NewGuid().ToString("N"), MaLoaiSan = 1,
-            DiaChi = "Test", DonGia = 200000m, GioMoCua = new(6,0), GioDongCua = new(22,0),
-            TrangThai = TrangThaiSan.HoatDong };
-        var order = new DatSan { MaKhachHang = CustomerId, SanTheThao = court, NgayDat = Clock.BayGio,
-            GioBatDau = Clock.BayGio.AddHours(startHours), GioKetThuc = Clock.BayGio.AddHours(startHours + 1),
-            DonGia = court.DonGia, TienCoc = deposit, TrangThai = state };
+        var court = new SanTheThao
+        {
+            TenSan = "M4 " + Guid.NewGuid().ToString("N"),
+            MaLoaiSan = 1,
+            DiaChi = "Test",
+            DonGia = 200000m,
+            GioMoCua = new(6, 0),
+            GioDongCua = new(22, 0),
+            TrangThai = TrangThaiSan.HoatDong
+        };
+        var order = new DatSan
+        {
+            MaKhachHang = CustomerId,
+            SanTheThao = court,
+            NgayDat = Clock.BayGio,
+            GioBatDau = Clock.BayGio.AddHours(startHours),
+            GioKetThuc = Clock.BayGio.AddHours(startHours + 1),
+            DonGia = court.DonGia,
+            TienCoc = deposit,
+            TrangThai = state
+        };
         db.Add(order);
         await db.SaveChangesAsync();
         return order;

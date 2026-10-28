@@ -2,8 +2,7 @@
 // Nội dung: quản lý danh mục dịch vụ (chỉ Admin).
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
@@ -11,42 +10,22 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize(Roles = nameof(VaiTro.Admin))]
-public class DichVuController(ApplicationDbContext db) : Controller
+public class DichVuController(IDichVuService service) : Controller
 {
-    private const int SoDongMoiTrang = 10;
 
     [HttpGet]
     public async Task<IActionResult> DanhSach(string? tuKhoa, TrangThaiDichVu? trangThai, string? sapXep, int trang = 1)
     {
-        var truyVan = db.DichVus.AsNoTracking().AsQueryable();
-
-        tuKhoa = tuKhoa?.Trim();
-        if (!string.IsNullOrEmpty(tuKhoa))
-            truyVan = truyVan.Where(x => x.TenDichVu.Contains(tuKhoa));
-        if (trangThai.HasValue)
-            truyVan = truyVan.Where(x => x.TrangThai == trangThai.Value);
-
-        IOrderedQueryable<DichVu> sapXepTruyVan = sapXep switch
-        {
-            "ten_giam" => truyVan.OrderByDescending(x => x.TenDichVu),
-            "gia_tang" => truyVan.OrderBy(x => x.DonGia),
-            "gia_giam" => truyVan.OrderByDescending(x => x.DonGia),
-            _ => truyVan.OrderBy(x => x.TenDichVu)
-        };
-
-        var tongSoDong = await sapXepTruyVan.CountAsync();
-        var tongTrang = Math.Max(1, (int)Math.Ceiling(tongSoDong / (double)SoDongMoiTrang));
-        trang = Math.Clamp(trang, 1, tongTrang);
+        var ketQua = await service.LayDanhSachAsync(tuKhoa, trangThai, sapXep, trang, HttpContext.RequestAborted);
 
         return View(new DichVuDanhSachViewModel
         {
-            DanhSach = await sapXepTruyVan.ThenBy(x => x.MaDichVu)
-                .Skip((trang - 1) * SoDongMoiTrang).Take(SoDongMoiTrang).ToListAsync(),
-            TuKhoa = tuKhoa,
+            DanhSach = ketQua.DanhSach,
+            TuKhoa = ketQua.TuKhoa,
             TrangThai = trangThai,
             SapXep = sapXep,
-            Trang = trang,
-            TongTrang = tongTrang
+            Trang = ketQua.Trang,
+            TongTrang = ketQua.TongTrang
         });
     }
 
@@ -59,24 +38,20 @@ public class DichVuController(ApplicationDbContext db) : Controller
         KiemTraDonGia(model);
         if (!ModelState.IsValid) return View(model);
 
-        db.DichVus.Add(new DichVu
+        var ketQua = await service.TaoAsync(model.TenDichVu, model.DonViTinh, model.DonGia, model.MoTa, HttpContext.RequestAborted);
+        if (!ketQua.ThanhCong)
         {
-            TenDichVu = model.TenDichVu,
-            DonViTinh = model.DonViTinh,
-            DonGia = model.DonGia,
-            MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa,
-            TrangThai = TrangThaiDichVu.HoatDong // do server quyết định, không nhận từ form
-        });
-        await db.SaveChangesAsync();
-
-        TempData["Success"] = "Đã thêm dịch vụ.";
+            ModelState.AddModelError(ketQua.TruongLoi ?? string.Empty, ketQua.Loi!);
+            return View(model);
+        }
+        TempData["Success"] = ketQua.ThongBao;
         return RedirectToAction(nameof(DanhSach));
     }
 
     [HttpGet]
     public async Task<IActionResult> Sua(int id)
     {
-        var dichVu = await db.DichVus.AsNoTracking().SingleOrDefaultAsync(x => x.MaDichVu == id);
+        var dichVu = await service.LayChiTietAsync(id, HttpContext.RequestAborted);
         if (dichVu is null) return NotFound();
 
         return View(new DichVuSuaViewModel
@@ -95,17 +70,14 @@ public class DichVuController(ApplicationDbContext db) : Controller
         KiemTraDonGia(model);
         if (!ModelState.IsValid) return View(model);
 
-        var dichVu = await db.DichVus.SingleOrDefaultAsync(x => x.MaDichVu == model.MaDichVu);
-        if (dichVu is null) return NotFound();
-
-        // Chỉ ảnh hưởng đơn mới: ChiTietDatSan sẽ lưu bản chụp DonGia lúc thêm.
-        dichVu.TenDichVu = model.TenDichVu;
-        dichVu.DonViTinh = model.DonViTinh;
-        dichVu.DonGia = model.DonGia;
-        dichVu.MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa;
-        await db.SaveChangesAsync();
-
-        TempData["Success"] = "Đã cập nhật dịch vụ.";
+        var ketQua = await service.SuaAsync(model.MaDichVu, model.TenDichVu, model.DonViTinh, model.DonGia, model.MoTa, HttpContext.RequestAborted);
+        if (ketQua.KhongTimThay) return NotFound();
+        if (!ketQua.ThanhCong)
+        {
+            ModelState.AddModelError(ketQua.TruongLoi ?? string.Empty, ketQua.Loi!);
+            return View(model);
+        }
+        TempData["Success"] = ketQua.ThongBao;
         return RedirectToAction(nameof(DanhSach));
     }
 
@@ -113,16 +85,9 @@ public class DichVuController(ApplicationDbContext db) : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DoiTrangThai(int id)
     {
-        var dichVu = await db.DichVus.SingleOrDefaultAsync(x => x.MaDichVu == id);
-        if (dichVu is null) return NotFound();
-
-        dichVu.TrangThai = dichVu.TrangThai == TrangThaiDichVu.HoatDong
-            ? TrangThaiDichVu.NgungHoatDong
-            : TrangThaiDichVu.HoatDong;
-        await db.SaveChangesAsync();
-
-        TempData["Success"] = dichVu.TrangThai == TrangThaiDichVu.HoatDong
-            ? "Đã kích hoạt dịch vụ." : "Đã ngừng hoạt động dịch vụ.";
+        var ketQua = await service.DoiTrangThaiAsync(id, HttpContext.RequestAborted);
+        if (ketQua.KhongTimThay) return NotFound();
+        TempData[ketQua.ThanhCong ? "Success" : "Error"] = ketQua.ThongBao ?? ketQua.Loi;
         return RedirectToAction(nameof(DanhSach));
     }
 
