@@ -38,6 +38,12 @@ public static class MenuQuanTri
             vanHanh.Add(new MucMenu("Đơn đặt sân", "QuanLyDonDat", "DanhSach", ["ChiTiet"],
                 "Tra cứu danh sách và chi tiết đơn đặt sân."));
         }
+        // Thống kê (M5): action chỉ cho Admin.
+        if (laAdmin)
+        {
+            vanHanh.Add(new MucMenu("Thống kê", "ThongKe", "Index", null,
+                "Doanh thu, số đơn và dịch vụ bán chạy."));
+        } 
         // Khách hàng (M3) bổ sung tại đây khi có màn hình quản lý.
 
         var danhMuc = new List<MucMenu>();

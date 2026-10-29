@@ -53,7 +53,8 @@
                 else
                 {
                     <dt class="col-sm-5">Tiền sân dự kiến</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
-                    <dt class="col-sm-5">Tổng tiền</dt><dd class="col-sm-7">Chưa chốt</dd>
+                    <dt class="col-sm-5">Tiền dịch vụ</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienDichVu ?? 0m)</dd>
+                    <dt class="col-sm-5">Tổng tiền dự kiến</dt><dd class="col-sm-7"><strong>@HienThiDatSan.Tien(Model.TienSanDuKien + (Model.TienDichVu ?? 0m))</strong></dd>
                 }
             </dl>
             <h2 class="h5">Các mốc xử lý</h2>
