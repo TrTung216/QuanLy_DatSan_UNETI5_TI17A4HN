@@ -11,11 +11,15 @@ public sealed class TaoTaiKhoan
     public required string HoTen { get; init; }
     public required string Email { get; init; }
     public VaiTro VaiTro { get; init; }
+    // Chỉ dùng khi tạo hồ sơ cho tài khoản khách; không nhận dữ liệu hệ thống của hồ sơ.
+    public string? SoDienThoai { get; init; }
 }
-public record SuaTaiKhoan(string HoTen, string Email, VaiTro VaiTro, TrangThaiTaiKhoan TrangThai);
-public record TaiKhoanDoc(int MaTaiKhoan, string TenDangNhap, string HoTen, string Email, VaiTro VaiTro, TrangThaiTaiKhoan TrangThai);
+public record SuaTaiKhoan(string HoTen, string Email, VaiTro VaiTro, TrangThaiTaiKhoan TrangThai,
+    string? SoDienThoai = null);
+public record TaiKhoanDoc(int MaTaiKhoan, string TenDangNhap, string HoTen, string Email, VaiTro VaiTro,
+    TrangThaiTaiKhoan TrangThai, bool CoHoSoKhachHang = false);
 public record TrangTaiKhoan(IReadOnlyList<TaiKhoanDoc> DanhSach, int Trang, int TongTrang, int TongSo);
-public enum MaLoiTaiKhoan { KhongTonTai, KhongDuQuyen, TrungTen, AdminCuoiCung, TuKhoaHoacHaQuyen, XungDotDuLieu, DuLieuKhongHopLe }
+public enum MaLoiTaiKhoan { KhongTonTai, KhongDuQuyen, TrungTen, AdminCuoiCung, TuKhoaHoacHaQuyen, XungDotDuLieu, DuLieuKhongHopLe, SoDienThoaiHoSoKhongHopLe }
 public record KetQuaQuanLyTaiKhoan(IReadOnlyList<MaLoiTaiKhoan> Loi)
 {
     public bool ThanhCong => Loi.Count == 0;

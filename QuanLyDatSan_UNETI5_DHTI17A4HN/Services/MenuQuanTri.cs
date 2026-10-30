@@ -1,5 +1,6 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. nguồn menu duy nhất của khu vực quản trị, dùng cho thanh bên và trang điều hành.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Bổ sung lối vào tra cứu đơn cho Admin/Nhân viên.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Kiểm tra vai trò và giữ mục đơn đặt sân active khi POST trả lại View lỗi.
 using System.Security.Claims;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
@@ -20,9 +21,11 @@ public static class MenuQuanTri
     // Điều kiện hiển thị phải khớp với [Authorize(Roles = ...)] của action; ẩn menu không thay thế kiểm tra quyền ở server.
     public static IReadOnlyList<NhomMenu> Lay(ClaimsPrincipal nguoiDung)
     {
+        if (nguoiDung.Identity?.IsAuthenticated != true) return [];
         var laAdmin = nguoiDung.IsInRole(nameof(VaiTro.Admin));
 
         var laNhanVien = nguoiDung.IsInRole(nameof(VaiTro.NhanVien));
+        if (!laAdmin && !laNhanVien) return [];
 
         var vanHanh = new List<MucMenu>();
         // Sân thể thao (M2): action Create/Edit/Delete yêu cầu Admin hoặc Nhân viên.
@@ -35,7 +38,7 @@ public static class MenuQuanTri
         }
         if (laAdmin || laNhanVien)
         {
-            vanHanh.Add(new MucMenu("Đơn đặt sân", "QuanLyDonDat", "DanhSach", ["ChiTiet"],
+            vanHanh.Add(new MucMenu("Đơn đặt sân", "QuanLyDonDat", "DanhSach", ["ChiTiet", "XacNhan", "TuChoi", "Huy"],
                 "Tra cứu danh sách và chi tiết đơn đặt sân."));
         }
         // Khách hàng (M3) bổ sung tại đây khi có màn hình quản lý.
