@@ -112,12 +112,19 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
         {
             dieuKien.TuKhoa = dieuKien.TuKhoa?.Trim();
             var ketQua = await sanService.LayDanhSachAsync(new(dieuKien.TuKhoa, dieuKien.MaLoaiSan,
-                dieuKien.TrangThai, dieuKien.GiaTu, dieuKien.GiaDen, dieuKien.SapXep, dieuKien.Trang), cancellationToken);
+                dieuKien.TrangThai, dieuKien.GiaTu, dieuKien.GiaDen, dieuKien.SapXep, dieuKien.Trang,
+                dieuKien.NgaySuDung, dieuKien.GioBatDau, dieuKien.GioKetThuc), cancellationToken);
             switch (ketQua.MaLoi)
             {
                 case MaLoiSan.ThanhCong: trangSan = ketQua.DuLieu; break;
                 case MaLoiSan.DuLieuKhongHopLe:
                     ModelState.AddModelError(string.Empty, "Điều kiện tra cứu sân không hợp lệ.");
+                    break;
+                case MaLoiSan.BatDauKhongTuongLai:
+                    ModelState.AddModelError(nameof(TraCuuSanViewModel.GioBatDau), "Vui lòng chọn ngày và giờ bắt đầu trong tương lai.");
+                    break;
+                case MaLoiSan.KhoangGioKhongHopLe:
+                    ModelState.AddModelError(nameof(TraCuuSanViewModel.GioKetThuc), "Giờ kết thúc phải sau giờ bắt đầu trong cùng ngày.");
                     break;
                 default: throw new InvalidOperationException("Mã lỗi tra cứu sân chưa được ánh xạ.");
             }
@@ -130,6 +137,7 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
             TongSoSan = trangSan.TongSoSan,
             TuKhoa = dieuKien.TuKhoa, MaLoaiSan = dieuKien.MaLoaiSan, TrangThai = dieuKien.TrangThai,
             GiaTu = dieuKien.GiaTu, GiaDen = dieuKien.GiaDen, SapXep = dieuKien.SapXep, Trang = trangSan.Trang,
+            NgaySuDung = dieuKien.NgaySuDung, GioBatDau = dieuKien.GioBatDau, GioKetThuc = dieuKien.GioKetThuc,
             CacLoaiSan = cacLoai.Select(x => new LoaiSanTraCuuViewModel(x.MaLoaiSan, x.TenLoai)).ToList()
         });
     }

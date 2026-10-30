@@ -1,4 +1,3 @@
-// Codex: tách truy cập dữ liệu sang Repository, giữ nghiệp vụ và tác giả gốc.
 // Phan Giang Tâm - 23103100196. M2: Truy vấn, kiểm tra và lưu sân theo quy ước service.
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
@@ -7,14 +6,39 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
 
-public class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec donViCongViec, ITaiKhoanHienTai taiKhoanHienTai) : ISanTheThaoService
+public class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec donViCongViec,
+    ITaiKhoanHienTai taiKhoanHienTai, IDatSanService datSanService) : ISanTheThaoService
 {
 
     private bool ChiHoatDong => taiKhoanHienTai.VaiTro is not (VaiTro.Admin or VaiTro.NhanVien);
     public async Task<KetQuaSan<TrangSanDoc>> LayDanhSachAsync(TraCuuSan dieuKien, CancellationToken cancellationToken)
     {
         if (!TraCuuHopLe(dieuKien)) return KetQuaSan<TrangSanDoc>.Loi(MaLoiSan.DuLieuKhongHopLe);
-        return KetQuaSan<TrangSanDoc>.Dat(await repository.LayDanhSachAsync(dieuKien, ChiHoatDong, cancellationToken));
+        IReadOnlyCollection<int>? maSanKhaDung = null;
+        if (dieuKien.NgaySuDung is { } ngay && dieuKien.GioBatDau is { } batDau
+            && dieuKien.GioKetThuc is { } ketThuc)
+        {
+            var ungVien = await repository.LayMaSanUngVienAsync(dieuKien, ChiHoatDong, cancellationToken);
+            var maTrong = new HashSet<int>();
+            // Gọi tuần tự vì M2 và M4 dùng chung DbContext trong request.
+            // Lô rỗng vẫn kiểm tra giờ, tránh báo "không có sân" khi thời gian sai.
+            foreach (var lo in ungVien.Distinct().Chunk(200).DefaultIfEmpty(Array.Empty<int>()))
+            {
+                var ketQua = await datSanService.KiemTraKhaDungAsync(lo,
+                    new(ngay, batDau, ketThuc), cancellationToken);
+                if (ketQua.Loi is { } loi)
+                    return KetQuaSan<TrangSanDoc>.Loi(loi switch
+                    {
+                        MaLoiKhaDungSan.BatDauKhongTuongLai => MaLoiSan.BatDauKhongTuongLai,
+                        MaLoiKhaDungSan.KhoangGioKhongHopLe => MaLoiSan.KhoangGioKhongHopLe,
+                        _ => throw new InvalidOperationException("Mã lỗi thời gian M4 chưa được ánh xạ.")
+                    });
+                maTrong.UnionWith(ketQua.DanhSach.Where(x => x.KhaDung).Select(x => x.MaSan));
+            }
+            maSanKhaDung = maTrong.ToArray();
+        }
+        return KetQuaSan<TrangSanDoc>.Dat(await repository.LayDanhSachAsync(
+            dieuKien, ChiHoatDong, maSanKhaDung, cancellationToken));
     }
     public Task<IReadOnlyList<LoaiSanLoc>> LayLoaiSanLocAsync(CancellationToken cancellationToken) =>
         repository.LayLoaiSanLocAsync(ChiHoatDong, cancellationToken);
@@ -24,6 +48,8 @@ public class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec 
         && (!x.GiaTu.HasValue || GiaHopLe(x.GiaTu.Value))
         && (!x.GiaDen.HasValue || GiaHopLe(x.GiaDen.Value))
         && (!x.GiaTu.HasValue || !x.GiaDen.HasValue || x.GiaTu <= x.GiaDen)
+        && ((!x.NgaySuDung.HasValue && !x.GioBatDau.HasValue && !x.GioKetThuc.HasValue)
+            || (x.NgaySuDung.HasValue && x.GioBatDau.HasValue && x.GioKetThuc.HasValue))
         && x.SapXep is "ten_tang" or "ten_giam" or "gia_tang" or "gia_giam" or "gio_tang" or "gio_giam";
 
     public Task<SanDoc?> LayChiTietAsync(int maSan, CancellationToken cancellationToken) =>

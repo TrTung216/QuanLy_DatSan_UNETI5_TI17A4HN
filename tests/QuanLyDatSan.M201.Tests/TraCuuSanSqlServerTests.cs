@@ -22,7 +22,12 @@ public class TraCuuSanSqlServerTests(TraCuuSanSqlServerFixture fixture) : IClass
         public VaiTro? VaiTro => QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.VaiTro.Admin;
     }
 
-    private SanTheThaoService TaoService(ApplicationDbContext db) => new(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan.SanTheThaoRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TaiKhoanQuanLy());
+    private SanTheThaoService TaoService(ApplicationDbContext db) => new(
+        new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan.SanTheThaoRepository(db),
+        new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TaiKhoanQuanLy(),
+        new DatSanService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan.DatSanRepository(db),
+            new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new DongHoHeThong(),
+            new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService()));
 
     [M2SqlServerTheory]
     [InlineData("gia_tang", "80000,100000,150000,200000,250000,300000,350000,400000,450000,500000")]

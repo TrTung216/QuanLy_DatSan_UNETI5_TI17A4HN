@@ -7,7 +7,8 @@
     var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
     var laQuanLy = User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien)));
     var coDieuKien = !string.IsNullOrWhiteSpace(Model.TuKhoa) || Model.MaLoaiSan.HasValue
-        || Model.TrangThai.HasValue || Model.GiaTu.HasValue || Model.GiaDen.HasValue;
+        || Model.TrangThai.HasValue || Model.GiaTu.HasValue || Model.GiaDen.HasValue
+        || Model.NgaySuDung.HasValue || Model.GioBatDau.HasValue || Model.GioKetThuc.HasValue;
     // Giữ mọi điều kiện ở các liên kết phân trang; tiền dùng định dạng URL không có dấu phân cách.
     var thamSoTrang = new Dictionary<string, string>
     {
@@ -16,7 +17,10 @@
         ["trangThai"] = Model.TrangThai.HasValue ? ((int)Model.TrangThai.Value).ToString(CultureInfo.InvariantCulture) : "",
         ["giaTu"] = Model.GiaTu?.ToString("0", CultureInfo.InvariantCulture) ?? "",
         ["giaDen"] = Model.GiaDen?.ToString("0", CultureInfo.InvariantCulture) ?? "",
-        ["sapXep"] = Model.SapXep
+        ["sapXep"] = Model.SapXep,
+        ["ngaySuDung"] = Model.NgaySuDung?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "",
+        ["gioBatDau"] = Model.GioBatDau?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? "",
+        ["gioKetThuc"] = Model.GioKetThuc?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? ""
     };
 }
 <div class="ql-page-header">
@@ -26,6 +30,22 @@
 <section class="ql-panel" aria-label="Danh sách sân thể thao">
     <form asp-action="Index" method="get" class="row g-3 mb-4" aria-label="Tìm và lọc sân">
         <div asp-validation-summary="All" class="text-danger col-12" role="alert"></div>
+        <div class="col-md-4">
+            <label asp-for="NgaySuDung" class="form-label"></label>
+            <input asp-for="NgaySuDung" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" aria-describedby="tra-cuu-gio" />
+            <span asp-validation-for="NgaySuDung" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="GioBatDau" class="form-label"></label>
+            <input asp-for="GioBatDau" type="time" asp-format="{0:HH:mm}" step="60" class="form-control" />
+            <span asp-validation-for="GioBatDau" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="GioKetThuc" class="form-label"></label>
+            <input asp-for="GioKetThuc" type="time" asp-format="{0:HH:mm}" step="60" class="form-control" />
+            <span asp-validation-for="GioKetThuc" class="text-danger"></span>
+        </div>
+        <p id="tra-cuu-gio" class="form-text col-12 mb-0">Nhập đủ ngày và giờ để tìm sân trống. Để trống cả ba ô để xem danh sách thông thường. Kết quả tìm kiếm không giữ chỗ; lịch sẽ được kiểm tra lại khi đặt sân.</p>
         <div class="col-md-6 col-lg-4">
             <label asp-for="TuKhoa" class="form-label"></label>
             <input asp-for="TuKhoa" class="form-control" maxlength="100" placeholder="Tên sân, tên loại sân hoặc địa chỉ" />
@@ -137,6 +157,9 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <a asp-action="Details" asp-route-id="@san.MaSan" class="btn btn-outline-primary btn-sm"
+                                       asp-route-ngay="@(Model.NgaySuDung?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))"
+                                       asp-route-batDau="@(Model.GioBatDau?.ToString("HH:mm", CultureInfo.InvariantCulture))"
+                                       asp-route-ketThuc="@(Model.GioKetThuc?.ToString("HH:mm", CultureInfo.InvariantCulture))"
                                        aria-label="Chi tiết @san.TenSan">Xem</a>
                                     @if (laQuanLy)
                                     {

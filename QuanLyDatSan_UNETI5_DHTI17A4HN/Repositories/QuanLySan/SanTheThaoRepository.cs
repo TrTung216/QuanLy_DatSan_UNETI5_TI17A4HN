@@ -1,4 +1,3 @@
-// Codex: tách truy vấn từ service SanTheThao, giữ nguyên bộ lọc và tracking.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
@@ -10,7 +9,12 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan;
 public class SanTheThaoRepository(ApplicationDbContext db) : ISanTheThaoRepository
 {
     private const int SoDongMoiTrang = 10;
-    public async Task<TrangSanDoc> LayDanhSachAsync(TraCuuSan dieuKien, bool chiHoatDong, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<int>> LayMaSanUngVienAsync(TraCuuSan dieuKien, bool chiHoatDong,
+        CancellationToken cancellationToken) =>
+        await LocSan(dieuKien, chiHoatDong).OrderBy(x => x.MaSan)
+            .Select(x => x.MaSan).ToListAsync(cancellationToken);
+
+    private IQueryable<SanTheThao> LocSan(TraCuuSan dieuKien, bool chiHoatDong)
     {
         // Lọc quyền trước: điều kiện URL không thể làm lộ sân của khách.
         var truyVan = LaySanDuocXem(chiHoatDong);
@@ -22,6 +26,16 @@ public class SanTheThaoRepository(ApplicationDbContext db) : ISanTheThaoReposito
         if (dieuKien.TrangThai.HasValue) truyVan = truyVan.Where(x => x.TrangThai == dieuKien.TrangThai);
         if (dieuKien.GiaTu.HasValue) truyVan = truyVan.Where(x => x.DonGia >= dieuKien.GiaTu.Value);
         if (dieuKien.GiaDen.HasValue) truyVan = truyVan.Where(x => x.DonGia <= dieuKien.GiaDen.Value);
+        return truyVan;
+    }
+
+    public async Task<TrangSanDoc> LayDanhSachAsync(TraCuuSan dieuKien, bool chiHoatDong,
+        IReadOnlyCollection<int>? maSanKhaDung, CancellationToken cancellationToken)
+    {
+        var truyVan = LocSan(dieuKien, chiHoatDong);
+        // null: xem danh sách thường; tập rỗng: đã tra cứu nhưng không còn sân trống.
+        if (maSanKhaDung is not null)
+            truyVan = truyVan.Where(x => maSanKhaDung.Contains(x.MaSan));
         var tongSoSan = await truyVan.CountAsync(cancellationToken);
         var tongTrang = Math.Max(1, (int)Math.Ceiling(tongSoSan / (double)SoDongMoiTrang));
         var trang = Math.Clamp(dieuKien.Trang, 1, tongTrang);
