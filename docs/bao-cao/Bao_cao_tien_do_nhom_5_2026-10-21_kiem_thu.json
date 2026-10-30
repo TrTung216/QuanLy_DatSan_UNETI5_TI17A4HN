@@ -1,0 +1,47 @@
+{
+  "report_date": "2026-10-21",
+  "timezone": "Asia/Saigon",
+  "branch": "main",
+  "base_commit": "ce5de11",
+  "scope": "working tree with uncommitted M1 changes; no remote refresh",
+  "build": {
+    "configuration": "Release",
+    "errors": 0,
+    "warnings": 0
+  },
+  "pending_model_changes": false,
+  "tests": [
+    {
+      "assembly": "QuanLyDatSan.M201.Tests.dll",
+      "total": 115,
+      "passed": 115,
+      "failed": 0,
+      "not_executed": 0,
+      "trx": "QuanLyDatSan_UNETI5_DHTI17A4HN\\obj\\bao-cao-nhom-20261021-full\\ADMIN_LAPTOP-H2EH6DG6_2026-10-21_20_54_37_net10.0.trx"
+    },
+    {
+      "assembly": "QuanLyDatSan.M103.Tests.dll",
+      "total": 75,
+      "passed": 75,
+      "failed": 0,
+      "not_executed": 0,
+      "trx": "QuanLyDatSan_UNETI5_DHTI17A4HN\\obj\\bao-cao-nhom-20261021-full\\ADMIN_LAPTOP-H2EH6DG6_2026-10-21_20_54_38_net10.0.trx"
+    },
+    {
+      "assembly": "QuanLyDatSan.M104.Tests.dll",
+      "total": 24,
+      "passed": 24,
+      "failed": 0,
+      "not_executed": 0,
+      "trx": "QuanLyDatSan_UNETI5_DHTI17A4HN\\obj\\bao-cao-nhom-20261021-full\\ADMIN_LAPTOP-H2EH6DG6_2026-10-21_20_54_42_net10.0.trx"
+    },
+    {
+      "assembly": "QuanLyDatSan.M4.Tests.dll",
+      "total": 114,
+      "passed": 114,
+      "failed": 0,
+      "not_executed": 0,
+      "trx": "QuanLyDatSan_UNETI5_DHTI17A4HN\\obj\\bao-cao-nhom-20261021-full\\ADMIN_LAPTOP-H2EH6DG6_2026-10-21_20_54_44_net10.0.trx"
+    }
+  ]
+}

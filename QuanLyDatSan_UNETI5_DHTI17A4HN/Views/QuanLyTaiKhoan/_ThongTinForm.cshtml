@@ -20,3 +20,19 @@
     </select>
     <span asp-validation-for="VaiTro" class="text-danger" id="loi-vai-tro"></span>
 </div>
+@if (ViewData["CoHoSoKhachHang"] is not true)
+{
+    <div class="mb-3" data-ho-so-khach>
+        <label asp-for="SoDienThoai" class="form-label"></label>
+        <input asp-for="SoDienThoai" class="form-control" type="tel" maxlength="20" autocomplete="tel"
+               aria-describedby="goi-y-ho-so loi-so-dien-thoai" />
+        <div id="goi-y-ho-so" class="form-text">
+            Bắt buộc khi chọn vai trò Khách hàng. Hệ thống tạo hồ sơ còn thiếu từ họ tên, email và số điện thoại này.
+        </div>
+        <span asp-validation-for="SoDienThoai" class="text-danger" id="loi-so-dien-thoai"></span>
+    </div>
+}
+else
+{
+    <p class="form-text">Tài khoản đã có hồ sơ khách hàng. Họ tên và email được đồng bộ khi lưu; thông tin khác của hồ sơ được giữ nguyên.</p>
+}

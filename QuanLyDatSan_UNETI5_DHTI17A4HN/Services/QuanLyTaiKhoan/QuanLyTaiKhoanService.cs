@@ -1,16 +1,17 @@
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ tách nghiệp vụ tài khoản, transaction và thu hồi phiên.
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTaiKhoan;
 
 public class QuanLyTaiKhoanService(ITaiKhoanRepository repository, IDonViCongViec donViCongViec, IPasswordHasher<TaiKhoan> hasher,
-    ITaiKhoanHienTai hienTai, PhienBanQuyenTaiKhoan phienBanQuyen) : IQuanLyTaiKhoanService
+    ITaiKhoanHienTai hienTai, PhienBanQuyenTaiKhoan phienBanQuyen, IDongHo dongHo) : IQuanLyTaiKhoanService
 {
     public Task<TrangTaiKhoan> LayDanhSachAsync(string? tuKhoa, VaiTro? vaiTro, TrangThaiTaiKhoan? trangThai, int trang, CancellationToken cancellationToken) =>
         repository.LayDanhSachAsync(tuKhoa?.Trim(), vaiTro, trangThai, trang, cancellationToken);
@@ -24,6 +25,8 @@ public class QuanLyTaiKhoanService(ITaiKhoanRepository repository, IDonViCongVie
             || string.IsNullOrWhiteSpace(yeuCau.MatKhau) || yeuCau.MatKhau.Length is < 12 or > 128)
             return Task.FromResult(new KetQuaQuanLyTaiKhoan([MaLoiTaiKhoan.DuLieuKhongHopLe]));
         var ten = yeuCau.TenDangNhap.Trim();
+        if (yeuCau.VaiTro == VaiTro.KhachHang && !SoDienThoaiHopLe(yeuCau.SoDienThoai))
+            return Task.FromResult(new KetQuaQuanLyTaiKhoan([MaLoiTaiKhoan.SoDienThoaiHoSoKhongHopLe]));
         return LuuAsync(async _ =>
         {
             if (await repository.TrungTenAsync(ten, cancellationToken))
@@ -34,6 +37,8 @@ public class QuanLyTaiKhoanService(ITaiKhoanRepository repository, IDonViCongVie
                 VaiTro = yeuCau.VaiTro, TrangThai = TrangThaiTaiKhoan.HoatDong
             };
             taiKhoan.MatKhau = hasher.HashPassword(taiKhoan, yeuCau.MatKhau);
+            if (taiKhoan.VaiTro == VaiTro.KhachHang)
+                taiKhoan.KhachHang = TaoHoSo(yeuCau.HoTen, yeuCau.Email, yeuCau.SoDienThoai!);
             repository.Them(taiKhoan);
             return new([]);
         }, cancellationToken);
@@ -53,6 +58,20 @@ public class QuanLyTaiKhoanService(ITaiKhoanRepository repository, IDonViCongVie
             if (!conLaAdminHoatDong && adminIds.Contains(id) && adminIds.Count == 1) loi.Add(MaLoiTaiKhoan.AdminCuoiCung);
             if (id == hienTai.MaTaiKhoan && !conLaAdminHoatDong) loi.Add(MaLoiTaiKhoan.TuKhoaHoacHaQuyen);
             if (loi.Count > 0) return new(loi);
+
+            // Sửa tài khoản cũ thiếu hồ sơ hoặc chuyển nhân viên thành khách:
+            // chỉ tạo khi có dữ liệu thật; không thay đổi hồ sơ đã tồn tại ngoài HoTen/Email.
+            if (yeuCau.VaiTro == VaiTro.KhachHang && taiKhoan.KhachHang is null)
+            {
+                if (!SoDienThoaiHopLe(yeuCau.SoDienThoai))
+                    return new([MaLoiTaiKhoan.SoDienThoaiHoSoKhongHopLe]);
+                taiKhoan.KhachHang = TaoHoSo(yeuCau.HoTen, yeuCau.Email, yeuCau.SoDienThoai!);
+            }
+            if (taiKhoan.KhachHang is { } hoSo)
+            {
+                hoSo.HoTen = yeuCau.HoTen;
+                hoSo.Email = yeuCau.Email;
+            }
 
             doiQuyenHoacTrangThai = taiKhoan.VaiTro != yeuCau.VaiTro || taiKhoan.TrangThai != yeuCau.TrangThai;
             taiKhoan.HoTen = yeuCau.HoTen;
@@ -99,5 +118,15 @@ public class QuanLyTaiKhoanService(ITaiKhoanRepository repository, IDonViCongVie
         !string.IsNullOrWhiteSpace(hoTen) && hoTen.Length <= 100
         && !string.IsNullOrWhiteSpace(email) && email.Length <= 254 && new EmailAddressAttribute().IsValid(email)
         && Enum.IsDefined(vaiTro);
+
+    private static bool SoDienThoaiHopLe(string? soDienThoai) =>
+        !string.IsNullOrWhiteSpace(soDienThoai) && soDienThoai.Trim().Length <= 20
+        && Regex.IsMatch(soDienThoai.Trim(), @"\A(0|\+84)[0-9]{9,10}\z");
+
+    private KhachHang TaoHoSo(string hoTen, string email, string soDienThoai) => new()
+    {
+        HoTen = hoTen, Email = email, SoDienThoai = soDienThoai.Trim(),
+        NgayDangKy = dongHo.BayGio, DiemTichLuy = 0, TrangThai = TrangThaiKhachHang.HoatDong
+    };
 
 }
