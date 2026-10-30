@@ -1,51 +1,49 @@
-# Hướng dẫn sử dụng layout chung
+﻿# Hướng dẫn sử dụng layout chung
 
-Phụ trách: **Trần Trọng Tùng — M1, MSSV: 23103100202**. Nội dung: khung giao diện, menu, hợp đồng CSS/JS và hướng dẫn tích hợp; Codex hỗ trợ triển khai và rà soát. Các thành viên trao đổi với Tùng trước khi sửa layout, menu, partial thông báo hoặc CSS/JS chung và đề xuất thay đổi qua PR. Mỗi module tự quản lý View và tài nguyên riêng; không tạo lại header/menu/footer trong View.
+Phụ trách: **Trần Trọng Tùng — M1, MSSV 23103100202**. Cập nhật tích hợp M1-05/M1-06 ngày 18/10/2026, trên main `ce5de11`. Codex hỗ trợ triển khai và kiểm thử. Tài liệu mô tả code hiện tại và hợp đồng giao diện theo quy ước nhóm v1.3; không thay thế quy tắc nghiệp vụ hay phân quyền server.
 
-Đã đối chiếu tài liệu **Quy_uoc_nhom_Quan_ly_dat_san.docx**, phiên bản 1.0 ngày 29/09/2026, do Tùng cung cấp ngày 05/10/2026. Phần quy ước đề xuất trong tài liệu không được coi là đã có xác nhận của cả nhóm; đầu việc này chỉ áp dụng các quy ước liên quan giao diện, không triển khai thêm nghiệp vụ. Việc commit/push/tạo PR được thực hiện theo yêu cầu riêng của Tùng; merge phải chờ review và approve của thành viên khác theo mục 8.
+**Thành viên khác trao đổi với Tùng trước khi sửa layout/menu/partial thông báo/CSS/JS chung.** Giữ thông tin tác giả và ghi đúng phần đóng góp khi sửa file của nhiều người. Layout khách và thanh bên quản trị đã được M3 phát triển; menu đơn đặt sân được M4 tích hợp. Mỗi module quản lý View và tài nguyên riêng, không tạo lại header/menu/footer trong View.
 
-## 1. Cấu trúc
+## 1. Các file dùng chung
 
-Các đường dẫn bên dưới tính từ thư mục project `QuanLyDatSan_UNETI5_DHTI17A4HN/`.
+Đường dẫn trong bảng tính từ thư mục project `QuanLyDatSan_UNETI5_DHTI17A4HN/`.
 
 | File | Chức năng |
 | --- | --- |
-| `Views/Shared/_Layout.cshtml` | Khung tiếng Việt, header, `RenderBody()`, thông báo, footer, thư viện và các section tùy chọn. |
-| `Views/Shared/_AdminLayout.cshtml` | Layout Nhân viên/Admin, dùng `_Layout` làm khung cha, đánh dấu khu vực quản trị và chuyển tiếp section `Styles`/`Scripts`; không lặp lại HTML/thư viện. |
-| `Views/Shared/_Header.cshtml` | Thương hiệu, menu, mục hiện tại theo Controller/Action, tài khoản/vai trò và form đăng xuất. |
-| `Views/Shared/_ThongBao.cshtml` | Đọc thông báo TempData, mã hóa nội dung bằng Razor và hiển thị nhãn tiếng Việt. |
-| `wwwroot/css/layout.css` | Màu xanh dương, bố cục responsive, focus, thành phần `ql-*` và quy ước Bootstrap chung trong `.ql-app`. |
-| `wwwroot/js/layout.js` | Escape đóng menu và trả focus; chống gửi lặp form đăng xuất chung, khôi phục nút khi quay lại bằng lịch sử trình duyệt. Bootstrap xử lý đóng/mở, `aria-expanded`. |
-| `wwwroot/css/site.css` | Cỡ chữ nền tảng và margin body; bỏ quy tắc footer tuyệt đối của template cũ. |
-| `Views/Shared/_Layout.cshtml.css` | Giữ file/pipeline CSS isolation, bỏ kiểu template cũ; kiểu khung được chuyển sang `layout.css` để áp dụng cả partial. |
-| `Views/_ViewStart.cshtml` | Chọn `_AdminLayout` cho principal đã xác thực có vai trò Admin/NhanVien; khách chưa đăng nhập và KhachHang dùng `_Layout`. |
-| `Views/_ViewImports.cshtml` | Đã có sẵn, import namespace và MVC Tag Helpers. Không thay đổi. |
-| `wwwroot/js/site.js` | Giữ nguyên file chung hiện có, chưa có logic. |
-| `Views/Shared/_ValidationScriptsPartial.cshtml` | Giữ nguyên jQuery Validation/Unobtrusive cho các form. |
+| `Views/_ViewStart.cshtml` | Chọn `_AdminLayout` cho Admin/NhanVien đã đăng nhập; các trường hợp khác dùng `_LayoutKhachHang`. |
+| `Views/_ViewImports.cshtml` | Namespace và MVC Tag Helpers dùng cho View. |
+| `Views/Shared/_LayoutKhachHang.cshtml` | Khung khách: header, thông báo, `RenderBody()`, footer và section tài nguyên. |
+| `Views/Shared/_HeaderKhachHang.cshtml` | Menu ngang, tên tài khoản, đăng nhập/đăng ký hoặc form đăng xuất. |
+| `Services/MenuKhachHang.cs` | Danh sách mục công khai và mục riêng của khách hàng, nhóm action để đánh dấu active. |
+| `Views/Shared/_AdminLayout.cshtml` | Khung quản trị độc lập: thanh bên, header tài khoản, nội dung, footer. |
+| `Services/MenuQuanTri.cs` | Nguồn menu theo quyền cho thanh bên và trang điều hành; chứa `MucMenu`, `NhomMenu`. |
+| `Views/Shared/_ThongBao.cshtml` | Thông báo TempData được Razor mã hóa, có nhãn và vai trò trợ năng. |
+| `wwwroot/css/layout.css` | Màu, cỡ chữ, focus, nút/form/bảng, trạng thái, nền và khoảng cách chung trong `.ql-app`. |
+| `wwwroot/css/thanh-phan.css` | Thành phần dùng chung như banner, thẻ, các bước hướng dẫn. |
+| `wwwroot/css/quan-tri.css` | Thanh bên, header và bố cục riêng của khu vực quản trị. |
+| `wwwroot/js/layout.js` | Escape đóng menu khách và trả focus; chống gửi lặp form đăng xuất, khôi phục khi quay lại lịch sử. |
+| `wwwroot/css/site.css`, `wwwroot/js/site.js` | Tài nguyên nền tảng hiện có. |
+| `Views/Shared/_ValidationScriptsPartial.cshtml` | jQuery Validation/Unobtrusive cho form của module. |
+| `Views/Shared/_Layout.cshtml`, `_Header.cshtml`, `_Layout.cshtml.css` | Khung cũ còn giữ để tương thích; không được `_ViewStart` chọn mặc định. Không thêm menu mới chỉ vào khung cũ. |
 
-Dùng Bootstrap **5.3.3**, jQuery và validation sẵn trong `wwwroot/lib`; không thêm framework/CDN. CSS module nạp sau CSS chung; JS module chạy sau jQuery, Bootstrap và JS chung. Các View vẫn có thể dùng CSS isolation qua bundle `.styles.css`.
+Dùng Bootstrap 5.3.3, jQuery và validation sẵn trong `wwwroot/lib`; không nạp lại thư viện trong View hoặc thêm CDN. Hai layout hiện tại độc lập, đều hỗ trợ `Styles` và `Scripts` tùy chọn. Menu khách thu gọn dưới **1200px**, khớp CSS/JS; thanh bên quản trị chuyển sang offcanvas dưới **992px**.
 
-Menu thu gọn dưới 1200px (điều chỉnh khi thêm menu M1-03 để tránh chen chúc ở tablet). Footer theo luồng flex, không đè nội dung. Có link bỏ qua menu, nhãn nút rõ ràng, `aria-current="page"` và focus bàn phím. Bảng rộng cần vùng cuộn riêng.
+## 2. Tạo View, tiêu đề và CSS/JS riêng
 
-## 2. Tạo View, tiêu đề và tài nguyên riêng
-
-Tạo View dưới `Views/<Controller>/<Action>.cshtml` cho action thực sự tồn tại. Không cần khai báo lại `Layout`, `<html>`, `<head>` hoặc các thư viện chung. View tự đặt một tiêu đề `h1`; layout chỉ sử dụng `ViewData["Title"]` cho tab trình duyệt.
-
-`_AdminLayout` chuyển tiếp nội dung và section tới `_Layout`; các ví dụ dưới đây dùng được với cả hai. `ViewData["KhuVucQuanTri"]` là cờ trình bày nội bộ của layout, không phải quyền truy cập và không phải TempData. Việc chọn layout không bảo vệ URL; Controller vẫn phải kiểm tra quyền. Đầu mỗi file mã nguồn ghi họ tên, MSSV và nội dung thực hiện; file nhiều người ghi đúng phần việc từng người.
+Tạo `Views/<Controller>/<Action>.cshtml` cho action đã tồn tại. Để `_ViewStart` chọn layout; không cần khai báo lại `Layout`, `<html>` hoặc `<head>`. View tự đặt một `h1`; tiêu đề tab lấy từ `ViewData["Title"]`.
 
 ```cshtml
-@* Họ tên: <thành viên>; MSSV: <mã sinh viên>; Nội dung: <phần việc thực tế>. *@
+@* Họ tên: <thành viên>; MSSV: <mã>; Nội dung: <phần việc thực tế>. *@
 @{
     ViewData["Title"] = "Tên chức năng";
 }
 <div class="ql-page-header">
     <h1>@ViewData["Title"]</h1>
-    <p class="ql-subtitle">Mô tả ngắn về công việc trên trang.</p>
+    <p class="ql-subtitle">Mô tả ngắn.</p>
 </div>
 <section class="ql-panel" aria-label="Nội dung chức năng">
     <!-- Nội dung của module -->
 </section>
-
 @section Styles {
     <link rel="stylesheet" href="~/css/ten-module.css" asp-append-version="true" />
 }
@@ -55,15 +53,13 @@ Tạo View dưới `Views/<Controller>/<Action>.cshtml` cho action thực sự t
 }
 ```
 
-`Styles` và `Scripts` đều tùy chọn. Chỉ khai báo tài nguyên đã tạo; bỏ validation partial nếu trang không cần. Section phải nằm trong View chính, không đặt trong partial. CSS riêng nên có lớp gốc của module, tránh selector toàn cục như `body`, `table`, `.btn`. Không nạp lại Bootstrap/jQuery.
+Chỉ khai báo file đã tạo, bỏ section/validation partial nếu không cần. Section nằm ở View chính, không đặt trong partial. CSS module nạp sau CSS chung và cần lớp gốc riêng, tránh selector toàn cục như `body`, `table`, `.btn`. Việc chọn layout và ẩn menu không bảo vệ URL: giữ `[Authorize]`, kiểm tra vai trò và quyền sở hữu ở server.
 
-## 3. Thành phần giao diện
+## 3. Nút, form, bảng, thông báo
 
-### Nút và form
+Dùng `btn-primary` cho thao tác chính, `btn-outline-primary` cho thao tác phụ, `btn-outline-secondary` để quay lại, `btn-danger` cho thao tác phá hủy. Link dùng để điều hướng; button submit dùng để gửi form. Nút luôn có chữ mô tả, không chỉ biểu tượng.
 
-Dùng `btn-primary` cho thao tác chính, `btn-outline-primary` cho thao tác phụ, `btn-outline-secondary` để quay lại, `btn-danger` cho thao tác xóa/hủy có tính phá hủy. Ghi rõ nhãn hành động; không chỉ dùng biểu tượng. Link để điều hướng, button submit để gửi form.
-
-Ví dụ form đăng nhập dưới đây sử dụng ViewModel/action đang có; các module thay bằng model và action đã triển khai của mình:
+Ví dụ form dùng ViewModel/action đăng nhập đã có:
 
 ```cshtml
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DangNhapViewModel
@@ -71,216 +67,113 @@ Ví dụ form đăng nhập dưới đây sử dụng ViewModel/action đang có
     <input asp-for="ReturnUrl" type="hidden" />
     <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
     <div class="mb-3">
-        <label asp-for="TenDangNhap" class="form-label"></label> <span aria-hidden="true">*</span>
-        <input asp-for="TenDangNhap" class="form-control" autocomplete="username"
-               required maxlength="50" aria-describedby="loi-ten" />
+        <label asp-for="TenDangNhap" class="form-label"></label>
+        <input asp-for="TenDangNhap" class="form-control" autocomplete="username" aria-describedby="loi-ten" />
         <span asp-validation-for="TenDangNhap" class="text-danger" id="loi-ten"></span>
     </div>
     <div class="mb-3">
-        <label asp-for="MatKhau" class="form-label"></label> <span aria-hidden="true">*</span>
-        <input asp-for="MatKhau" class="form-control" autocomplete="current-password"
-               required maxlength="128" aria-describedby="loi-mat-khau" />
+        <label asp-for="MatKhau" class="form-label"></label>
+        <input asp-for="MatKhau" class="form-control" autocomplete="current-password" aria-describedby="loi-mat-khau" />
         <span asp-validation-for="MatKhau" class="text-danger" id="loi-mat-khau"></span>
     </div>
-    <div class="d-flex flex-wrap gap-2">
-        <button type="submit" class="btn btn-primary">Đăng nhập</button>
-        <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Về trang chủ</a>
-    </div>
+    <button type="submit" class="btn btn-primary">Đăng nhập</button>
+    <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Về trang chủ</a>
 </form>
 ```
 
-Form có label liên kết input; placeholder không thay thế label. Dùng `form-select` cho select, `form-check` cho checkbox. Giữ validation server; không chỉ kiểm tra bằng JS. Với form sửa dữ liệu, luôn dùng phương thức và anti-forgery theo Controller.
-
-Giải thích dấu * là trường bắt buộc trên form. Giữ dữ liệu nhập khi có lỗi, riêng mật khẩu không điền lại. Vô hiệu hóa nút khi form hợp lệ đang gửi; trang đăng nhập hiện có xử lý tại section Scripts, đăng xuất được xử lý trong `layout.js`. Ví dụ trên chỉ minh họa markup; module cần thêm xử lý submit/khôi phục nút phù hợp với form thường hoặc AJAX của mình. Không gắn trình xử lý chung lên mọi form. Hủy/xóa dữ liệu phải có bước xác nhận trước khi gửi; hiện chưa có action hủy/xóa để tích hợp. Nút nghiệp vụ phải xét cả quyền và trạng thái, không cho form chọn trạng thái tùy ý.
-
-### Bảng và trạng thái rỗng
+Thêm `_ValidationScriptsPartial` trong section Scripts của View form. Dùng `form-select` và `form-check` cho select/checkbox. Label không được thay bằng placeholder. Giữ validation server và token chống giả mạo cho thao tác thay đổi dữ liệu; xác nhận trước xóa/hủy, có phản hồi lỗi và cho phép thử lại. JS chung chỉ quản lý submit đăng xuất, module tự quản lý form nghiệp vụ của mình.
 
 ```html
-<div class="table-responsive" role="region" aria-label="Danh sách kết quả" tabindex="0">
-    <table class="table table-hover align-middle ql-table">
+<div class="table-responsive">
+    <table class="table table-hover ql-table">
         <caption>Danh sách kết quả</caption>
         <thead><tr><th scope="col">Tên</th><th scope="col">Trạng thái</th></tr></thead>
-        <tbody><!-- Render dữ liệu thật từ ViewModel tại đây --></tbody>
+        <tbody><!-- Lặp dữ liệu thực từ ViewModel; Razor tự mã hóa nội dung. --></tbody>
     </table>
 </div>
+<!-- Khi không có kết quả, hiển thị thay bảng -->
+<div class="ql-empty">Không có kết quả phù hợp. Hãy thử thay đổi bộ lọc.</div>
 ```
 
-Chỉ render bảng khi có dữ liệu. Khi rỗng dùng:
+Phân trang dùng `pagination ql-pagination`, mỗi mục có `page-item`, link có `page-link`, trang hiện tại thêm `active` và `aria-current="page"`. Mục không khả dụng dùng span thay link. Link trang giữ tìm kiếm/lọc/sắp xếp; truy vấn phân trang ở server bằng Skip/Take, mặc định 10 dòng theo quy ước nhóm. Ngày `dd/MM/yyyy`, giờ `HH:mm`, tiền theo `vi-VN` kèm đơn vị; không thêm dữ liệu hoặc thống kê giả.
 
-```html
-<div class="ql-empty">
-    <h2 class="h5">Chưa có dữ liệu</h2>
-    <p class="mb-0">Chưa có kết quả phù hợp với điều kiện tìm kiếm.</p>
-</div>
-```
+### TempData và trạng thái
 
-### Nhãn trạng thái
+Controller đặt `TempData["Success"] = "Đã lưu dữ liệu.";` trước redirect. Layout tự render `_ThongBao` một lần, View không render lại và không dùng `Html.Raw` cho nội dung thông báo.
 
-Mỗi nhãn luôn chứa chữ; không truyền đạt trạng thái chỉ bằng màu. Module tự ánh xạ enum nghiệp vụ của mình, không dùng các lớp này để thay thế enum hay kiểm tra nghiệp vụ.
-
-| Trạng thái | Lớp | Màu |
+| Key | Hiển thị | Sử dụng thực tế |
 | --- | --- | --- |
-| Chờ xác nhận (`ChoXuLy`) | `ql-status ql-status--waiting` | Vàng |
-| Đã xác nhận | `ql-status ql-status--confirmed` | Xanh dương |
-| Hoàn thành | `ql-status ql-status--completed` | Xanh lá |
-| Hủy | `ql-status ql-status--cancelled` | Xám |
-| Từ chối | `ql-status ql-status--rejected` | Đỏ |
+| `Success` | Thành công, xanh lá, `role="status"` | Tài khoản, loại sân, sân, hồ sơ, đăng ký, đặt/xử lý đơn, dịch vụ. |
+| `Error` | Lỗi, đỏ, `role="alert"` | Loại sân được tham chiếu; hồ sơ khách thiếu/bị khóa. |
+| `Warning` | Lưu ý, vàng, `role="status"` | M2: sân đã bị xóa bởi thao tác khác. |
+| `Info` | Thông tin, xanh dương, `role="status"` | Partial hỗ trợ; chưa có Controller ghi key này. |
 
-```html
-<span class="ql-status ql-status--confirmed">Đã xác nhận</span>
-```
+Thông báo nội tuyến có thể dùng `<div class="alert alert-warning ql-notice" role="status"><strong>Lưu ý:</strong> Nội dung.</div>` khi không qua redirect.
 
-Theo quy ước mục 4, `ChoXuLy` hiển thị “Chờ xác nhận”, `DangXuLy` hiển thị “Đã xác nhận”. Đây là hướng dẫn tích hợp; không tạo enum đặt sân mới trong đầu việc layout.
-
-### Thông báo và TempData
-
-M1-03 (`QuanLyTaiKhoanController`), M1-04 (`LoaiSanController`) và M5 (`DichVuController`) ghi `Success` sau khi lưu. M1-04 ghi `Error` khi chặn xóa loại sân đang được tham chiếu. Lỗi form dùng `ModelState`. Partial đọc bốn key dưới đây; `Warning`, `Info` là hợp đồng sẵn cho các module tích hợp:
-
-| Key (phân biệt cách viết theo quy ước) | Bootstrap | Nhãn |
+| Trạng thái đơn | Chữ hiển thị | Lớp CSS ngoài `ql-status` |
 | --- | --- | --- |
-| `Success` | `alert-success` | Thành công |
-| `Error` | `alert-danger` | Lỗi |
-| `Warning` | `alert-warning` | Lưu ý |
-| `Info` | `alert-info` | Thông tin |
+| ChoXuLy | Chờ xác nhận | `ql-status--waiting` (vàng) |
+| DangXuLy | Đã xác nhận | `ql-status--confirmed` (xanh dương) |
+| HoanThanh | Hoàn thành | `ql-status--completed` (xanh lá) |
+| DaHuy | Đã hủy | `ql-status--cancelled` (xám) |
+| TuChoi | Từ chối | `ql-status--rejected` (đỏ) |
 
-Gán chuỗi sau khi thao tác thực sự thành công/thất bại rồi redirect; ví dụ trong Controller của module: `TempData["Success"] = "Đã lưu thay đổi.";`. Layout đọc một lần ở request kế tiếp, không tự tạo thông báo. Không lưu HTML hay dữ liệu nhạy cảm; không dùng `Html.Raw`. View không render lại các key này để tránh thông báo trùng. Lỗi có `role="alert"`; thông báo khác có `role="status"`.
+Ví dụ: `<span class="ql-status ql-status--waiting">Chờ xác nhận</span>`. Luôn có chữ, không truyền trạng thái chỉ bằng màu; không đổi giá trị enum.
 
-Thông báo tại chỗ không qua redirect:
+## 4. Menu đang hoạt động
 
-```html
-<div class="alert alert-info ql-notice" role="status">
-    <strong>Thông tin:</strong> Chọn điều kiện tìm kiếm để xem kết quả.
-</div>
-```
+Bảng liệt kê Controller/Action (GET), URL thực do Tag Helpers sinh. Quyền dựa trên code server hiện tại.
 
-### Phân trang
-
-Dùng `pagination ql-pagination`, `aria-label` trên nav và `aria-current="page"` ở trang hiện tại. Trang bị vô hiệu hóa dùng span, không dùng link vẫn bấm được. Controller của module chịu trách nhiệm phân trang thật và giữ bộ lọc; layout không tự phân trang dữ liệu.
-
-Mặc định **10 dòng/trang**, dùng `Skip/Take` trên server; giữ từ khóa tìm kiếm, bộ lọc và sort khi chuyển trang theo quy ước mục 7. Có thể tham khảo `LoaiSan/DanhSach` để kết hợp tìm kiếm, trạng thái, sắp xếp và phân trang.
-
-```html
-<nav aria-label="Phân trang kết quả">
-    <ul class="pagination ql-pagination">
-        <li class="page-item disabled"><span class="page-link">Trước</span></li>
-        <li class="page-item active"><span class="page-link" aria-current="page">1</span></li>
-        <li class="page-item disabled"><span class="page-link">Sau</span></li>
-    </ul>
-</nav>
-```
-
-Đây là ví dụ trạng thái một trang trong tài liệu, không phải dữ liệu đưa vào ứng dụng. Khi có trang khác, module sinh link bằng Tag Helpers tới action thật và tham số phân trang thật.
-
-### Định dạng ngày, giờ và tiền
-
-Ngày hiển thị `dd/MM/yyyy`, giờ `HH:mm`, tiền theo văn hóa `vi-VN`, ví dụ `200.000 ₫`. Trong View dùng `giaTriNgay.ToString("dd/MM/yyyy")`, `giaTriGio.ToString("HH:mm")` và `soTien.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN"))` kèm `₫` cho giá trị đồng nguyên. Đây chỉ là định dạng; công thức và làm tròn thuộc service nghiệp vụ. Input dùng `date`/`datetime-local` và giá trị chuẩn HTML, không nhét chuỗi `dd/MM/yyyy` vào thuộc tính value của input date.
-
-Thời điểm nghiệp vụ phải theo giờ Việt Nam từ lớp đồng hồ chung khi nhóm triển khai; layout không tự dùng giờ máy chủ để sinh thời điểm hoặc chuyển đổi dữ liệu. Không sửa culture toàn ứng dụng trong đầu việc giao diện này.
-
-## 4. Menu và quyền truy cập
-
-Nguồn quyền: `TaiKhoanController` có `[Authorize]`, riêng `DangNhap` và `TuChoiTruyCap` có `[AllowAnonymous]`; `HomeController` công khai. `QuanLyTaiKhoanController` và `DichVuController` yêu cầu vai trò Admin ở cấp lớp. `Services/PhienDangNhap.cs` kiểm tra lại tài khoản, Session, phiên bản quyền, trạng thái và vai trò mỗi request có cookie. `ITaiKhoanHienTai` đọc principal đã xác thực. Enum hiện có: `Admin = 1`, `NhanVien = 2`, `KhachHang = 3`.
-
-Layout dùng `User.Identity.IsAuthenticated` để chọn nhóm menu và inject `ITaiKhoanHienTai` để lấy họ tên/vai trò. Không đọc quyền từ form/URL, không tạo cơ chế đăng nhập mới. Mọi kiểm tra quyền phía server được giữ nguyên.
-
-### Menu đang hoạt động
-
-| Tên | Controller/Action | Chưa đăng nhập | Khách hàng | Nhân viên | Admin |
-| --- | --- | --- | --- | --- | --- |
-| Trang chủ | `Home/Index` | Có | Có | Có | Có |
-| Quyền riêng tư | `Home/Privacy` | Có | Có | Có | Có |
-| Đăng nhập | `TaiKhoan/DangNhap` (GET) | Có | Ẩn | Ẩn | Ẩn |
-| Thông tin tài khoản | `TaiKhoan/ThongTin` (GET) | Ẩn | Có | Có | Có |
-| Đăng xuất | `TaiKhoan/DangXuat` (**POST**) | Ẩn | Có | Có | Có |
-| Quản lý tài khoản | `QuanLyTaiKhoan/DanhSach` (GET) | Ẩn | Ẩn | Ẩn | Có |
-| Loại sân | `LoaiSan/DanhSach` (GET) | Ẩn | Ẩn | Ẩn | Có |
-| Dịch vụ | `DichVu/DanhSach` (GET) | Ẩn | Ẩn | Ẩn | Có |
-
-Admin có thêm Quản lý tài khoản (M1-03), Loại sân (M1-04) và Dịch vụ (M5), tương ứng Controller yêu cầu vai trò Admin. Nhân viên/Admin dùng `_AdminLayout` với nhãn “Khu vực quản trị”, còn khách dùng `_Layout`. Header hiển thị tên vai trò tiếng Việt. `TaiKhoan/TuChoiTruyCap` (HTTP 403) và `Home/Error` tồn tại nhưng không là mục điều hướng thường xuyên.
-
-Đăng xuất luôn là form POST có `asp-antiforgery="true"`, tương ứng `[HttpPost, ValidateAntiForgeryToken]`. Không đổi thành link GET. Mục active so sánh cả Controller lẫn Action, không phân biệt hoa/thường; Quản lý tài khoản và Loại sân giữ active ở các trang con cùng Controller. Các trang lỗi không đánh dấu nhầm Trang chủ.
-
-### Thêm mục menu
-
-1. Trao đổi với Tùng; xác nhận action đã có, phương thức và quyền server thực tế. Ghi tên hiển thị tiếng Việt, Controller/Action, danh sách vai trò được phép.
-2. Sửa danh sách `menu` ở `_Header.cshtml`. Mục công khai thêm vào danh sách ban đầu; mục cần đăng nhập thêm trong `if (daDangNhap)`; mục theo vai trò kiểm tra `User.IsInRole(nameof(VaiTro.Admin))` hoặc các vai trò đúng với `[Authorize(Roles = ...)]` của action. Nếu action dùng policy, đánh giá cùng policy qua authorization service, không đoán theo tên module.
-3. Thêm tuple `("Tên hiển thị", "Controller đã tồn tại", "Action đã tồn tại")` trong điều kiện đúng. Vòng lặp tự sinh link, active và `aria-current`. Nếu muốn một mục active cho cả Index/Create/Edit, mở rộng điều kiện active một cách rõ ràng, vẫn kiểm tra Controller. Nếu thêm Areas, cần mở rộng cả thông tin area và điều kiện active; hiện project chưa dùng Areas.
-4. Kiểm tra truy cập URL trực tiếp bằng vai trò không được phép và khách chưa đăng nhập. Ẩn menu chỉ là giao diện, không thay thế `[Authorize]` hay kiểm tra sở hữu dữ liệu.
-5. Cập nhật bảng menu và kiểm tra desktop/mobile. Khi menu dài thêm, có thể điều chỉnh breakpoint với Tùng.
-
-### Menu dự kiến, chưa tạo link
-
-Theo ma trận quyền mục 6 và hợp đồng layout mục 7 của tài liệu quy ước. Chỉ bổ sung link sau khi có action và kiểm tra server tương ứng; tên route dưới đây không được tự giả định.
-
-| Mục dự kiến | Quyền theo tài liệu | Controller/Action |
+| Mục | Controller/Action | Người thấy trên menu |
 | --- | --- | --- |
-| Xem/tìm sân hoạt động (M2) | Công khai; cả ba vai trò được dùng | Chưa có |
-| Tạo đơn đặt sân (M3) | Chỉ Khách hàng; Nhân viên/Admin không được tạo theo ma trận hiện tại | Chưa có |
-| Lịch của tôi (M3) | Khách hàng chỉ dữ liệu của mình; Nhân viên/Admin xem đơn theo quyền xử lý | Chưa có |
-| Hồ sơ cá nhân (M3) | Cả ba vai trò, chỉ dữ liệu của mình; khác trang ThongTin chỉ đọc hiện có | Chưa có |
-| Quản lý sân (M2), khách hàng (M3) | Nhân viên/Admin; quản lý khách hàng không cấp quyền sửa mật khẩu/vai trò | Chưa có |
-| Quản lý đơn, xác nhận/từ chối (M4) | Nhân viên/Admin; hủy đơn chờ cho khách chỉ là thao tác trên đơn của mình | Chưa có |
-| Dịch vụ trong đơn và tính tiền (M5 phối hợp M4) | Nhân viên/Admin | Chưa có |
-| Dashboard và thống kê (M5) | Nhân viên/Admin | Chưa có |
-| Đổi/khôi phục mật khẩu | Tài liệu M1 ghi chưa triển khai; quy ước chưa chốt luồng cụ thể | Chưa có |
+| Trang chủ công khai | `Home/Index` | Chưa đăng nhập |
+| Trang chủ khách | `KhachHang/TrangChu` | Khách hàng |
+| Danh sách sân | `SanTheThao/Index` | Tất cả; khách chỉ thấy dữ liệu server cho phép |
+| Đăng nhập | `TaiKhoan/DangNhap` | Chưa đăng nhập, góc phải |
+| Đăng ký | `KhachHang/DangKy` | Chưa đăng nhập, bên phải Đăng nhập |
+| Đặt sân | `DonDat/Tao` | Khách hàng |
+| Lịch của tôi | `DonDat/Index` | Khách hàng |
+| Hồ sơ | `HoSo/Index` | Khách hàng |
+| Trang điều hành | `QuanTri/Index` | Admin/Nhân viên |
+| Thêm sân | `SanTheThao/Create` | Admin/Nhân viên |
+| Đơn đặt sân | `QuanLyDonDat/DanhSach` | Admin/Nhân viên |
+| Loại sân | `LoaiSan/DanhSach` | Admin |
+| Dịch vụ | `DichVu/DanhSach` | Admin |
+| Quản lý tài khoản | `QuanLyTaiKhoan/DanhSach` | Admin |
+| Thông tin tài khoản | `TaiKhoan/ThongTin` | Khách hàng bấm tên trên header; Admin/Nhân viên có mục ở thanh bên |
+| Quyền riêng tư | `Home/Privacy` | Tất cả, footer |
 
-Không gắn link giả, `href="#"` hoặc Controller tạm cho các mục dự kiến.
+Đăng xuất là **POST `TaiKhoan/DangXuat` có anti-forgery**, hiển thị khi đã đăng nhập. Không tạo link GET. Trang `TaiKhoan/TuChoiTruyCap` trả 403 và `Home/Error` tồn tại nhưng không cần mục menu thường xuyên.
 
-## 5. Tích hợp View hiện có
+`MucMenu.KhopTrang` so sánh Controller và Action không phân biệt hoa/thường. `CungNhomAction` giữ active ở trang con; ví dụ Đơn đặt sân gồm `ChiTiet`, `XacNhan`, `TuChoi`, `Huy`. Ba action POST chỉ dùng để nhận diện khi server trả lại View lỗi, không biến thành link điều hướng. Mục Thêm sân tách riêng khỏi Danh sách sân.
 
-- `Home/Index`: thay lời chào template bằng nội dung tiếng Việt và nút đăng nhập/thông tin tài khoản đúng trạng thái, không có thống kê giả.
-- `Home/Privacy`: thay placeholder bằng mô tả cookie/phiên đúng cơ chế hiện có và nhắc đăng xuất trên máy dùng chung.
-- `TaiKhoan/DangNhap`: thêm khung/tiêu đề và liên kết mô tả lỗi bằng `aria-describedby`; giữ model, ReturnUrl, form POST, validation, section Scripts và xử lý submit cũ.
-- `TaiKhoan/ThongTin`: thêm khung/tiêu đề, giữ nguyên dữ liệu và ánh xạ vai trò.
-- `TaiKhoan/TuChoiTruyCap`: thêm khung và nhãn 403, giữ link về trang chủ và HTTP 403 của Controller.
-- `Shared/Error`: Việt hóa, giữ mã yêu cầu; thay hướng dẫn bật Development trong template bằng hướng dẫn liên hệ quản trị.
+### Cách bổ sung mục
 
-Không sửa Controller, service xác thực, Entity, DbContext, migration, cấu hình kết nối hay logic M2–M5. `_ViewStart` được cập nhật chọn layout theo vai trò, `_ViewImports` giữ nguyên. Thay đổi package có sẵn trong `.csproj` của Tùng được giữ nguyên.
+1. Xác nhận với Tùng: tên hiển thị, Controller/Action đã tồn tại, phương thức GET và quyền/policy thực tế. Không đoán quyền từ tên module.
+2. Menu khách thêm trong `MenuKhachHang.Lay`; thanh bên/trang điều hành thêm trong `MenuQuanTri.Lay`, đúng nhánh vai trò. Dùng `new MucMenu("Tên", "Controller", "Action", ["TrangCon"])`. Đây là cấu hình giao diện thuần, không truy vấn DB hoặc cần đăng ký DI.
+3. Nếu route cần ID, đặt liên kết trên bản ghi ở View thay vì menu toàn cục. Action POST là form trong View. Nếu thêm Area/policy mới, mở rộng cấu hình và kiểm thử tương ứng, không hardcode đường dẫn đoán.
+4. Cập nhật bảng này và `MenuVaiTroTests`; kiểm tra route tồn tại, quyền server, active, URL trực tiếp và desktop/mobile. Kiểm tra menu dài hoặc tên tài khoản dài.
 
-## 6. Chạy thử và kiểm tra
+### Chức năng dự kiến chưa có lối vào hoàn chỉnh
 
-Tại thư mục gốc repository, với .NET 10 SDK và cấu hình/database hiện có:
+- Quản lý khách hàng dành cho Admin/Nhân viên: chưa có màn hình/route quản lý tương ứng. Hồ sơ hiện có chỉ dành cho khách hàng tự xem/sửa.
+- Khách hàng hủy đơn; nhân viên hoàn thành đơn/chốt tiền; dịch vụ trong đơn và báo cáo thống kê: bổ sung sau khi module phụ trách triển khai đầy đủ. Các thao tác trên đơn đặt trong trang chi tiết, không tạo mục menu POST.
+- Đổi/khôi phục mật khẩu: chưa có luồng tương ứng.
+
+Trang điều hành và danh mục dịch vụ đã tồn tại; không đồng nghĩa phần báo cáo/tính tiền M5 đã hoàn tất. Không tạo `href="#"`, Controller giả hoặc link chết để lấp chỗ trống.
+
+## 5. Chạy và kiểm tra
+
+Từ gốc repo:
 
 ```powershell
-dotnet build
-dotnet run --no-build --project .\QuanLyDatSan_UNETI5_DHTI17A4HN --launch-profile http
+dotnet build -c Release
+dotnet test tests/QuanLyDatSan.M103.Tests/QuanLyDatSan.M103.Tests.csproj -c Release --filter FullyQualifiedName~MenuVaiTroTests
+dotnet run -c Release --no-build --project .\QuanLyDatSan_UNETI5_DHTI17A4HN --launch-profile http
 ```
 
-Mở `http://localhost:5024`. Cấu hình kết nối bằng User Secrets hoặc biến môi trường theo tài liệu M1; không lưu thông tin cá nhân vào code. Các action tài khoản cần có cấu hình kết nối vì Controller nhận DbContext, kể cả GET đăng nhập. Dùng database và tài khoản hợp lệ đã có để kiểm tra đăng nhập; không chạy script `KiemTraDangNhap.ps1` cho đầu việc layout vì script đó tạo/xóa database.
+Mở `http://localhost:5024`; dùng cấu hình/database và tài khoản hợp lệ đã có. Không đưa connection string cá nhân vào repo, không reset database để kiểm tra layout. Nếu executable đang bị khóa, dừng đúng ứng dụng/debug session trước khi build.
 
-Checklist bàn giao: kiểm tra ở 1440px, 1024px, 390px và 320px; mở/đóng menu và Escape; Tab/Shift+Tab và link bỏ qua menu; active đúng trang; đăng nhập, thông tin tài khoản và đăng xuất lần lượt với Khách hàng/Nhân viên/Admin; không có link đến action chưa tồn tại; kiểm tra HTTP 403, form validation, chuỗi tên dài, bảng cuộn ngang và footer khi nội dung dài. POST đăng xuất phải có anti-forgery và sau đăng xuất URL thông tin phải yêu cầu đăng nhập lại.
+Kiểm tra khách, khách hàng, nhân viên, admin ở 1440/1200/1024/390/320px: menu, tên tài khoản, mở/đóng/Escape, focus, liên kết, active ở trang con, form lỗi, thông tin tài khoản, 403 và đăng xuất. Mở URL quản trị bằng vai trò khác phải bị server chặn. Không coi ẩn menu là đã kiểm chứng phân quyền.
 
-### Kết quả thực tế ngày 05/10/2026
-
-- `dotnet build`: thành công, **0 lỗi, 0 cảnh báo**. Lần đầu NuGet bị chặn bởi mạng sandbox; đã build thành công khi được phép truy cập mạng, không thay package của người dùng.
-- Chạy app bằng cấu hình Development hiện có trên `http://127.0.0.1:5129`, dùng Chrome headless qua Playwright tạm trong `obj/` (không thêm dependency project). Sandbox gặp lỗi quyền Windows Data Protection; chạy ngoài sandbox thành công, không sửa cơ chế xác thực.
-- Đã kiểm tra Trang chủ, Quyền riêng tư, Đăng nhập, Từ chối truy cập và trang lỗi ở **1440, 1024, 390, 320px**: đúng mã HTTP (403 cho trang từ chối), tiêu đề tiếng Việt, một main/h1, active theo trang, không tràn ngang. Đã xem ảnh desktop và đăng nhập mobile.
-- Đã kiểm tra nút menu, `aria-expanded`, Escape đóng và trả focus, link bỏ qua menu bằng bàn phím; khách không thấy form đăng xuất. Đã kiểm tra màu chữ nút link chính khi hover/focus.
-- Liên kết công khai và tài nguyên CSS/JS trả 200; không có lỗi JavaScript. Khách vào `/TaiKhoan/ThongTin` được chuyển tới đăng nhập với ReturnUrl.
-- Trang đăng nhập có label, input password, anti-forgery; client chặn trường bắt buộc rỗng; POST form rỗng với token hiển thị lỗi validation server (không truy vấn database); POST thiếu token trả 400.
-- **Chưa kiểm tra bằng tài khoản thật**: đăng nhập thành công, nội dung ThongTin, menu/tên/vai trò của Khách hàng/Nhân viên/Admin, đăng xuất và phiên sau đăng xuất. Chưa có thông tin tài khoản kiểm thử được cung cấp; không tạo/reset database hay tạo tài khoản để thử. Nhánh đăng xuất POST và quyền hiện tại đã được rà soát ở mã nguồn, chưa coi là kiểm thử tích hợp.
-- Bảng/phân trang và nhãn trạng thái đã có kiểu/ví dụ; chưa có Controller nghiệp vụ sử dụng nên chưa kiểm tra toàn luồng. Thông báo TempData và section CSS/JS đã được kiểm tra render riêng sau đợt đối chiếu quy ước bên dưới; `Scripts` của trang đăng nhập hoạt động trên app thật.
-- Đã rà soát diff: chỉ thay layout, View trình bày, CSS/JS và tài liệu; `.csproj` vẫn là thay đổi có sẵn. Sau khi xác nhận nhánh đăng nhập đã merge qua PR #2 và được Tùng đồng ý, đã tạo nhánh `feature/m1-layout-menu` từ `origin/main` (`9ccd919`), giữ nguyên toàn bộ thay đổi tại thời điểm chuyển nhánh. PR layout không bao gồm thay đổi package có sẵn trong `.csproj`.
-
-Ảnh và kết quả kiểm tra cục bộ nằm trong `QuanLyDatSan_UNETI5_DHTI17A4HN/obj/layout-check/` (Git bỏ qua), không phải tài nguyên triển khai.
-
-## 7. Rà soát theo quy ước nhóm ngày 05/10/2026
-
-Nguồn đối chiếu: `Quy_uoc_nhom_Quan_ly_dat_san.docx` phiên bản 1.0, mục 1, 4, 6, 7, 8. Không sửa tài liệu gốc trong Downloads.
-
-| Điểm rà soát | Kết quả xử lý |
-| --- | --- |
-| Đầu file ghi họ tên, MSSV, nội dung | Bổ sung vào các file layout, partial, CSS/JS, trang chủ/quyền riêng tư/lỗi và `_ViewStart`; các View tài khoản đã có. Ghi rõ Codex hỗ trợ phần triển khai. |
-| Hai layout khách/quản trị | Thêm `_AdminLayout`, chọn trong `_ViewStart` theo vai trò đã xác thực; dùng layout cha để không trùng header/footer hoặc tài nguyên. |
-| Ma trận quyền và menu dự kiến | Thay các dòng “chưa xác định quyền” bằng phân quyền có căn cứ trong tài liệu; vẫn không tạo link tới action chưa có. |
-| Nhãn trạng thái | Hướng dẫn rõ “Chờ xác nhận” cho ChoXuLy và “Đã xác nhận” cho DangXuLy, giữ màu kèm chữ. |
-| Ngày/giờ/tiền và danh sách | Bổ sung định dạng `dd/MM/yyyy`, `HH:mm`, tiền Việt; mặc định 10 dòng/trang, Skip/Take server và giữ tìm/lọc/sort. Chưa triển khai nghiệp vụ thay module khác. |
-| Phản hồi khi gửi form | Đăng nhập giữ xử lý nút sẵn có; form đăng xuất khóa nút, chặn gửi lặp, khôi phục khi quay lại từ lịch sử. Hướng dẫn xác nhận hủy/xóa cho module sau. |
-| Quy trình Git và schema | Nhánh `feature/m1-layout-menu` từ `origin/main`; commit/push/PR theo yêu cầu của Tùng. Không đổi schema hoặc package; cần thành viên khác approve trước khi Tùng merge bằng Create a merge commit. |
-
-Kiểm tra bổ sung:
-
-- Build project và Razor thành công, 0 lỗi/0 cảnh báo. Kiểm tra lại ứng dụng thật ở bốn độ rộng trên cho các trang công khai, validation, anti-forgery và chuyển hướng tài khoản: đạt.
-- Bộ kiểm tra render độc lập trong `obj/layout-render-check/` dùng principal mô phỏng Guest/KhachHang/NhanVien/Admin, không đăng ký database hoặc thay cơ chế xác thực của app. Đã kiểm tra đúng layout, một header/main/footer, section Styles/Scripts chuyển tiếp đúng một lần (cả View không có section), thông báo được mã hóa và form đăng xuất có token.
-- HTML render mô phỏng cho ba vai trò đã được xem bằng Chrome ở 1440/1024/390/320px: không tràn ngang, có menu tài khoản; JS chặn lần submit tiếp theo, khóa nút và khôi phục qua pageshow. Dữ liệu mô phỏng chỉ nằm trong `obj/`, không đưa vào giao diện thực tế của project.
-- Các kiểm tra render/JS này **không thay thế kiểm thử đăng nhập/đăng xuất và phân quyền server bằng tài khoản thật**. Giới hạn kiểm thử tài khoản ở mục 6 vẫn còn; không coi token tạo trong bộ render là đã xác minh toàn luồng đăng xuất.
+Bằng chứng và giới hạn kiểm thử đợt tích hợp này: [Phần 7 — Tích hợp menu](module-1/Phan-7-Tich-hop-menu.md). Các kết quả 05/10 của bản layout cũ nằm trong lịch sử Git; không dùng thay bằng chứng cho layout sau tích hợp.
