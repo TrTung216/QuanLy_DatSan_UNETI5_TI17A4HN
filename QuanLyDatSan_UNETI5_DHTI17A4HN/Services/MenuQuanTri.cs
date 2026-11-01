@@ -38,7 +38,7 @@ public static class MenuQuanTri
         }
         if (laAdmin || laNhanVien)
         {
-            vanHanh.Add(new MucMenu("Đơn đặt sân", "QuanLyDonDat", "DanhSach", ["ChiTiet", "XacNhan", "TuChoi", "Huy"],
+            vanHanh.Add(new MucMenu("Đơn đặt sân", "QuanLyDonDat", "DanhSach", ["ChiTiet", "XacNhan", "TuChoi", "Huy", "GhiCoc", "HoanThanh"],
                 "Tra cứu danh sách và chi tiết đơn đặt sân."));
         }
         // Khách hàng (M3) bổ sung tại đây khi có màn hình quản lý.

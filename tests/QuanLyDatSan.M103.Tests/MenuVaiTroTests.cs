@@ -68,6 +68,8 @@ public class MenuVaiTroTests
     [InlineData("XacNhan")]
     [InlineData("TuChoi")]
     [InlineData("Huy")]
+    [InlineData("GhiCoc")]
+    [InlineData("HoanThanh")]
     public void TrangChiTietVaLoiXuLyDonGiuDungMotMucActive(string action)
     {
         var menu = MenuQuanTri.Lay(NguoiDung("NhanVien")).SelectMany(x => x.DanhSachMuc).ToArray();
