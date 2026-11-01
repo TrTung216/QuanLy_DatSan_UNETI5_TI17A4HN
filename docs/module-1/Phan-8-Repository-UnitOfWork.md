@@ -67,3 +67,19 @@ SQL tests cần LocalDB và chỉ dùng database test riêng có tên ngẫu nhi
 Kết quả ngày 28/10/2026 trên đúng nội dung PR: build Release 0 lỗi/0 cảnh báo; **355/355 test đạt, 0 bỏ qua** (M103 70, M104 24, M201 115, M4 141, M5 5), gồm 8 test SQL Server mới của M1. EF xác nhận không có pending model changes. Log/TRX local ở `QuanLyDatSan_UNETI5_DHTI17A4HN/obj/pr-tests.log` và `obj/pr-tests/` trong worktree; không commit artifact build.
 
 Kết quả 383 test trên workspace gốc trước đó có các thay đổi hồ sơ/menu local, không dùng thay kết quả của PR độc lập.
+
+## Tích hợp phần M1 local ngày 30/10/2026
+
+Sau PR #58 và #60, phần hồ sơ/menu trước đó còn ở local được khôi phục trên nền `main@7c08860` và đưa vào nhánh `feature/m1-dong-bo-ho-so-menu`.
+
+- `QuanLyTaiKhoanService` nhận `IDongHo`, tạo/bổ sung hồ sơ khách khi Admin cung cấp số điện thoại hợp lệ và đồng bộ họ tên/email trong transaction hiện có.
+- `TaiKhoanRepository` nạp `KhachHang` cùng tài khoản khi cập nhật; DTO đọc thêm cờ `CoHoSoKhachHang`. Đây là bổ sung nghiệp vụ hồ sơ, không phải khẳng định PR #58 trước đó đã có chức năng này.
+- Giữ UoW, ánh xạ lỗi và đăng ký repository mới của main; bỏ các đăng ký `IDongHo`/`IDatSanService` trùng trong `Program.cs`.
+- Khôi phục test hồ sơ/menu, cập nhật dependency đồng hồ tại các test khởi tạo service trực tiếp.
+- Không thay Entity, DbContext, snapshot hoặc migration; không chạy Update-Database trên database ứng dụng.
+
+Kiểm tra sau tích hợp tại local ngày 30/10: build Release 0 warning/0 error; **445/445 test pass, 0 skip** (M103 104; M104 24; M201 115; M4 197; M5 5), bật cả SQL Server M1/M2. Bằng chứng local ở `obj/stash-restore-20261030/` và `obj/stash-restore-20261030.log`.
+
+Các kết quả lịch sử ở phần trên vẫn thuộc phạm vi refactor trước đó. Kết quả build/test trên commit chuẩn bị push được ghi riêng trong PR. Giao diện desktop/mobile chưa được nghiệm thu lại trong lần tích hợp này.
+
+Hành vi hồ sơ: [Phần 6](Phan-6-Dong-bo-ho-so-khach.md). Menu và hướng dẫn nghiệm thu: [Phần 7](Phan-7-Tich-hop-menu.md).

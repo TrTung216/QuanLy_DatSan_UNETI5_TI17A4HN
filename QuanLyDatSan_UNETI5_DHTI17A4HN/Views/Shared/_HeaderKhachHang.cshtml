@@ -1,5 +1,5 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. header và menu của giao diện khách hàng; menu đổi theo trạng thái đăng nhập. *@
-@* M1: Trần Trọng Tùng; MSSV: 23103100202. Gom đăng nhập/đăng ký vào khu vực tài khoản bên phải. *@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp menu công khai/khách hàng, liên kết tài khoản và breakpoint thu gọn. *@
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
 @inject ITaiKhoanHienTai TaiKhoanHienTai
@@ -8,26 +8,22 @@
     var action = ViewContext.RouteData.Values["action"]?.ToString();
     var daDangNhap = User.Identity?.IsAuthenticated == true;
     var laKhachHang = daDangNhap && User.IsInRole(nameof(VaiTro.KhachHang));
-    // Chỉ thêm mục khi action và quyền phía server đã tồn tại; "CungNhomAction" giữ trạng thái đang chọn ở trang con.
-    var menu = new List<MucMenu>();
-    if (laKhachHang)
+    var menu = MenuKhachHang.Lay(User);
+    var trangTaiKhoan = new MucMenu("Thông tin tài khoản", "TaiKhoan", "ThongTin").KhopTrang(controller, action);
+    var tenVaiTro = TaiKhoanHienTai.VaiTro switch
     {
-        menu.Add(new MucMenu("Trang chủ", "KhachHang", "TrangChu"));
-        menu.Add(new MucMenu("Đặt sân", "DonDat", "Tao"));
-        menu.Add(new MucMenu("Lịch của tôi", "DonDat", "Index", ["ChiTiet"]));
-        menu.Add(new MucMenu("Hồ sơ", "HoSo", "Index", ["Sua"]));
-    }
-    else
-    {
-        menu.Add(new MucMenu("Trang chủ", "Home", "Index"));
-    }
+        VaiTro.KhachHang => "Khách hàng",
+        VaiTro.NhanVien => "Nhân viên",
+        VaiTro.Admin => "Quản trị viên",
+        _ => "Tài khoản"
+    };
     var trangDangNhap = string.Equals(controller, "TaiKhoan", StringComparison.OrdinalIgnoreCase)
         && string.Equals(action, "DangNhap", StringComparison.OrdinalIgnoreCase);
     var trangDangKy = string.Equals(controller, "KhachHang", StringComparison.OrdinalIgnoreCase)
         && string.Equals(action, "DangKy", StringComparison.OrdinalIgnoreCase);
 }
 <header class="ql-header">
-    <nav class="navbar navbar-expand-lg navbar-light" aria-label="Điều hướng chính">
+    <nav class="navbar navbar-expand-xl navbar-light" aria-label="Điều hướng chính">
         <div class="container">
             <a class="navbar-brand ql-brand" asp-area="" asp-controller="@(laKhachHang ? "KhachHang" : "Home")" asp-action="@(laKhachHang ? "TrangChu" : "Index")">
                 <span class="ql-brand-mark" aria-hidden="true">
@@ -59,8 +55,9 @@
                     @if (daDangNhap)
                     {
                         <div class="ql-account-info">
-                            <span class="ql-account-name">@TaiKhoanHienTai.HoTen</span>
-                            <span class="ql-account-role">Khách hàng</span>
+                            <a class="ql-account-name" asp-area="" asp-controller="TaiKhoan" asp-action="ThongTin"
+                               title="Thông tin tài khoản" aria-current="@(trangTaiKhoan ? "page" : null)">@TaiKhoanHienTai.HoTen</a>
+                            <span class="ql-account-role">@tenVaiTro</span>
                         </div>
                         <form id="dang-xuat" asp-area="" asp-controller="TaiKhoan" asp-action="DangXuat" method="post" asp-antiforgery="true">
                             <button type="submit" class="btn btn-outline-primary">Đăng xuất</button>

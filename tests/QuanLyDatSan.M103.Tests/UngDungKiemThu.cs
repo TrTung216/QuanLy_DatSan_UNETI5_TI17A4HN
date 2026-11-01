@@ -37,6 +37,14 @@ public sealed class UngDungKiemThu : WebApplicationFactory<TaiKhoanController>
                 VaiTro INTEGER NOT NULL CHECK(VaiTro IN (1,2,3)),
                 TrangThai INTEGER NOT NULL CHECK(TrangThai IN (0,1))
             );
+            CREATE TABLE KhachHang (
+                MaKhachHang INTEGER PRIMARY KEY AUTOINCREMENT,
+                MaTaiKhoan INTEGER NOT NULL UNIQUE REFERENCES TaiKhoan(MaTaiKhoan) ON DELETE RESTRICT,
+                HoTen TEXT NOT NULL, Email TEXT NOT NULL, SoDienThoai TEXT NOT NULL,
+                NgaySinh TEXT NULL, GioiTinh INTEGER NULL, DiaChi TEXT NULL,
+                NgayDangKy TEXT NOT NULL, DiemTichLuy INTEGER NOT NULL CHECK(DiemTichLuy >= 0),
+                TrangThai INTEGER NOT NULL CHECK(TrangThai IN (0,1)), GhiChu TEXT NULL
+            );
             """;
         command.ExecuteNonQuery();
     }

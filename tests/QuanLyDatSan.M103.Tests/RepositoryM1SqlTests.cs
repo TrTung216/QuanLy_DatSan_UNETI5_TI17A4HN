@@ -157,7 +157,7 @@ public class RepositoryM1SqlTests(M1SqlFixture fixture) : IClassFixture<M1SqlFix
         {
             await using var db = fixture.Db();
             var service = new QuanLyTaiKhoanService(new TaiKhoanRepository(db), DonVi(db), new PasswordHasher<TaiKhoan>(),
-                new Actor(actor), phien);
+                new Actor(actor), phien, new DongHoTest());
             await start.Task;
             return await service.SuaAsync(target, new("Staff", "staff@example.test", VaiTro.NhanVien, TrangThaiTaiKhoan.HoatDong), default);
         }
@@ -172,6 +172,12 @@ public class RepositoryM1SqlTests(M1SqlFixture fixture) : IClassFixture<M1SqlFix
 
     private static TaiKhoan TaiKhoanMoi(string ten) => new()
     { TenDangNhap = ten, MatKhau = "test-only-not-login", HoTen = "Test", Email = "test@example.test", VaiTro = VaiTro.NhanVien };
+
+    private sealed class DongHoTest : IDongHo
+    {
+        public DateTime BayGio => new(2030, 1, 1, 8, 0, 0);
+        public DateOnly HomNay => DateOnly.FromDateTime(BayGio);
+    }
 
     private sealed class Actor(int id) : ITaiKhoanHienTai
     {

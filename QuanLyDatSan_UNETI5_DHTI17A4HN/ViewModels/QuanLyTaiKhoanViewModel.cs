@@ -21,6 +21,10 @@ public class TaiKhoanThongTinViewModel
     [EnumDataType(typeof(VaiTro), ErrorMessage = "Vai trò không hợp lệ.")]
     [Display(Name = "Vai trò")]
     public VaiTro? VaiTro { get; set; }
+
+    [StringLength(20, ErrorMessage = "Số điện thoại tối đa 20 ký tự.")]
+    [Display(Name = "Số điện thoại để tạo hồ sơ khách hàng")]
+    public string? SoDienThoai { get; set; }
 }
 
 public class TaiKhoanTaoViewModel : TaiKhoanThongTinViewModel

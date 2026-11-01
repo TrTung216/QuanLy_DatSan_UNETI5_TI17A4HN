@@ -43,7 +43,8 @@ public class QuanLyTaiKhoanTests
 
     private static Dictionary<string, string> SuaForm(string vaiTro = "2", string trangThai = "1") => new()
     {
-        ["HoTen"] = "Họ tên cập nhật", ["Email"] = "capnhat@example.test", ["VaiTro"] = vaiTro, ["TrangThai"] = trangThai
+        ["HoTen"] = "Họ tên cập nhật", ["Email"] = "capnhat@example.test", ["VaiTro"] = vaiTro, ["TrangThai"] = trangThai,
+        ["SoDienThoai"] = "0912345678"
     };
 
     private static async Task<HttpResponseMessage> GuiAsync(HttpClient client, string path, Dictionary<string, string> form)
