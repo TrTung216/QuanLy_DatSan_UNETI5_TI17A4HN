@@ -33,13 +33,61 @@ public class TraCuuSanViewModel : IValidatableObject
 
     public int Trang { get; set; } = 1;
 
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    [Display(Name = "Ngày sử dụng")]
+    public DateOnly? NgaySuDung { get; set; }
+
+    [Display(Name = "Giờ bắt đầu")]
+    public TimeOnly? GioBatDau { get; set; }
+
+    [Display(Name = "Giờ kết thúc")]
+    public TimeOnly? GioKetThuc { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(
+    ValidationContext validationContext)
     {
-        if (GiaTu.HasValue && GiaTu != decimal.Truncate(GiaTu.Value))
-            yield return new("Giá từ phải là số nguyên theo đồng.", [nameof(GiaTu)]);
-        if (GiaDen.HasValue && GiaDen != decimal.Truncate(GiaDen.Value))
-            yield return new("Giá đến phải là số nguyên theo đồng.", [nameof(GiaDen)]);
+        if (GiaTu.HasValue &&
+            GiaTu != decimal.Truncate(GiaTu.Value))
+        {
+            yield return new ValidationResult(
+                "Giá từ phải là số nguyên theo đồng.",
+                [nameof(GiaTu)]);
+        }
+
+        if (GiaDen.HasValue &&
+            GiaDen != decimal.Truncate(GiaDen.Value))
+        {
+            yield return new ValidationResult(
+                "Giá đến phải là số nguyên theo đồng.",
+                [nameof(GiaDen)]);
+        }
+
         if (GiaTu.HasValue && GiaDen.HasValue && GiaTu > GiaDen)
-            yield return new("Giá đến phải lớn hơn hoặc bằng giá từ.", [nameof(GiaDen)]);
+        {
+            yield return new ValidationResult(
+                "Giá đến phải lớn hơn hoặc bằng giá từ.",
+                [nameof(GiaDen)]);
+        }
+
+        var coNhapThoiGian = NgaySuDung.HasValue
+            || GioBatDau.HasValue
+            || GioKetThuc.HasValue;
+
+        if (coNhapThoiGian &&
+            (!NgaySuDung.HasValue
+            || !GioBatDau.HasValue
+            || !GioKetThuc.HasValue))
+        {
+            yield return new ValidationResult(
+                "Vui lòng nhập đủ ngày sử dụng, giờ bắt đầu và giờ kết thúc.",
+                [nameof(NgaySuDung), nameof(GioBatDau), nameof(GioKetThuc)]);
+        }
+
+        if (GioBatDau.HasValue && GioKetThuc.HasValue
+            && GioKetThuc.Value <= GioBatDau.Value)
+        {
+            yield return new ValidationResult(
+                "Giờ kết thúc phải sau giờ bắt đầu trong cùng ngày.",
+                [nameof(GioKetThuc)]);
+        }
     }
 }

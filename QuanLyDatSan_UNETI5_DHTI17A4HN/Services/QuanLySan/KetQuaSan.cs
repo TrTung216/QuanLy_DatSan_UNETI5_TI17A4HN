@@ -10,7 +10,9 @@ public enum MaLoiSan
     DuLieuLienQuanThayDoi,
     DangDuocThamChieu,
     DaBiXoa,
-    GioThueKhongHopLe
+    GioThueKhongHopLe,
+    BatDauKhongTuongLai,
+    KhoangGioKhongHopLe
 }
 
 // Chỉ tạo qua factory: thành công có dữ liệu; thất bại có một mã lỗi hợp lệ.
