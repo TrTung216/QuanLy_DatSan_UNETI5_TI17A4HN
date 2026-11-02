@@ -13,8 +13,15 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyKhachHang;
 public sealed class DangKyKhachService(ITaiKhoanRepository taiKhoanRepository, ITrangChuKhachRepository repository,
     IDonViCongViec donViCongViec, IPasswordHasher<TaiKhoan> hasher, IDongHo dongHo, ITaiKhoanHienTai hienTai) : IDangKyKhachService
 {
-    public async Task<TrangChuKhachDto?> LayTrangChuAsync(CancellationToken cancellationToken) =>
-        hienTai.MaTaiKhoan is { } id ? await repository.LayTrangChuAsync(id, dongHo.BayGio, cancellationToken) : null;
+    public async Task<TrangChuKhachDto?> LayTrangChuAsync(CancellationToken cancellationToken)
+    {
+        if (hienTai.MaTaiKhoan is { } id)
+        {
+            return await repository.LayTrangChuAsync(id, dongHo.BayGio, cancellationToken);
+        }
+
+        return null;
+    }
 
     public async Task<MaLoiDangKyKhach> DangKyAsync(DangKyKhach yeuCau, CancellationToken cancellationToken)
     {
@@ -31,6 +38,16 @@ public sealed class DangKyKhachService(ITaiKhoanRepository taiKhoanRepository, I
         if (await taiKhoanRepository.TrungTenAsync(tenDangNhap, cancellationToken)) return MaLoiDangKyKhach.TrungTen;
         var hoTen = yeuCau.HoTen.Trim();
         var email = yeuCau.Email.Trim();
+        string? diaChi;
+        if (string.IsNullOrWhiteSpace(yeuCau.DiaChi))
+        {
+            diaChi = null;
+        }
+        else
+        {
+            diaChi = yeuCau.DiaChi.Trim();
+        }
+
         var taiKhoan = new TaiKhoan
         {
             TenDangNhap = tenDangNhap,
@@ -47,7 +64,7 @@ public sealed class DangKyKhachService(ITaiKhoanRepository taiKhoanRepository, I
             SoDienThoai = yeuCau.SoDienThoai.Trim(),
             NgaySinh = yeuCau.NgaySinh,
             GioiTinh = yeuCau.GioiTinh,
-            DiaChi = string.IsNullOrWhiteSpace(yeuCau.DiaChi) ? null : yeuCau.DiaChi.Trim(),
+            DiaChi = diaChi,
             NgayDangKy = dongHo.BayGio,
             DiemTichLuy = 0,
             TrangThai = TrangThaiKhachHang.HoatDong

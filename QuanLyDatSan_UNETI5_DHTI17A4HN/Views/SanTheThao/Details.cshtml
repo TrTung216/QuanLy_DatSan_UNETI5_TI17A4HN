@@ -5,6 +5,18 @@
 @{
     ViewData["Title"] = "Chi tiết sân";
     var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
+    var tienIch = Model.TienIch;
+    if (string.IsNullOrWhiteSpace(tienIch))
+    {
+        tienIch = "Chưa cập nhật";
+    }
+
+    var ghiChu = Model.GhiChu;
+    if (string.IsNullOrWhiteSpace(ghiChu))
+    {
+        ghiChu = "Không có";
+    }
+
     var trangThai = Model.TrangThai switch
     {
         TrangThaiSan.HoatDong => "Hoạt động",
@@ -22,7 +34,7 @@
         <dt class="col-sm-3">Loại sân</dt><dd class="col-sm-9">@Model.TenLoai</dd>
         <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9 text-break">@Model.DiaChi</dd>
         <dt class="col-sm-3">Tiện ích</dt>
-        <dd class="col-sm-9 text-break">@(string.IsNullOrWhiteSpace(Model.TienIch) ? "Chưa cập nhật" : Model.TienIch)</dd>
+        <dd class="col-sm-9 text-break">@tienIch</dd>
         <dt class="col-sm-3">Giá giờ thường T2–T6</dt><dd class="col-sm-9">@Model.DonGia.ToString("N0", vanHoa) ₫/giờ</dd>
         <dt class="col-sm-3">Cao điểm T2–T6 (18h–21h)</dt><dd class="col-sm-9">@((Model.DonGiaCaoDiem ?? Model.DonGia).ToString("N0", vanHoa)) ₫/giờ</dd>
         <dt class="col-sm-3">T7 và CN cả ngày</dt><dd class="col-sm-9">@((Model.DonGiaCuoiTuan ?? Model.DonGia).ToString("N0", vanHoa)) ₫/giờ</dd>
@@ -32,7 +44,7 @@
         <dt class="col-sm-3">Ngày bảo trì</dt>
         <dd class="col-sm-9">@(Model.NgayBaoTri?.ToString("dd/MM/yyyy") ?? "Chưa có lịch")</dd>
         <dt class="col-sm-3">Ghi chú</dt>
-        <dd class="col-sm-9 text-break">@(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có" : Model.GhiChu)</dd>
+        <dd class="col-sm-9 text-break">@ghiChu</dd>
     </dl>
     <h2 class="h5 mt-4">Tính thử tiền thuê</h2>
     <p class="form-text">Giá được chia theo từng khung giờ. Đây là tiền thuê dự kiến; chưa kiểm tra sân trống và chưa gồm dịch vụ.</p>

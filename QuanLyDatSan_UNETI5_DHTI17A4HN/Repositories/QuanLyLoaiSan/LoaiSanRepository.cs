@@ -20,7 +20,15 @@ public class LoaiSanRepository(ApplicationDbContext db) : ILoaiSanRepository
         var tongSo = await query.CountAsync(cancellationToken);
         var tongTrang = Math.Max(1, (int)Math.Ceiling(tongSo / (double)SoDongMoiTrang));
         trang = Math.Clamp(trang, 1, tongTrang);
-        var sapXepQuery = sapXep == "ten_giam" ? query.OrderByDescending(x => x.TenLoai) : query.OrderBy(x => x.TenLoai);
+        IOrderedQueryable<LoaiSan> sapXepQuery;
+        if (sapXep == "ten_giam")
+        {
+            sapXepQuery = query.OrderByDescending(x => x.TenLoai);
+        }
+        else
+        {
+            sapXepQuery = query.OrderBy(x => x.TenLoai);
+        }
         var danhSach = await Chieu(sapXepQuery.ThenBy(x => x.MaLoaiSan)
             .Skip((trang - 1) * SoDongMoiTrang).Take(SoDongMoiTrang)).ToListAsync(cancellationToken);
         return new(danhSach, trang, tongTrang, tongSo);

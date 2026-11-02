@@ -56,8 +56,15 @@
                                 @foreach (var muc in nhom.DanhSachMuc)
                                 {
                                     var hienTai = muc.KhopTrang(controller, action);
+                                    var lopTrangHienTai = "";
+                                    string? ariaTrangHienTai = null;
+                                    if (hienTai)
+                                    {
+                                        lopTrangHienTai = "active";
+                                        ariaTrangHienTai = "page";
+                                    }
                                     <li>
-                                        <a class="ql-side-link @(hienTai ? "active" : "")" aria-current="@(hienTai ? "page" : null)"
+                                        <a class="ql-side-link @lopTrangHienTai" aria-current="@ariaTrangHienTai"
                                            asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">@muc.Ten</a>
                                     </li>
                                 }

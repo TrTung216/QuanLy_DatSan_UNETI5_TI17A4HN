@@ -1,4 +1,5 @@
-// Codex: hợp đồng truy cập dữ liệu, không lộ kiểu EF.
+// M5: Nguyễn Hữu Quang; MSSV: 23103100184
+// Nội dung: hợp đồng truy cập dữ liệu danh mục dịch vụ.
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;

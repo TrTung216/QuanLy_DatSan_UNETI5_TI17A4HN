@@ -7,14 +7,27 @@
     var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
     var laQuanLy = User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien)));
     var coDieuKien = !string.IsNullOrWhiteSpace(Model.TuKhoa) || Model.MaLoaiSan.HasValue
-        || Model.TrangThai.HasValue || Model.GiaTu.HasValue || Model.GiaDen.HasValue
-        || Model.NgaySuDung.HasValue || Model.GioBatDau.HasValue || Model.GioKetThuc.HasValue;
+        || Model.TrangThai.HasValue || Model.GiaTu.HasValue || Model.GiaDen.HasValue;
+    var trangThaiLoc = "";
+    if (Model.TrangThai.HasValue)
+    {
+        trangThaiLoc = ((int)Model.TrangThai.Value).ToString(CultureInfo.InvariantCulture);
+    }
+
+    var tieuDeTrong = "Chưa có sân để hiển thị";
+    var moTaTrong = "Danh sách sẽ xuất hiện khi có sân được cập nhật.";
+    if (coDieuKien)
+    {
+        tieuDeTrong = "Không có sân phù hợp";
+        moTaTrong = "Thử thay đổi điều kiện tìm kiếm hoặc bấm Đặt lại.";
+    }
+
     // Giữ mọi điều kiện ở các liên kết phân trang; tiền dùng định dạng URL không có dấu phân cách.
     var thamSoTrang = new Dictionary<string, string>
     {
         ["tuKhoa"] = Model.TuKhoa ?? "",
         ["maLoaiSan"] = Model.MaLoaiSan?.ToString(CultureInfo.InvariantCulture) ?? "",
-        ["trangThai"] = Model.TrangThai.HasValue ? ((int)Model.TrangThai.Value).ToString(CultureInfo.InvariantCulture) : "",
+        ["trangThai"] = trangThaiLoc,
         ["giaTu"] = Model.GiaTu?.ToString("0", CultureInfo.InvariantCulture) ?? "",
         ["giaDen"] = Model.GiaDen?.ToString("0", CultureInfo.InvariantCulture) ?? "",
         ["sapXep"] = Model.SapXep,
@@ -114,8 +127,8 @@
     else if (Model.DanhSachSan.Count == 0)
     {
         <div class="ql-empty">
-            <h2 class="h5">@(coDieuKien ? "Không có sân phù hợp" : "Chưa có sân để hiển thị")</h2>
-            <p class="mb-0">@(coDieuKien ? "Thử thay đổi điều kiện tìm kiếm hoặc bấm Đặt lại." : "Danh sách sẽ xuất hiện khi có sân được cập nhật.")</p>
+            <h2 class="h5">@tieuDeTrong</h2>
+            <p class="mb-0">@moTaTrong</p>
         </div>
     }
     else

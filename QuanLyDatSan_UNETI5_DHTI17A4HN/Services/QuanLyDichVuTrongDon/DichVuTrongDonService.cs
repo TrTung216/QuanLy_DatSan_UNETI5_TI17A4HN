@@ -6,6 +6,7 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Chung;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon;
@@ -24,7 +25,15 @@ public class DichVuTrongDonService(IDichVuTrongDonRepository repository, IDonViC
         if (trangThai is null) return null;
         var dong = await repository.LayDongAsync(maDatSan, cancellationToken);
         var choPhepSua = ChoPhepSua(trangThai.Value);
-        var coTheThem = choPhepSua ? await repository.LayDichVuHoatDongAsync(cancellationToken) : [];
+        List<DichVuDoc> coTheThem;
+        if (choPhepSua)
+        {
+            coTheThem = await repository.LayDichVuHoatDongAsync(cancellationToken);
+        }
+        else
+        {
+            coTheThem = [];
+        }
         var tongTien = tinhTien.TinhTienDichVu(dong.Select(x => new DongDichVu(x.SoLuong, x.DonGia)));
         return new ChiTietDichVuTrongDon(maDatSan, trangThai.Value, choPhepSua, tongTien, dong, coTheThem);
     }

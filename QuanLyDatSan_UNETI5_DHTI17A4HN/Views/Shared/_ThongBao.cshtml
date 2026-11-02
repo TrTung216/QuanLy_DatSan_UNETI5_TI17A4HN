@@ -13,7 +13,13 @@
 {
     if (TempData[muc.Key] is string noiDung && !string.IsNullOrWhiteSpace(noiDung))
     {
-        <div class="alert alert-@muc.Css ql-notice" role="@(muc.Key == "Error" ? "alert" : "status")">
+        var vaiTroThongBao = "status";
+        if (muc.Key == "Error")
+        {
+            vaiTroThongBao = "alert";
+        }
+
+        <div class="alert alert-@muc.Css ql-notice" role="@vaiTroThongBao">
             <strong>@muc.Nhan:</strong> @noiDung
         </div>
     }

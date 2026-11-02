@@ -67,7 +67,12 @@ public class SanTheThaoRepository(ApplicationDbContext db) : ISanTheThaoReposito
     {
         var san = await LaySanDuocXem(chiHoatDong).Include(x => x.LoaiSan)
             .SingleOrDefaultAsync(x => x.MaSan == maSan, cancellationToken);
-        return san is null ? null : ThanhDuLieuDoc(san);
+        if (san is null)
+        {
+            return null;
+        }
+
+        return ThanhDuLieuDoc(san);
     }
 
     public async Task<bool> KiemTraLoaiSanAsync(int? maLoaiSan, int? maLoaiSanHienTai, CancellationToken cancellationToken)

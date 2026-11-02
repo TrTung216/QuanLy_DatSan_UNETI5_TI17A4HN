@@ -1,4 +1,5 @@
-// Codex: tách truy vấn từ service DichVu, giữ nguyên bộ lọc và tracking.
+// M5: Nguyễn Hữu Quang; MSSV: 23103100184
+// Nội dung: truy vấn danh mục dịch vụ và chuẩn bị thay đổi dữ liệu.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
