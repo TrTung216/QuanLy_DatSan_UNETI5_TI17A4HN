@@ -17,8 +17,9 @@
     }
 
     // Chỉ thêm mục khi action và quyền phía server đã tồn tại; "CungNhomAction" giữ trạng thái đang chọn ở trang con.
-    var menu = new List<MucMenu>();
-    if (laKhachHang)
+    var menu = MenuKhachHang.Lay(User);
+    var trangTaiKhoan = new MucMenu("Thông tin tài khoản", "TaiKhoan", "ThongTin").KhopTrang(controller, action);
+    var tenVaiTro = TaiKhoanHienTai.VaiTro switch
     {
         VaiTro.KhachHang => "Khách hàng",
         VaiTro.NhanVien => "Nhân viên",
