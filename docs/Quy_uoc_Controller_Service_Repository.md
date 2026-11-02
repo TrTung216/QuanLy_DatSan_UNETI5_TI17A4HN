@@ -18,7 +18,7 @@
 - Giữ một project ASP.NET Core MVC, EF Core và SQL Server hiện có. Không thêm framework kiến trúc hoặc Generic Repository chỉ để đủ tầng.
 - Với phần đã chuyển đổi theo tài liệu này, thay quy định Service dùng trực tiếp DbContext tại mục phân tầng của quy ước nhóm v1.4. Các quy định nghiệp vụ, quyền, Git, tác giả và kiểm thử vẫn giữ nguyên.
 - Phần chưa chuyển đổi được tiếp tục dùng Service → DbContext trong giai đoạn bàn giao. Không chỉ xóa `using` để đạt checklist hoặc buộc đổi toàn bộ module cùng lúc.
-- Không thay các quyết định nghiệp vụ trong [hợp đồng M3/M4/M5](https://github.com/TrTung216/QuanLy_DatSan_UNETI5_TI17A4HN/pull/55), [quy ước cọc](https://github.com/TrTung216/QuanLy_DatSan_UNETI5_TI17A4HN/pull/55) và [phân công](https://github.com/TrTung216/QuanLy_DatSan_UNETI5_TI17A4HN/pull/55). Khi chuyển đổi phải giữ chữ ký service, DTO, mã lỗi và hành vi đã thống nhất, trừ thay đổi được nêu rõ và cập nhật toàn bộ caller.
+- Không thay các quyết định nghiệp vụ trong [hợp đồng M3/M4/M5](Hop_dong_M3_M4_M5.md), [quy ước cọc](Quy_uoc_dat_coc_chuyen_khoan.md) và [phân công](Phan_cong_chuyen_khoan_QR.md). Khi chuyển đổi phải giữ chữ ký service, DTO, mã lỗi và hành vi đã thống nhất, trừ thay đổi được nêu rõ và cập nhật toàn bộ caller.
 - Refactor thuần túy không thay Entity/schema, không tạo migration, không đổi route, quyền, công thức tiền, trạng thái hoặc thông báo hiện có.
 
 ## 2. Luồng gọi và trách nhiệm

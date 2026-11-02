@@ -165,11 +165,11 @@ public partial class TrangThaiSanTests
         using var app = await TaoAppAsync(); using var scope = app.Services.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ISanTheThaoService>();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        service = new SanTheThaoService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan.SanTheThaoRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TaiKhoanThu());
+        service = new SanTheThaoService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan.SanTheThaoRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TaiKhoanThu(), scope.ServiceProvider.GetRequiredService<IDatSanService>());
         var gia = await service.TinhGiaAsync(1, DateOnly.Parse(ngay), TimeOnly.Parse(dau), TimeOnly.Parse(cuoi), default);
         Assert.True(gia.ThanhCong);
         Assert.Equal((decimal)tien, gia.DuLieu);
-        Assert.Equal(MaLoiSan.KhongTonTai, (await new SanTheThaoService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan.SanTheThaoRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TaiKhoanThu { VaiTro = null }).TinhGiaAsync(1, DateOnly.Parse(ngay), TimeOnly.Parse(dau), TimeOnly.Parse(cuoi), default)).MaLoi);
+        Assert.Equal(MaLoiSan.KhongTonTai, (await new SanTheThaoService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan.SanTheThaoRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TaiKhoanThu { VaiTro = null }, scope.ServiceProvider.GetRequiredService<IDatSanService>()).TinhGiaAsync(1, DateOnly.Parse(ngay), TimeOnly.Parse(dau), TimeOnly.Parse(cuoi), default)).MaLoi);
     }
 
     [Theory]
@@ -215,7 +215,7 @@ public partial class TrangThaiSanTests
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseSqlite(db.Database.GetDbConnection()).AddInterceptors(new LoiLuuThu()).Options;
         await using var dbLoi = new ApplicationDbContext(options);
-        var service = new SanTheThaoService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan.SanTheThaoRepository(dbLoi), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(dbLoi), new TaiKhoanThu());
+        var service = new SanTheThaoService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan.SanTheThaoRepository(dbLoi), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(dbLoi), new TaiKhoanThu(), scope.ServiceProvider.GetRequiredService<IDatSanService>());
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.TaoAsync(YeuCauHopLe(), default));
         Assert.Equal(2, await db.SanTheThaos.CountAsync());
     }

@@ -43,7 +43,8 @@ public class QuanLyTaiKhoanController(IQuanLyTaiKhoanService service, ITaiKhoanH
         var ketQua = await service.TaoAsync(new TaoTaiKhoan
         {
             TenDangNhap = model.TenDangNhap, MatKhau = model.MatKhau,
-            HoTen = model.HoTen, Email = model.Email, VaiTro = model.VaiTro!.Value
+            HoTen = model.HoTen, Email = model.Email, VaiTro = model.VaiTro!.Value,
+            SoDienThoai = model.SoDienThoai
         }, cancellationToken);
         return PhanHoi(ketQua, model, "Đã tạo tài khoản.");
     }
@@ -69,7 +70,7 @@ public class QuanLyTaiKhoanController(IQuanLyTaiKhoanService service, ITaiKhoanH
         NapThongTinForm(taiKhoan);
         if (!ModelState.IsValid) return View(model);
         var ketQua = await service.SuaAsync(id, new SuaTaiKhoan(
-            model.HoTen, model.Email, model.VaiTro!.Value, model.TrangThai!.Value), cancellationToken);
+            model.HoTen, model.Email, model.VaiTro!.Value, model.TrangThai!.Value, model.SoDienThoai), cancellationToken);
         return PhanHoi(ketQua, model, "Đã cập nhật tài khoản.");
     }
 
@@ -78,6 +79,7 @@ public class QuanLyTaiKhoanController(IQuanLyTaiKhoanService service, ITaiKhoanH
         ViewData["MaTaiKhoan"] = taiKhoan.MaTaiKhoan;
         ViewData["TenDangNhap"] = taiKhoan.TenDangNhap;
         ViewData["LaTaiKhoanHienTai"] = taiKhoan.MaTaiKhoan == hienTai.MaTaiKhoan;
+        ViewData["CoHoSoKhachHang"] = taiKhoan.CoHoSoKhachHang;
     }
 
     private IActionResult PhanHoi(KetQuaQuanLyTaiKhoan ketQua, object model, string thongBao)
@@ -98,6 +100,8 @@ public class QuanLyTaiKhoanController(IQuanLyTaiKhoanService service, ITaiKhoanH
                 MaLoiTaiKhoan.TuKhoaHoacHaQuyen => (string.Empty, "Bạn không thể tự khóa hoặc hạ quyền tài khoản đang đăng nhập."),
                 MaLoiTaiKhoan.XungDotDuLieu => (string.Empty, "Có cập nhật đồng thời. Vui lòng tải lại trang và thử lại."),
                 MaLoiTaiKhoan.DuLieuKhongHopLe => (string.Empty, "Thông tin tài khoản không hợp lệ."),
+                MaLoiTaiKhoan.SoDienThoaiHoSoKhongHopLe => (nameof(TaiKhoanThongTinViewModel.SoDienThoai),
+                    "Vui lòng nhập số điện thoại thật, hợp lệ để tạo hồ sơ khách hàng, ví dụ 0912345678."),
                 _ => throw new InvalidOperationException("Mã lỗi tài khoản chưa được ánh xạ.")
             };
             ModelState.AddModelError(truong, noiDung);
