@@ -1,14 +1,11 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: khai báo hợp đồng service dùng chung M2/M3/M4 cho tra cứu khả dụng theo lô, tạo đơn, kiểm tra trùng lịch, khóa sân và chuyển trạng thái.
-// Đọc đơn cá nhân/quản lý kèm RowVersion để hủy/xử lý an toàn; lọc, sắp xếp, phân trang và chọn sân.
-// Bên gọi xác thực vai trò; thao tác khách hủy lấy mã tài khoản từ phiên đăng nhập, service kiểm tra chủ đơn.
+// Hợp đồng tra cứu khả dụng, tạo và xử lý đơn dùng chung M2/M3/M4.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
 public interface IDatSanService
 {
-    // M2 tra cứu tối đa 200 mã sân/lần; kết quả không giữ chỗ. Lọc sân khả dụng trước khi phân trang.
     Task<KetQuaKhaDungSan> KiemTraKhaDungAsync(IReadOnlyCollection<int> maSans,
         KhoangGioTraCuuSan khoangGio, CancellationToken cancellationToken);
 
@@ -24,11 +21,11 @@ public interface IDatSanService
     Task<KetQuaXuLyDon> KhachHangHuyDonAsync(HuyDonYeuCau yeuCau, int maTaiKhoan, CancellationToken cancellationToken);
     Task<KetQuaXuLyDon> NhanVienHuyDonAsync(HuyDonYeuCau yeuCau,
         CancellationToken cancellationToken);
+    Task<KetQuaXuLyDon> GhiCocAsync(GhiCocYeuCau yeuCau, CancellationToken cancellationToken);
     Task<KetQuaXuLyDon> HoanThanhDonAsync(HoanThanhDonYeuCau yeuCau, CancellationToken cancellationToken);
     Task<DanhSachDonDto> LayDanhSachCaNhanAsync(int maTaiKhoan, TrangThaiDatSan? trangThai, int trang, CancellationToken cancellationToken);
     Task<ChiTietDonDto?> LayChiTietCaNhanAsync(int maTaiKhoan, int id, CancellationToken cancellationToken);
     Task<IReadOnlyList<SanChonDto>> LayLuaChonSanAsync(CancellationToken cancellationToken);
-    // Bên gọi phải kiểm tra quyền Admin/NhanVien trước khi tra cứu đơn quản lý.
     Task<DanhSachDonQuanLyDto> LayDanhSachQuanLyAsync(LocDonQuanLy loc, CancellationToken cancellationToken);
     Task<ChiTietDonQuanLyDto?> LayChiTietQuanLyAsync(int id, CancellationToken cancellationToken);
     Task<IReadOnlyList<LoaiSanLocDto>> LayLoaiSanLocDonAsync(CancellationToken cancellationToken);

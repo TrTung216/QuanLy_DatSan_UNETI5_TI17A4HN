@@ -99,4 +99,4 @@ Nội dung PR theo mẫu: [PR-M4-03.md](PR-M4-03.md).
 Phần code tại HEAD `b58db79` đã được nghiệm thu kỹ thuật ngày 16/10/2026, gồm kiểm tra Chrome desktop/mobile.
 Lượt nghiệm thu chỉ cập nhật tài liệu/bằng chứng, chưa commit/push/tạo PR hoặc đóng issue.
 Còn đối chiếu main trước merge, review của thành viên khác và merge theo quy trình nhóm.
-Issue #24 (ghi cọc, hoàn thành gắn tính tiền M5-03) là công việc tiếp theo.
+Issue #24 đã được triển khai trong workspace ngày 20/10/2026: xem [M4-04 — Ghi cọc và hoàn thành](M4-04-Ghi-coc-va-hoan-thanh-don.md).

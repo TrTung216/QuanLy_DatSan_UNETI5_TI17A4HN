@@ -8,6 +8,14 @@
     var action = ViewContext.RouteData.Values["action"]?.ToString();
     var daDangNhap = User.Identity?.IsAuthenticated == true;
     var laKhachHang = daDangNhap && User.IsInRole(nameof(VaiTro.KhachHang));
+    var controllerThuongHieu = "Home";
+    var actionThuongHieu = "Index";
+    if (laKhachHang)
+    {
+        controllerThuongHieu = "KhachHang";
+        actionThuongHieu = "TrangChu";
+    }
+
     // Chỉ thêm mục khi action và quyền phía server đã tồn tại; "CungNhomAction" giữ trạng thái đang chọn ở trang con.
     var menu = new List<MucMenu>();
     if (laKhachHang)
@@ -29,7 +37,7 @@
 <header class="ql-header">
     <nav class="navbar navbar-expand-lg navbar-light" aria-label="Điều hướng chính">
         <div class="container">
-            <a class="navbar-brand ql-brand" asp-area="" asp-controller="@(laKhachHang ? "KhachHang" : "Home")" asp-action="@(laKhachHang ? "TrangChu" : "Index")">
+            <a class="navbar-brand ql-brand" asp-area="" asp-controller="@controllerThuongHieu" asp-action="@actionThuongHieu">
                 <span class="ql-brand-mark" aria-hidden="true">
                     <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6">
                         <rect x="4" y="3" width="24" height="26" rx="3" />
@@ -49,8 +57,15 @@
                     @foreach (var muc in menu)
                     {
                         var hienTai = muc.KhopTrang(controller, action);
+                        var lopTrangHienTai = "";
+                        string? ariaTrangHienTai = null;
+                        if (hienTai)
+                        {
+                            lopTrangHienTai = "active";
+                            ariaTrangHienTai = "page";
+                        }
                         <li class="nav-item">
-                            <a class="nav-link @(hienTai ? "active" : "")" aria-current="@(hienTai ? "page" : null)"
+                            <a class="nav-link @lopTrangHienTai" aria-current="@ariaTrangHienTai"
                                asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">@muc.Ten</a>
                         </li>
                     }
@@ -68,10 +83,21 @@
                     }
                     else
                     {
+                        string? ariaDangNhap = null;
+                        if (trangDangNhap)
+                        {
+                            ariaDangNhap = "page";
+                        }
+
+                        string? ariaDangKy = null;
+                        if (trangDangKy)
+                        {
+                            ariaDangKy = "page";
+                        }
                         <a class="btn btn-primary" asp-area="" asp-controller="TaiKhoan" asp-action="DangNhap"
-                           aria-current="@(trangDangNhap ? "page" : null)">Đăng nhập</a>
+                           aria-current="@ariaDangNhap">Đăng nhập</a>
                         <a class="btn btn-outline-primary" asp-area="" asp-controller="KhachHang" asp-action="DangKy"
-                           aria-current="@(trangDangKy ? "page" : null)">Đăng ký</a>
+                           aria-current="@ariaDangKy">Đăng ký</a>
                     }
                 </div>
             </div>

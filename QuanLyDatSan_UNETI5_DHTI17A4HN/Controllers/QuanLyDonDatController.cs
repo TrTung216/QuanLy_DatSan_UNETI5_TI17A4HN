@@ -1,6 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: M4-02/03 - tra cứu đơn và POST xác nhận, từ chối, hủy cho Admin/NhanVien.
-// Ánh xạ DTO/ViewModel, kiểm tra dữ liệu và RowVersion; giữ lý do khi lỗi, nạp lại trạng thái và chuyển hướng nội bộ.
+// Nhận yêu cầu quản lý đơn, kiểm tra dữ liệu/RowVersion và gọi service; giữ nội dung nhập khi lỗi.
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,7 +39,12 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
     public async Task<IActionResult> ChiTiet(int id, string? quayLai, CancellationToken cancellationToken)
     {
         var model = await LayChiTietViewModelAsync(id, quayLai, cancellationToken);
-        return model is null ? NotFound() : View(model);
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        return View(model);
     }
 
     private async Task<ChiTietDonQuanLyViewModel?> LayChiTietViewModelAsync(int id, string? quayLai,
@@ -53,6 +57,12 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         var laDonCho = don.TrangThai == TrangThaiDatSan.ChoXuLy;
         var laDonXacNhan = don.TrangThai == TrangThaiDatSan.DangXuLy;
         var chuaBatDau = don.GioBatDau > dongHo.BayGio;
+        var quayLaiAnToan = Url.Action(nameof(DanhSach))!;
+        if (Url.IsLocalUrl(quayLai))
+        {
+            quayLaiAnToan = quayLai!;
+        }
+
         return new ChiTietDonQuanLyViewModel
         {
             MaDatSan = don.MaDatSan, MaKhachHang = result.MaKhachHang,
@@ -63,11 +73,15 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
             NgayXacNhan = don.NgayXacNhan, NgayHuy = don.NgayHuy, NgayHoanThanh = don.NgayHoanThanh,
             LyDoHuy = don.LyDoHuy, TienSan = don.TienSan, TienDichVu = don.TienDichVu,
             TongTien = don.TongTien, TienSanDuKien = don.TienSanDuKien,
+            TienDichVuDuKien = don.TienDichVuDuKien, TongTienDuKien = don.TongTienDuKien,
             PhienBan = Convert.ToBase64String(don.PhienBan),
             CoTheXacNhan = laDonCho && chuaBatDau,
             CoTheTuChoi = laDonCho && don.TienCoc == 0m,
             CoTheNhanVienHuy = chuaBatDau && don.TienCoc == 0m && (laDonCho || laDonXacNhan),
-            QuayLai = Url.IsLocalUrl(quayLai) ? quayLai! : Url.Action(nameof(DanhSach))!
+            CoTheGhiCoc = laDonXacNhan && don.TienCoc < don.TongTienDuKien,
+            CoTheHoanThanh = laDonXacNhan && don.GioKetThuc <= dongHo.BayGio
+                && don.TienCoc <= don.TongTienDuKien,
+            QuayLai = quayLaiAnToan
         };
     }
 
@@ -103,6 +117,26 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         return await XuLyKetQuaAsync(model.MaDon, model.QuayLai, result, null, model.LyDo, cancellationToken);
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> GhiCoc(GhiCocViewModel model, CancellationToken cancellationToken)
+    {
+        if (!KiemTraPhienBan(model.PhienBan, out var phienBan))
+            return await HienThiLoiAsync(model.MaDon, model.QuayLai, null, null, cancellationToken);
+        var result = await datSanService.GhiCocAsync(
+            new GhiCocYeuCau(model.MaDon, model.TongCoc!.Value, phienBan), cancellationToken);
+        return await XuLyKetQuaAsync(model.MaDon, model.QuayLai, result, null, null, cancellationToken);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> HoanThanh(HoanThanhDonViewModel model, CancellationToken cancellationToken)
+    {
+        if (!KiemTraPhienBan(model.PhienBan, out var phienBan))
+            return await HienThiLoiAsync(model.MaDon, model.QuayLai, null, null, cancellationToken);
+        var result = await datSanService.HoanThanhDonAsync(
+            new HoanThanhDonYeuCau(model.MaDon, model.DaThuDu, phienBan), cancellationToken);
+        return await XuLyKetQuaAsync(model.MaDon, model.QuayLai, result, null, null, cancellationToken);
+    }
+
     private async Task<IActionResult> XuLyKetQuaAsync(int maDon, string? quayLai, KetQuaXuLyDon result,
         string? lyDoTuChoi, string? lyDoHuy, CancellationToken cancellationToken)
     {
@@ -114,7 +148,11 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         }
 
         TempData["Success"] = "Đã cập nhật đơn đặt sân.";
-        var anToan = Url.IsLocalUrl(quayLai) ? quayLai : Url.Action(nameof(DanhSach));
+        var anToan = Url.Action(nameof(DanhSach));
+        if (Url.IsLocalUrl(quayLai))
+        {
+            anToan = quayLai;
+        }
         return RedirectToAction(nameof(ChiTiet), new { id = maDon, quayLai = anToan });
     }
 
@@ -125,7 +163,14 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         if (model is null) return NotFound();
         model.LyDoTuChoiNhap = lyDoTuChoi;
         model.LyDoHuyNhap = lyDoHuy;
-        // View dùng phiên bản vừa đọc từ database; dữ liệu nhập chỉ giữ lại để người dùng sửa.
+        if (ModelState.TryGetValue(nameof(GhiCocViewModel.TongCoc), out var coc))
+        {
+            model.TongCocNhap = coc.AttemptedValue;
+        }
+        else
+        {
+            model.TongCocNhap = null;
+        }
         return View(nameof(ChiTiet), model);
     }
 

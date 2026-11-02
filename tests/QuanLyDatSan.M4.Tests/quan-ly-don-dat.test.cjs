@@ -13,7 +13,7 @@ function setup() {
     const pageEvents = {};
     const confirms = [];
     let answer = true;
-    const forms = [undefined, 'Từ chối đơn?', 'Hủy đơn?'].map(message => ({
+    const forms = [undefined, 'Từ chối đơn?', 'Hủy đơn?', 'Ghi nhận cọc?', 'Hoàn thành đơn?'].map(message => ({
         dataset: { xacNhan: message }, valid: true, reported: false, buttons: [{ disabled: false }],
         checkValidity() { return this.valid; },
         reportValidity() { this.reported = true; },
@@ -55,13 +55,26 @@ test('Form chưa hợp lệ không gửi hoặc mở xác nhận', () => {
     assert.ok(page.forms.every(form => !form.buttons[0].disabled));
 });
 
-test('Chỉ gửi một thao tác và khóa cả ba nút xử lý', () => {
+test('Chỉ gửi một thao tác và khóa mọi nút xử lý', () => {
     const page = setup();
     assert.equal(page.submit(0).prevented, false);
     assert.equal(page.submit(0).prevented, true);
     assert.equal(page.submit(2).prevented, true);
     assert.ok(page.forms.every(form => form.buttons[0].disabled));
     assert.equal(page.confirms.length, 0);
+});
+
+test('Ghi cọc và hoàn thành cần xác nhận; gửi cọc khóa cả hoàn thành', () => {
+    const page = setup();
+    page.answer(false);
+    assert.equal(page.submit(3).prevented, true);
+    assert.equal(page.submit(4).prevented, true);
+    page.answer(true);
+    assert.equal(page.submit(3).prevented, false);
+    assert.equal(page.submit(4).prevented, true);
+    assert.ok(page.forms.every(form => form.buttons[0].disabled));
+    page.pageEvents.pageshow();
+    assert.equal(page.submit(4).prevented, false);
 });
 
 test('Quay lại bằng lịch sử khôi phục nút và cho phép xác nhận thao tác mới', () => {

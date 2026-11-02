@@ -41,6 +41,11 @@ public static class ThongBaoLoiDatSanViewModel
         MaLoiDatSan.SanDaThayDoi => ("", "Thông tin sân của đơn đã thay đổi. Hãy tải lại trang."),
         MaLoiDatSan.PhienBanDaCu => ("", "Đơn đã được cập nhật ở nơi khác. Hãy tải lại trang rồi thử lại."),
         MaLoiDatSan.XungDotDuLieu => ("", "Đơn vừa được người khác cập nhật. Hãy tải lại trang."),
+        MaLoiDatSan.ChiGhiCocDonXacNhan => ("", "Chỉ ghi nhận cọc cho đơn đã xác nhận."),
+        MaLoiDatSan.TienCocKhongHopLe => ("TongCoc", "Tổng cọc phải là số đồng nguyên dương và không vượt giới hạn lưu trữ."),
+        MaLoiDatSan.CocKhongTang => ("TongCoc", "Tổng cọc mới phải lớn hơn cọc đã ghi nhận. Chưa hỗ trợ giảm hoặc hoàn cọc."),
+        MaLoiDatSan.CocVuotTongTien => ("TongCoc", "Tổng cọc không được vượt tổng tiền hiện tại của đơn."),
+        MaLoiDatSan.TienVuotGioiHan => ("", "Tổng tiền vượt giới hạn lưu trữ. Vui lòng kiểm tra đơn và dịch vụ."),
         MaLoiDatSan.NgoaiGioKhiTao when loi.GioMoCua.HasValue && loi.GioDongCua.HasValue
             => ("GioBatDau", $"Sân chỉ mở cửa từ {loi.GioMoCua:HH:mm} đến {loi.GioDongCua:HH:mm}."),
         _ => throw new InvalidOperationException("Mã lỗi đặt sân chưa được ánh xạ hoặc thiếu dữ liệu thông báo.")

@@ -21,7 +21,7 @@ using Xunit;
 
 namespace QuanLyDatSan.M4.Tests;
 
-public sealed class QuanLyDonDatTests(SqlFixture f) : IClassFixture<SqlFixture>
+public sealed partial class QuanLyDonDatTests(SqlFixture f) : IClassFixture<SqlFixture>
 {
     private static LocDonQuanLy Filter(string? keyword = null) =>
         new(keyword, null, null, null, null, SapXepDonQuanLy.NgayGiam, 1);

@@ -1,5 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
-// Nội dung: M4-02/03 - bộ lọc và dữ liệu danh sách/chi tiết; điều kiện hiển thị các nút xử lý đơn.
+// Nội dung: M4-02/03/04 - bộ lọc, chi tiết, tiền dự kiến và điều kiện xử lý/ghi cọc/hoàn thành đơn.
 // Khai báo lý do từ chối/hủy, RowVersion, validation POST và dữ liệu nhập cần giữ lại khi có lỗi.
 
 using System.ComponentModel.DataAnnotations;
@@ -74,6 +74,13 @@ public sealed class ChiTietDonQuanLyViewModel : ChiTietDonViewModel
     public bool CoTheXacNhan { get; init; }
     public bool CoTheTuChoi { get; init; }
     public bool CoTheNhanVienHuy { get; init; }
+    public bool CoTheGhiCoc { get; init; }
+    public bool CoTheHoanThanh { get; init; }
+    public decimal TienDichVuDuKien { get; init; }
+    public decimal TongTienDuKien { get; init; }
+    public decimal ConPhaiThu => TrangThai == TrangThaiDatSan.HoanThanh ? 0m
+        : Math.Max(0m, (TongTien ?? TongTienDuKien) - TienCoc);
+    [BindNever] public string? TongCocNhap { get; set; }
     [BindNever] public string? LyDoTuChoiNhap { get; set; }
     [BindNever] public string? LyDoHuyNhap { get; set; }
 }

@@ -67,6 +67,6 @@ bằng `EnsureCreated`, không kiểm chứng chuỗi migration. Không thay đ�
 ## Phần tiếp theo
 
 - #23: đã bổ sung action/form xác nhận, từ chối, hủy cho nhân viên/Admin; xem [M4-03](M4-03-Xac-nhan-tu-choi-huy-don.md).
-- #24: còn ghi nhận cọc và hoàn thành đơn, phối hợp hợp đồng tính tiền M5 (#27).
+- #24: đã triển khai ghi cọc và hoàn thành tích hợp tính tiền M5 trong workspace ngày 20/10/2026; xem [M4-04](M4-04-Ghi-coc-va-hoan-thanh-don.md).
 - Nút chuyển trạng thái đã bổ sung trong M4-03; chưa kiểm tra trực quan bằng trình duyệt.
 - Đây là kết quả triển khai local, chưa xác nhận nhóm review/merge hoặc đóng issue trên GitHub.
