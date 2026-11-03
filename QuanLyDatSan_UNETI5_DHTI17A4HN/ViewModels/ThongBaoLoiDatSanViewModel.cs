@@ -1,6 +1,7 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung: ánh xạ mã lỗi tạo đơn, xác nhận, từ chối, hủy và hoàn thành đơn sang trường form và thông báo tiếng Việt.
 // Phát hiện mã lỗi chưa được ánh xạ hoặc thiếu dữ liệu để tạo thông báo.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp ba mã lỗi cọc/quyền mới của M4, tránh lỗi 500 tại caller hiện có.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
@@ -46,6 +47,9 @@ public static class ThongBaoLoiDatSanViewModel
         MaLoiDatSan.CocKhongTang => ("TongCoc", "Tổng cọc mới phải lớn hơn cọc đã ghi nhận. Chưa hỗ trợ giảm hoặc hoàn cọc."),
         MaLoiDatSan.CocVuotTongTien => ("TongCoc", "Tổng cọc không được vượt tổng tiền hiện tại của đơn."),
         MaLoiDatSan.TienVuotGioiHan => ("", "Tổng tiền vượt giới hạn lưu trữ. Vui lòng kiểm tra đơn và dịch vụ."),
+        MaLoiDatSan.YeuCauDoiSoatCoc => ("", "Đơn áp dụng chính sách cọc mới. Cần đối soát giao dịch trước khi xác nhận cọc và đặt sân."),
+        MaLoiDatSan.GiaoDichChoDoiSoat => ("", "Đơn có giao dịch chưa xử lý xong. Cần đối soát trước khi hủy hoặc từ chối."),
+        MaLoiDatSan.KhongDuQuyen => ("", "Tài khoản hiện tại không đủ quyền thực hiện thao tác này."),
         MaLoiDatSan.NgoaiGioKhiTao when loi.GioMoCua.HasValue && loi.GioDongCua.HasValue
             => ("GioBatDau", $"Sân chỉ mở cửa từ {loi.GioMoCua:HH:mm} đến {loi.GioDongCua:HH:mm}."),
         _ => throw new InvalidOperationException("Mã lỗi đặt sân chưa được ánh xạ hoặc thiếu dữ liệu thông báo.")

@@ -1,3 +1,4 @@
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Bổ sung hợp đồng đọc, mô phỏng và xác nhận cọc.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Hợp đồng tra cứu khả dụng, tạo và xử lý đơn dùng chung M2/M3/M4.
 
@@ -6,6 +7,10 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
 public interface IDatSanService
 {
+    Task<KetQuaCoc<ThongTinCocDto>> LayThongTinCocAsync(int maDatSan, CancellationToken ct);
+    Task<KetQuaCoc<DoiSoatCocDto>> LayDoiSoatCocAsync(int maDatSan, CancellationToken ct);
+    Task<KetQuaCoc<GiaoDichCocDto>> TaoGiaoDichMoPhongAsync(TaoGiaoDichMoPhongYeuCau yc, CancellationToken ct);
+    Task<KetQuaCoc<XacNhanCocDto>> XacNhanCocVaDatSanAsync(XacNhanCocYeuCau yc, CancellationToken ct);
     Task<KetQuaKhaDungSan> KiemTraKhaDungAsync(IReadOnlyCollection<int> maSans,
         KhoangGioTraCuuSan khoangGio, CancellationToken cancellationToken);
 

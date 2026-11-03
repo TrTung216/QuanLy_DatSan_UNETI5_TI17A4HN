@@ -1,3 +1,4 @@
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Cập nhật danh tính kiểm thử theo quyền xử lý đơn và cọc.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung: kiểm thử SQL Server cho quy tắc đặt sân, xác nhận/từ chối/hủy/hoàn thành, cọc và quyền sở hữu.
 // Kiểm tra thời điểm, lý do, RowVersion, thao tác lặp, khóa đồng thời và rollback transaction.
@@ -142,7 +143,7 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
     {
         var order = await f.Booking(deposit: 50000m);
         await using var db = f.Db();
-        var service = f.Service(db);
+        var service = f.Service(db, actor: action == "TuChoi" ? f.AdminAccountId : f.CustomerAccountId);
         var request = new HuyDonYeuCau(order.MaDatSan, "Lý do", order.RowVersion);
         var result = action == "TuChoi"
             ? await service.TuChoiDonAsync(request, default)
@@ -159,7 +160,7 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
     {
         var order = await f.Booking();
         await using var db = f.Db();
-        IDatSanService service = f.Service(db);
+        IDatSanService service = f.Service(db, actor: f.CustomerAccountId);
         Assert.Null(await service.LayChiTietCaNhanAsync(f.OtherCustomerAccountId, order.MaDatSan, default));
         var detail = await service.LayChiTietCaNhanAsync(f.CustomerAccountId, order.MaDatSan, default);
         Assert.NotNull(detail);
@@ -172,7 +173,7 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
         Assert.Equal("Đổi kế hoạch", saved.LyDoHuy);
         await using var retry = f.Db();
         Assert.Equal(MaLoiDatSan.PhienBanDaCu,
-            (await f.Service(retry).KhachHangHuyDonAsync(request, f.CustomerAccountId, default)).Loi);
+            (await f.Service(retry, actor: f.CustomerAccountId).KhachHangHuyDonAsync(request, f.CustomerAccountId, default)).Loi);
     }
 
     [Fact]
@@ -182,11 +183,11 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
         foreach (var rv in new[] { o.RowVersion, new byte[8] })
         {
             await using var db = f.Db();
-            Assert.Equal(MaLoiDatSan.KhongTonTai, (await f.Service(db).KhachHangHuyDonAsync(
+            Assert.Equal(MaLoiDatSan.KhongTonTai, (await f.Service(db, actor: f.OtherCustomerAccountId).KhachHangHuyDonAsync(
                 new(o.MaDatSan, "Hủy", rv), f.OtherCustomerAccountId, default)).Loi);
         }
         await using var act = f.Db();
-        Assert.True((await f.Service(act).KhachHangHuyDonAsync(new(o.MaDatSan, "Hủy", o.RowVersion),
+        Assert.True((await f.Service(act, actor: f.CustomerAccountId).KhachHangHuyDonAsync(new(o.MaDatSan, "Hủy", o.RowVersion),
             f.CustomerAccountId, default)).ThanhCong);
     }
 
@@ -197,7 +198,7 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
     {
         var o = await f.Booking(state, hours);
         await using var db = f.Db();
-        Assert.False((await f.Service(db).KhachHangHuyDonAsync(new(o.MaDatSan, "Hủy", o.RowVersion),
+        Assert.False((await f.Service(db, actor: f.CustomerAccountId).KhachHangHuyDonAsync(new(o.MaDatSan, "Hủy", o.RowVersion),
             f.CustomerAccountId, default)).ThanhCong);
         Assert.Equal(state, (await f.Read(o.MaDatSan)).TrangThai);
     }

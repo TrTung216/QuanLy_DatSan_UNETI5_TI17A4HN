@@ -1,3 +1,4 @@
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Chuẩn bị tài khoản, môi trường và cấu hình cho test service cọc.
 // M4: kiểm thử bằng SQL Server thật trên database riêng; Codex hỗ trợ.
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
@@ -26,6 +27,7 @@ public sealed class SqlFixture : IAsyncLifetime
     public int CustomerId { get; private set; }
     public int CustomerAccountId { get; private set; }
     public int OtherCustomerAccountId { get; private set; }
+    public int AdminAccountId { get; private set; }
 
     public SqlFixture()
     {
@@ -42,7 +44,13 @@ public sealed class SqlFixture : IAsyncLifetime
     public ApplicationDbContext Db(params IInterceptor[] interceptors) => new(
         new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(ConnectionString)
             .AddInterceptors(interceptors).Options);
-    public DatSanService Service(ApplicationDbContext db) => new(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan.DatSanRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), Clock, new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService());
+    public DatSanService Service(ApplicationDbContext db, int? actor = null, IDongHo? clock = null,
+        bool enabled = true, string environment = "Development") => new(
+        new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan.DatSanRepository(db),
+        new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), clock ?? Clock,
+        new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService(),
+        new ActorTest(actor ?? AdminAccountId), new EnvironmentTest { EnvironmentName = environment },
+        Microsoft.Extensions.Options.Options.Create(new CocMoPhongOptions { Bat = enabled }));
 
     public async Task InitializeAsync()
     {
@@ -67,6 +75,7 @@ public sealed class SqlFixture : IAsyncLifetime
             await db.SaveChangesAsync();
             if (name == "customer") { CustomerId = account.KhachHang!.MaKhachHang; CustomerAccountId = account.MaTaiKhoan; }
             if (name == "other") OtherCustomerAccountId = account.MaTaiKhoan;
+            if (name == "admin") AdminAccountId = account.MaTaiKhoan;
         }
     }
 
@@ -115,4 +124,19 @@ public sealed class SqlFixture : IAsyncLifetime
         await using var db = Db();
         await db.Database.EnsureDeletedAsync();
     }
+}
+
+public sealed class ActorTest(int id) : ITaiKhoanHienTai
+{
+    public int? MaTaiKhoan => id;
+    public string? HoTen => "Test";
+    public VaiTro? VaiTro => null; // Service phải đọc role từ DB.
+}
+public sealed class EnvironmentTest : Microsoft.Extensions.Hosting.IHostEnvironment
+{
+    public string EnvironmentName { get; set; } = "Development";
+    public string ApplicationName { get; set; } = "Test";
+    public string ContentRootPath { get; set; } = "";
+    public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; }
+        = new Microsoft.Extensions.FileProviders.NullFileProvider();
 }

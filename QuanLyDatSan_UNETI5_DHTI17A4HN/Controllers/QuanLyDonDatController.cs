@@ -1,5 +1,6 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nhận yêu cầu quản lý đơn, kiểm tra dữ liệu/RowVersion và gọi service; giữ nội dung nhập khi lỗi.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp phản hồi Forbid khi service M4 phát hiện quyền đã thay đổi.
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -142,6 +143,7 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
     {
         if (!result.ThanhCong)
         {
+            if (result.Loi == MaLoiDatSan.KhongDuQuyen) return Forbid();
             ModelState.AddModelError(string.Empty,
                 ThongBaoLoiDatSanViewModel.AnhXa(new LoiDatSan(result.Loi!.Value)).ThongBao);
             return await HienThiLoiAsync(maDon, quayLai, lyDoTuChoi, lyDoHuy, cancellationToken);

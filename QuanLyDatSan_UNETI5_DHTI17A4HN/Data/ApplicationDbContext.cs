@@ -1,5 +1,6 @@
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ soạn mã.
 // Nội dung: ánh xạ dữ liệu M1, ràng buộc SQL Server và loại sân mẫu.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp chính sách cọc, giao dịch/biên nhận và ràng buộc lịch sử theo hợp đồng M4.
 // M2: Phan Giang Tâm; MSSV: 23103100196.
 // Nội dung: đăng ký sân, cấu hình bảng, quan hệ loại sân và chuẩn hóa dữ liệu.
 // M5: Nguyễn Hữu Quang; MSSV: 23103100184
@@ -23,6 +24,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<KhachHang> KhachHangs => Set<KhachHang>();
     public DbSet<DatSan> DatSans => Set<DatSan>();
     public DbSet<ChiTietDatSan> ChiTietDatSans => Set<ChiTietDatSan>();
+    public DbSet<GiaoDichCoc> GiaoDichCocs => Set<GiaoDichCoc>();
+    public DbSet<BienNhanCoc> BienNhanCocs => Set<BienNhanCoc>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -149,10 +152,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     "[GioKetThuc] > [GioBatDau] AND CAST([GioBatDau] AS date) = CAST([GioKetThuc] AS date)");
                 table.HasCheckConstraint("CK_DatSan_Tien", "[DonGia] >= 0 AND [TienCoc] >= 0");
                 table.HasCheckConstraint("CK_DatSan_TrangThai", "[TrangThai] IN (0, 1, 2, 3, 4)");
+                table.HasCheckConstraint("CK_DatSan_ChinhSachCoc",
+                    "[PhienBanChinhSachCoc] IN (0, 1) AND [TienCocYeuCau] >= 0 AND ([PhienBanChinhSachCoc] = 1 OR [TienCocYeuCau] = 0)");
             });
             entity.HasKey(x => x.MaDatSan);
             entity.Property(x => x.DonGia).HasPrecision(18, 2);
             entity.Property(x => x.TienCoc).HasPrecision(18, 2);
+            // Đơn cũ và luồng tạo hiện tại giữ chính sách 0; chưa bật cọc trước khi đủ giao diện/hợp đồng M5.
+            entity.Property(x => x.PhienBanChinhSachCoc).HasDefaultValue(0);
+            entity.Property(x => x.TienCocYeuCau).HasPrecision(18, 2).HasDefaultValue(0m);
             entity.Property(x => x.TienSan).HasPrecision(18, 2);
             entity.Property(x => x.TienDichVu).HasPrecision(18, 2);
             entity.Property(x => x.TongTien).HasPrecision(18, 2);
@@ -167,6 +175,54 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasOne(x => x.SanTheThao)
                 .WithMany()
                 .HasForeignKey(x => x.MaSan)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<GiaoDichCoc>(entity =>
+        {
+            entity.ToTable("GiaoDichCoc", table =>
+            {
+                table.HasCheckConstraint("CK_GiaoDichCoc_SoTien", "[SoTien] > 0");
+                table.HasCheckConstraint("CK_GiaoDichCoc_TrangThai", "[TrangThai] IN (0, 1, 2)");
+                table.HasCheckConstraint("CK_GiaoDichCoc_LoiNgoaiLe", "[LoiNgoaiLe] IS NULL OR [LoiNgoaiLe] BETWEEN 1 AND 19");
+                table.HasCheckConstraint("CK_GiaoDichCoc_ThongTin",
+                    "LEN(LTRIM(RTRIM([Nguon]))) > 0 AND LEN(LTRIM(RTRIM([TaiKhoanNhan]))) > 0 AND LEN(LTRIM(RTRIM([MaGiaoDichNgoai]))) >= 3 AND LEN(LTRIM(RTRIM([NoiDung]))) > 0");
+            });
+            entity.HasKey(x => x.MaGiaoDich);
+            entity.Property(x => x.Nguon).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.TaiKhoanNhan).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.MaGiaoDichNgoai).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.NoiDung).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.SoTien).HasPrecision(18, 2);
+            entity.Property(x => x.RowVersion).IsRowVersion();
+            // Tên index được Unit of Work nhận diện để không nuốt nhầm lỗi unique khác.
+            entity.HasIndex(x => new { x.Nguon, x.TaiKhoanNhan, x.MaGiaoDichNgoai }).IsUnique();
+            entity.HasIndex(x => x.NoiDung);
+            entity.HasOne<TaiKhoan>().WithMany().HasForeignKey(x => x.MaNguoiGhi)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<BienNhanCoc>(entity =>
+        {
+            entity.ToTable("BienNhanCoc", table =>
+            {
+                table.HasCheckConstraint("CK_BienNhanCoc_SoTien", "[SoTien] > 0");
+                table.HasCheckConstraint("CK_BienNhanCoc_ThongTin",
+                    "LEN(LTRIM(RTRIM([Nguon]))) > 0 AND LEN(LTRIM(RTRIM([TaiKhoanNhan]))) > 0 AND LEN(LTRIM(RTRIM([MaGiaoDichNgoai]))) >= 3 AND LEN(LTRIM(RTRIM([NoiDung]))) > 0");
+            });
+            entity.HasKey(x => x.MaBienNhan);
+            entity.Property(x => x.SoTien).HasPrecision(18, 2);
+            entity.Property(x => x.Nguon).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.TaiKhoanNhan).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.MaGiaoDichNgoai).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.NoiDung).HasMaxLength(100).IsRequired();
+            entity.HasIndex(x => x.MaDatSan).IsUnique();
+            entity.HasIndex(x => x.MaGiaoDich).IsUnique();
+            entity.HasOne<DatSan>().WithMany().HasForeignKey(x => x.MaDatSan)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<GiaoDichCoc>().WithMany().HasForeignKey(x => x.MaGiaoDich)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<TaiKhoan>().WithMany().HasForeignKey(x => x.MaNguoiXacNhan)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
