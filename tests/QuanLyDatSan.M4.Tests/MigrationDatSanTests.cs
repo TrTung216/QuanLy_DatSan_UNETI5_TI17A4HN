@@ -1,3 +1,4 @@
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Cập nhật phụ thuộc service trong kiểm thử migration hiện có.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung: áp dụng chuỗi migration thực tế trên database ngẫu nhiên riêng cho M4-01.
 // Kiểm tra đọc model sân/đơn và hợp đồng khả dụng sau migrate; chỉ dọn đúng database do bài test tạo.
@@ -33,7 +34,7 @@ public sealed class MigrationDatSanTests
             await db.DatSans.AsNoTracking().Take(1).ToListAsync();
             await db.SanTheThaos.AsNoTracking().Include(x => x.LoaiSan).Take(1).ToListAsync();
             var clock = new DongHoTest();
-            var result = await new DatSanService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan.DatSanRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), clock, new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService()).KiemTraKhaDungAsync(
+            var result = await new DatSanService(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan.DatSanRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), clock, new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService(), new ActorTest(0), new EnvironmentTest(), Microsoft.Extensions.Options.Options.Create(new CocMoPhongOptions())).KiemTraKhaDungAsync(
                 [int.MaxValue], new(clock.HomNay, new(10, 0), new(11, 0)), default);
             Assert.Equal(MaLoiKhaDungSan.SanKhongTonTai, Assert.Single(result.DanhSach).Loi);
         }

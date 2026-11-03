@@ -1,3 +1,4 @@
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Bổ sung mã lỗi cọc cho luồng xử lý đơn hiện có.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // DTO, yêu cầu xử lý và mã lỗi đặt sân; dùng RowVersion để phát hiện dữ liệu cũ.
 
@@ -43,7 +44,10 @@ public enum MaLoiDatSan
     CocKhongTang = 35,
     CocVuotTongTien = 36,
     TienVuotGioiHan = 37,
-    NgoaiGioKhiTao = 100
+    NgoaiGioKhiTao = 100,
+    YeuCauDoiSoatCoc = 101,
+    GiaoDichChoDoiSoat = 102,
+    KhongDuQuyen = 103
 }
 
 public sealed record LoiDatSan(MaLoiDatSan Ma, TimeOnly? GioMoCua = null, TimeOnly? GioDongCua = null);

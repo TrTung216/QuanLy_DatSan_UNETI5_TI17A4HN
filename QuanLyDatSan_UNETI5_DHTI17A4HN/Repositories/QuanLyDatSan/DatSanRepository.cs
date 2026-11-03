@@ -1,3 +1,4 @@
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Tách truy cập dữ liệu cọc sang file partial riêng.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Truy vấn đơn, kiểm tra trùng lịch và khóa sân; việc lưu do đơn vị công việc quản lý.
 
@@ -9,7 +10,7 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan;
 
-public class DatSanRepository(ApplicationDbContext db) : IDatSanRepository
+public partial class DatSanRepository(ApplicationDbContext db) : IDatSanRepository
 {
     private const int SoDongMoiTrang = 10;
     public async Task<DanhSachDonDto> LayDanhSachCaNhanAsync(int maTaiKhoan, TrangThaiDatSan? trangThai,

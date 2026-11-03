@@ -1,3 +1,4 @@
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Chặn bỏ qua đối soát cọc và hủy đơn có tiền chờ xử lý.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Xác nhận, từ chối, hủy, ghi cọc và hoàn thành đơn; kiểm tra trạng thái và RowVersion.
 // Khóa sân và lưu trong transaction; cọc là tổng đã nhận, tiền hoàn thành được tính lại qua M5.
@@ -13,18 +14,13 @@ public partial class DatSanService
         CancellationToken cancellationToken) =>
         XuLyDonCoKhoaSanAsync(yeuCau.MaDatSan, yeuCau.PhienBan, async (don, token) =>
         {
-            if (don.TrangThai != TrangThaiDatSan.ChoXuLy)
-                return MaLoiDatSan.ChiXacNhanDonCho;
-
-            var now = dongHo.BayGio;
-            var loiGio = KiemTraKhoangGio(don.GioBatDau, don.GioKetThuc, now);
-            if (loiGio is not null) return AnhXaLoiKhaDung(loiGio.Value, khiTao: false);
-            var san = await repository.LayKhaDungAsync(don.MaSan, don.GioBatDau, don.GioKetThuc, don.MaDatSan, token);
-            var loiSan = DanhGiaKhaDungSan(san, don.GioBatDau, don.GioKetThuc);
-            if (loiSan is not null) return AnhXaLoiKhaDung(loiSan.Value, khiTao: false);
+            if (don.PhienBanChinhSachCoc == 1 && don.TienCocYeuCau > 0)
+                return MaLoiDatSan.YeuCauDoiSoatCoc;
+            var loi = await KiemTraXacNhanAsync(don, token);
+            if (loi.HasValue) return loi;
 
             don.TrangThai = TrangThaiDatSan.DangXuLy;
-            don.NgayXacNhan = now;
+            don.NgayXacNhan = dongHo.BayGio;
             return null;
         }, cancellationToken);
 
@@ -36,18 +32,17 @@ public partial class DatSanService
         if (string.IsNullOrWhiteSpace(lyDoChuan) || lyDoChuan.Length > 1000)
             return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.LyDoTuChoiKhongHopLe));
 
-        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, (don, _) =>
+        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, async (don, token) =>
         {
             if (don.TrangThai != TrangThaiDatSan.ChoXuLy)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.ChiTuChoiDonCho);
+                return MaLoiDatSan.ChiTuChoiDonCho;
 
-            if (don.TienCoc > 0m)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.DaNhanCoc);
+            if (await KiemTraTienTruocHuyAsync(don, token) is { } loiCoc) return loiCoc;
 
             don.TrangThai = TrangThaiDatSan.TuChoi;
             don.NgayHuy = dongHo.BayGio;
             don.LyDoHuy = lyDoChuan;
-            return Task.FromResult<MaLoiDatSan?>(null);
+            return null;
         }, cancellationToken);
     }
 
@@ -60,22 +55,21 @@ public partial class DatSanService
         if (maTaiKhoan <= 0)
             return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.TaiKhoanKhongHopLe));
 
-        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, (don, _) =>
+        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, async (don, token) =>
         {
             if (don.KhachHang.MaTaiKhoan != maTaiKhoan)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.KhongTonTai);
+                return MaLoiDatSan.KhongTonTai;
             if (don.TrangThai != TrangThaiDatSan.ChoXuLy)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.KhachChiHuyDonCho);
+                return MaLoiDatSan.KhachChiHuyDonCho;
             if (don.GioBatDau <= dongHo.BayGio)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.QuaGioHuy);
+                return MaLoiDatSan.QuaGioHuy;
 
-            if (don.TienCoc > 0m)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.DaNhanCoc);
+            if (await KiemTraTienTruocHuyAsync(don, token) is { } loiCoc) return loiCoc;
 
             don.TrangThai = TrangThaiDatSan.DaHuy;
             don.NgayHuy = dongHo.BayGio;
             don.LyDoHuy = lyDoChuan;
-            return Task.FromResult<MaLoiDatSan?>(null);
+            return null;
         }, cancellationToken, maTaiKhoan);
     }
 
@@ -87,20 +81,19 @@ public partial class DatSanService
         if (string.IsNullOrWhiteSpace(lyDoChuan) || lyDoChuan.Length > 1000)
             return Task.FromResult(KetQuaXuLyDon.ThatBai(MaLoiDatSan.LyDoHuyKhongHopLe));
 
-        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, (don, _) =>
+        return XuLyDonCoKhoaSanAsync(maDatSan, phienBan, async (don, token) =>
         {
             if (don.TrangThai is not (TrangThaiDatSan.ChoXuLy or TrangThaiDatSan.DangXuLy))
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.TrangThaiKhongChoHuy);
+                return MaLoiDatSan.TrangThaiKhongChoHuy;
             if (don.GioBatDau <= dongHo.BayGio)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.QuaGioHuy);
+                return MaLoiDatSan.QuaGioHuy;
 
-            if (don.TienCoc > 0m)
-                return Task.FromResult<MaLoiDatSan?>(MaLoiDatSan.DaNhanCoc);
+            if (await KiemTraTienTruocHuyAsync(don, token) is { } loiCoc) return loiCoc;
 
             don.TrangThai = TrangThaiDatSan.DaHuy;
             don.NgayHuy = dongHo.BayGio;
             don.LyDoHuy = lyDoChuan;
-            return Task.FromResult<MaLoiDatSan?>(null);
+            return null;
         }, cancellationToken);
     }
 
@@ -112,6 +105,7 @@ public partial class DatSanService
 
         return XuLyDonCoKhoaSanAsync(yeuCau.MaDatSan, yeuCau.PhienBan, async (don, token) =>
         {
+            if (don.PhienBanChinhSachCoc != 0) return MaLoiDatSan.YeuCauDoiSoatCoc;
             if (don.TrangThai != TrangThaiDatSan.DangXuLy)
                 return MaLoiDatSan.ChiGhiCocDonXacNhan;
             if (yeuCau.TongCoc <= don.TienCoc)
@@ -158,6 +152,10 @@ public partial class DatSanService
             return KetQuaXuLyDon.ThatBai(MaLoiDatSan.MaDonKhongHopLe);
         if (phienBan is not { Length: 8 })
             return KetQuaXuLyDon.ThatBai(MaLoiDatSan.PhienBanKhongHopLe);
+        if (maTaiKhoanChuDon.HasValue
+            ? taiKhoanHienTai.MaTaiKhoan != maTaiKhoanChuDon || !await KhachDuDieuKienAsync(maTaiKhoanChuDon.Value, cancellationToken)
+            : !await CoQuyenQuanLyAsync(cancellationToken))
+            return KetQuaXuLyDon.ThatBai(MaLoiDatSan.KhongDuQuyen);
 
         var maSan = await repository.LayMaSanCuaDonAsync(maDatSan, maTaiKhoanChuDon, cancellationToken);
         if (!maSan.HasValue)
@@ -168,6 +166,10 @@ public partial class DatSanService
             return await donViCongViec.TrongGiaoDichAsync(async token =>
             {
                 await KhoaSanAsync(maSan.Value, cancellationToken);
+                if (maTaiKhoanChuDon.HasValue
+                    ? taiKhoanHienTai.MaTaiKhoan != maTaiKhoanChuDon || !await KhachDuDieuKienAsync(maTaiKhoanChuDon.Value, token)
+                    : !await CoQuyenQuanLyAsync(token))
+                    return KetQuaXuLyDon.ThatBai(MaLoiDatSan.KhongDuQuyen);
 
                 var don = await repository.LayDonDeCapNhatAsync(maDatSan, maTaiKhoanChuDon, token);
                 if (don is null)
@@ -177,7 +179,7 @@ public partial class DatSanService
                 if (!don.RowVersion.AsSpan().SequenceEqual(phienBan))
                     return KetQuaXuLyDon.ThatBai(MaLoiDatSan.PhienBanDaCu);
 
-                var loi = await apDung(don, cancellationToken);
+                var loi = await apDung(don, token);
                 if (loi is not null)
                     return KetQuaXuLyDon.ThatBai(loi.Value);
 

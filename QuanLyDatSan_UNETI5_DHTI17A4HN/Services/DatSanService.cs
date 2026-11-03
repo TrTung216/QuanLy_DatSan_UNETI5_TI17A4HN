@@ -1,3 +1,4 @@
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Nhận phụ thuộc cho service cọc; chưa bật chính sách mới khi tạo đơn.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Tạo đơn: kiểm tra khách, khóa sân, kiểm tra khả dụng và lưu giá tại thời điểm đặt.
 
@@ -8,7 +9,9 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
-public partial class DatSanService(IDatSanRepository repository, IDonViCongViec donViCongViec, IDongHo dongHo, ITinhTienService tinhTien) : IDatSanService
+public partial class DatSanService(IDatSanRepository repository, IDonViCongViec donViCongViec, IDongHo dongHo,
+    ITinhTienService tinhTien, ITaiKhoanHienTai taiKhoanHienTai, IHostEnvironment moiTruong,
+    Microsoft.Extensions.Options.IOptions<CocMoPhongOptions> cauHinhCoc) : IDatSanService
 {
     private Task<bool> KhachDuDieuKienAsync(int maTaiKhoan, CancellationToken cancellationToken) =>
         repository.KhachDuDieuKienAsync(maTaiKhoan, cancellationToken);
@@ -44,6 +47,7 @@ public partial class DatSanService(IDatSanRepository repository, IDonViCongViec 
                 return KetQuaTaoDon.ThatBai(new(AnhXaLoiKhaDung(loiSan.Value, khiTao: true),
                     san?.GioMoCua, san?.GioDongCua));
 
+            // Chưa kích hoạt chính sách cọc 1 cho đơn mới trước khi M1/M3/M5 tích hợp đủ luồng.
             var don = new DatSan
             {
                 MaKhachHang = khachHang.MaKhachHang,
