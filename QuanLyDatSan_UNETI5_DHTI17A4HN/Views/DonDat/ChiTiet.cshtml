@@ -25,6 +25,8 @@
     else
     {
         <dt class="col-sm-3">Tiền sân dự kiến</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
+        <dt class="col-sm-3">Tiền dịch vụ</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienDichVu ?? 0m)</dd>
+        <dt class="col-sm-3">Tổng tiền dự kiến</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSanDuKien + (Model.TienDichVu ?? 0m))</dd>
     }
     @if (Model.NgayXacNhan.HasValue)
     {

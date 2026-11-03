@@ -16,7 +16,12 @@ public class DichVuTrongDonController(IDichVuTrongDonService dichVuTrongDonServi
     public async Task<IActionResult> Index(int maDatSan, CancellationToken cancellationToken)
     {
         var chiTiet = await dichVuTrongDonService.LayTheoDonAsync(maDatSan, cancellationToken);
-        return chiTiet is null ? NotFound() : View(chiTiet);
+        if (chiTiet is null)
+        {
+            return NotFound();
+        }
+
+        return View(chiTiet);
     }
 
     [HttpPost, ValidateAntiForgeryToken]

@@ -14,10 +14,45 @@ public interface ITaiKhoanHienTai
 public class TaiKhoanHienTai(IHttpContextAccessor accessor) : ITaiKhoanHienTai
 {
     private ClaimsPrincipal? User => accessor.HttpContext?.User;
-    public int? MaTaiKhoan => User?.Identity?.IsAuthenticated == true
-        && int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ma) ? ma : null;
-    public string? HoTen => MaTaiKhoan.HasValue ? User?.Identity?.Name : null;
-    public VaiTro? VaiTro => MaTaiKhoan.HasValue
-        && Enum.TryParse<VaiTro>(User?.FindFirstValue(ClaimTypes.Role), out var vaiTro)
-        && Enum.IsDefined(vaiTro) ? vaiTro : null;
+    public int? MaTaiKhoan
+    {
+        get
+        {
+            if (User?.Identity?.IsAuthenticated == true
+                && int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ma))
+            {
+                return ma;
+            }
+
+            return null;
+        }
+    }
+
+    public string? HoTen
+    {
+        get
+        {
+            if (MaTaiKhoan.HasValue)
+            {
+                return User?.Identity?.Name;
+            }
+
+            return null;
+        }
+    }
+
+    public VaiTro? VaiTro
+    {
+        get
+        {
+            if (MaTaiKhoan.HasValue
+                && Enum.TryParse<VaiTro>(User?.FindFirstValue(ClaimTypes.Role), out var vaiTro)
+                && Enum.IsDefined(vaiTro))
+            {
+                return vaiTro;
+            }
+
+            return null;
+        }
+    }
 }

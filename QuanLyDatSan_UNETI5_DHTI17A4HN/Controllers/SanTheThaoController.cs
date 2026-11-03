@@ -98,9 +98,17 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
     private async Task NapLoaiSan(ThemSanViewModel model, CancellationToken cancellationToken, int? maLoaiSanHienTai = null)
     {
         var cacLoai = await sanService.LayLuaChonAsync(maLoaiSanHienTai, cancellationToken);
-        model.CacLoaiSan = cacLoai.Select(x => new LuaChonLoaiSan(x.MaLoaiSan,
-            x.DangHoatDong ? x.TenLoai : x.TenLoai + " (ngừng hoạt động)",
-            x.DonGiaTheoGio, x.DonGiaCaoDiem, x.DonGiaCuoiTuan)).ToList();
+        model.CacLoaiSan = cacLoai.Select(x =>
+        {
+            var tenLoai = x.TenLoai;
+            if (!x.DangHoatDong)
+            {
+                tenLoai += " (ngừng hoạt động)";
+            }
+
+            return new LuaChonLoaiSan(x.MaLoaiSan, tenLoai,
+                x.DonGiaTheoGio, x.DonGiaCaoDiem, x.DonGiaCuoiTuan);
+        }).ToList();
     }
 
     [HttpGet]
@@ -178,7 +186,12 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var san = await sanService.LayChiTietAsync(id, cancellationToken);
-        return san is null ? NotFound() : View(ThanhViewModel(san));
+        if (san is null)
+        {
+            return NotFound();
+        }
+
+        return View(ThanhViewModel(san));
     }
 
     [Authorize(Roles = nameof(VaiTro.Admin) + "," + nameof(VaiTro.NhanVien))]

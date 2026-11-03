@@ -83,7 +83,14 @@ public class LoaiSanService(ILoaiSanRepository repository, IDonViCongViec donViC
     private static void GanThongTin(LoaiSan loaiSan, GhiLoaiSan x)
     {
         loaiSan.TenLoai = x.TenLoai.Trim();
-        loaiSan.MoTa = string.IsNullOrWhiteSpace(x.MoTa) ? null : x.MoTa.Trim();
+        if (string.IsNullOrWhiteSpace(x.MoTa))
+        {
+            loaiSan.MoTa = null;
+        }
+        else
+        {
+            loaiSan.MoTa = x.MoTa.Trim();
+        }
         loaiSan.SoNguoiToiDa = x.SoNguoiToiDa;
         loaiSan.DonGiaTheoGio = x.DonGiaTheoGio;
         loaiSan.TrangThai = x.TrangThai;

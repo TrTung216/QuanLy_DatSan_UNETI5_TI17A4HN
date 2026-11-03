@@ -71,7 +71,12 @@
             }
             function capNhat() {
                 var tuyChon = san.options[san.selectedIndex];
-                var donGia = tuyChon ? parseFloat(tuyChon.getAttribute('data-don-gia')) : NaN;
+                var donGia;
+                if (tuyChon) {
+                    donGia = parseFloat(tuyChon.getAttribute('data-don-gia'));
+                } else {
+                    donGia = NaN;
+                }
                 if (isNaN(donGia) || !batDau.value || !ketThuc.value) { hienThi.textContent = '—'; return; }
                 var soPhut = phut(ketThuc.value) - phut(batDau.value);
                 if (soPhut <= 0) { hienThi.textContent = '—'; return; }

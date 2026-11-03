@@ -39,7 +39,14 @@ public partial class KhachHangService(IKhachHangRepository repository, IDonViCon
         khachHang.SoDienThoai = dto.SoDienThoai.Trim();
         khachHang.NgaySinh = dto.NgaySinh;
         khachHang.GioiTinh = dto.GioiTinh;
-        khachHang.DiaChi = string.IsNullOrWhiteSpace(dto.DiaChi) ? null : dto.DiaChi.Trim();
+        if (string.IsNullOrWhiteSpace(dto.DiaChi))
+        {
+            khachHang.DiaChi = null;
+        }
+        else
+        {
+            khachHang.DiaChi = dto.DiaChi.Trim();
+        }
         // Hồ sơ và tài khoản trùng HoTen/Email: cập nhật cùng một lần SaveChanges (một giao dịch).
         khachHang.TaiKhoan.HoTen = hoTen;
         khachHang.TaiKhoan.Email = email;

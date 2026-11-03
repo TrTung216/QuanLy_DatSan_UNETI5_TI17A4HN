@@ -87,7 +87,14 @@ public class DichVuController(IDichVuService service) : Controller
     {
         var ketQua = await service.DoiTrangThaiAsync(id, HttpContext.RequestAborted);
         if (ketQua.KhongTimThay) return NotFound();
-        TempData[ketQua.ThanhCong ? "Success" : "Error"] = ketQua.ThongBao ?? ketQua.Loi;
+        if (ketQua.ThanhCong)
+        {
+            TempData["Success"] = ketQua.ThongBao ?? ketQua.Loi;
+        }
+        else
+        {
+            TempData["Error"] = ketQua.ThongBao ?? ketQua.Loi;
+        }
         return RedirectToAction(nameof(DanhSach));
     }
 

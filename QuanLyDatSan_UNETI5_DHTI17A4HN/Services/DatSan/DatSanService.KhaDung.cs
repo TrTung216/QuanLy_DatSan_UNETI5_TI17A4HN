@@ -61,16 +61,32 @@ public partial class DatSanService
         return null;
     }
 
-    private static MaLoiDatSan AnhXaLoiKhaDung(MaLoiKhaDungSan loi, bool khiTao) => loi switch
+    private static MaLoiDatSan AnhXaLoiKhaDung(MaLoiKhaDungSan loi, bool khiTao)
     {
-        MaLoiKhaDungSan.BatDauKhongTuongLai => khiTao ? MaLoiDatSan.BatDauKhongTuongLai : MaLoiDatSan.QuaGioXacNhan,
-        MaLoiKhaDungSan.KhoangGioKhongHopLe => MaLoiDatSan.KetThucKhongHopLe,
-        MaLoiKhaDungSan.SanKhongTonTai => MaLoiDatSan.SanKhongTonTai,
-        MaLoiKhaDungSan.SanKhongNhanDat => khiTao ? MaLoiDatSan.SanKhongNhanDat : MaLoiDatSan.SanKhongHoatDong,
-        MaLoiKhaDungSan.NgoaiGioHoatDong => khiTao ? MaLoiDatSan.NgoaiGioKhiTao : MaLoiDatSan.NgoaiGioHoatDong,
-        MaLoiKhaDungSan.SanBaoTri => khiTao ? MaLoiDatSan.SanBaoTriKhiTao : MaLoiDatSan.SanBaoTri,
-        MaLoiKhaDungSan.TrungLich => khiTao ? MaLoiDatSan.TrungLichKhiTao : MaLoiDatSan.TrungLich,
-        _ => throw new ArgumentOutOfRangeException(nameof(loi))
-    };
+        switch (loi)
+        {
+            case MaLoiKhaDungSan.BatDauKhongTuongLai:
+                if (khiTao) return MaLoiDatSan.BatDauKhongTuongLai;
+                return MaLoiDatSan.QuaGioXacNhan;
+            case MaLoiKhaDungSan.KhoangGioKhongHopLe:
+                return MaLoiDatSan.KetThucKhongHopLe;
+            case MaLoiKhaDungSan.SanKhongTonTai:
+                return MaLoiDatSan.SanKhongTonTai;
+            case MaLoiKhaDungSan.SanKhongNhanDat:
+                if (khiTao) return MaLoiDatSan.SanKhongNhanDat;
+                return MaLoiDatSan.SanKhongHoatDong;
+            case MaLoiKhaDungSan.NgoaiGioHoatDong:
+                if (khiTao) return MaLoiDatSan.NgoaiGioKhiTao;
+                return MaLoiDatSan.NgoaiGioHoatDong;
+            case MaLoiKhaDungSan.SanBaoTri:
+                if (khiTao) return MaLoiDatSan.SanBaoTriKhiTao;
+                return MaLoiDatSan.SanBaoTri;
+            case MaLoiKhaDungSan.TrungLich:
+                if (khiTao) return MaLoiDatSan.TrungLichKhiTao;
+                return MaLoiDatSan.TrungLich;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(loi));
+        }
+    }
 
 }

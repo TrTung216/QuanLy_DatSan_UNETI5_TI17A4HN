@@ -2,6 +2,13 @@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.HoSoViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @{ ViewData["Title"] = "Hồ sơ cá nhân"; }
+@{
+    var diaChi = Model.DiaChi;
+    if (string.IsNullOrWhiteSpace(diaChi))
+    {
+        diaChi = "—";
+    }
+}
 <div class="ql-page-header">
     <p class="ql-eyebrow">Khách hàng</p>
     <h1>Hồ sơ cá nhân</h1>
@@ -16,7 +23,7 @@
     <dt class="col-sm-3">Ngày sinh</dt><dd class="col-sm-9">@(Model.NgaySinh?.ToString("dd/MM/yyyy") ?? "—")</dd>
     <dt class="col-sm-3">Giới tính</dt>
     <dd class="col-sm-9">@(Model.GioiTinh switch { GioiTinh.Nam => "Nam", GioiTinh.Nu => "Nữ", GioiTinh.Khac => "Khác", _ => "Không khai báo" })</dd>
-    <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.DiaChi) ? "—" : Model.DiaChi)</dd>
+    <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9">@diaChi</dd>
     <dt class="col-sm-3">Ngày đăng ký</dt><dd class="col-sm-9">@Model.NgayDangKy.ToString("dd/MM/yyyy HH:mm")</dd>
     <dt class="col-sm-3">Điểm tích lũy</dt><dd class="col-sm-9">@Model.DiemTichLuy</dd>
 </dl>
