@@ -1,4 +1,5 @@
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ transaction, rollback và lỗi lưu dùng chung.
+// M1: Ánh xạ đúng ba index unique giao dịch/biên nhận cho service cọc M4.
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -122,6 +123,11 @@ public sealed class DonViCongViec(ApplicationDbContext db, ILogger<DonViCongViec
         {
             if (sql.Message.Contains("'IX_LoaiSan_TenLoai'", StringComparison.Ordinal)) return MaLoiLuuTru.TrungTenLoaiSan;
             if (sql.Message.Contains("'IX_TaiKhoan_TenDangNhap'", StringComparison.Ordinal)) return MaLoiLuuTru.TrungTenDangNhap;
+            if (sql.Message.Contains("'IX_GiaoDichCoc_Nguon_TaiKhoanNhan_MaGiaoDichNgoai'", StringComparison.Ordinal))
+                return MaLoiLuuTru.TrungGiaoDichCoc;
+            if (sql.Message.Contains("'IX_BienNhanCoc_MaDatSan'", StringComparison.Ordinal)
+                || sql.Message.Contains("'IX_BienNhanCoc_MaGiaoDich'", StringComparison.Ordinal))
+                return MaLoiLuuTru.TrungBienNhanCoc;
         }
         if (sql.Number == 547 && sql.Message.Contains("FK_SanTheThao_LoaiSan_MaLoaiSan", StringComparison.Ordinal))
             return MaLoiLuuTru.LoaiSanDangDuocThamChieu;

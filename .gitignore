@@ -7,8 +7,6 @@ appsettings.Development.json
 .nuget-local/
 *.mdf
 *.ldf
-# 20261006005847_CapNhatModel.cs
-# 20261006005847_CapNhatModel.Designer.cs
-# 20261006024417_ThemDanhMucDichVu.cs
-# 20261006024417_ThemDanhMucDichVu.Designer.cs
-Migrations/
+# Migration dùng chung phải đi cùng Designer và snapshot; chỉ loại bản local cũ.
+**/Migrations/*_CapNhatModel.cs
+**/Migrations/*_CapNhatModel.Designer.cs
