@@ -1,0 +1,269 @@
+﻿@* M5: Nguyễn Hữu Quang; MSSV: 23103100184; Nội dung: trang thống kê doanh thu, số đơn, sân và dịch vụ bán chạy. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ThongKeViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyThongKe
+@{
+    ViewData["Title"] = "Thống kê";
+    var kq = Model.KetQua;
+    decimal maxKy;
+    if (kq.TheoKy.Count == 0)
+    {
+        maxKy = 0m;
+    }
+    else
+    {
+        maxKy = kq.TheoKy.Max(x => x.TongTien);
+    }
+
+    decimal maxSan;
+    if (kq.TheoSan.Count == 0)
+    {
+        maxSan = 0m;
+    }
+    else
+    {
+        maxSan = kq.TheoSan.Max(x => x.TongTien);
+    }
+
+    var tenCheDo = "tháng";
+    var nhanCheDo = "Tháng";
+    string? ngayDuocChon = null;
+    string? thangDuocChon = null;
+    if (Model.BoLoc.CheDo == CheDoThongKe.Ngay)
+    {
+        tenCheDo = "ngày";
+        nhanCheDo = "Ngày";
+        ngayDuocChon = "selected";
+    }
+    else
+    {
+        thangDuocChon = "selected";
+    }
+
+    int Phan(decimal giaTri, decimal tran)
+    {
+        if (tran <= 0m)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round(giaTri / tran * 100m);
+    }
+}
+<div class="ql-page-header">
+    <h1>@ViewData["Title"]</h1>
+    <p class="ql-subtitle">Doanh thu chỉ tính đơn đã hoàn thành, theo ngày hoàn thành.</p>
+</div>
+
+@if (Model.ThongBaoLoi is not null)
+{
+    <div class="alert alert-danger">@Model.ThongBaoLoi</div>
+}
+
+<section class="ql-panel mb-4" aria-label="Bộ lọc thống kê">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label for="tuNgay" class="form-label">Từ ngày</label>
+            <input type="date" id="tuNgay" name="tuNgay" value="@Model.BoLoc.TuNgay.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label for="denNgay" class="form-label">Đến ngày</label>
+            <input type="date" id="denNgay" name="denNgay" value="@Model.BoLoc.DenNgay.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label for="cheDo" class="form-label">Xem theo</label>
+            <select id="cheDo" name="cheDo" class="form-select">
+                <option value="0" selected="@ngayDuocChon">Ngày</option>
+                <option value="1" selected="@thangDuocChon">Tháng</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary">Xem thống kê</button>
+        </div>
+    </form>
+</section>
+
+<section aria-labelledby="tong-quan-thong-ke" class="mb-4">
+    <h2 id="tong-quan-thong-ke" class="ql-section-title">Tổng quan</h2>
+    <div class="ql-stat-grid">
+        <div class="ql-stat">
+            <p class="ql-stat-label">Tổng doanh thu</p>
+            <p class="ql-stat-value">@HienThiDatSan.Tien(kq.TongDoanhThu)</p>
+            <p class="ql-stat-note">@kq.SoDonHoanThanh đơn hoàn thành</p>
+        </div>
+        <div class="ql-stat">
+            <p class="ql-stat-label">Tiền sân</p>
+            <p class="ql-stat-value">@HienThiDatSan.Tien(kq.TienSan)</p>
+        </div>
+        <div class="ql-stat">
+            <p class="ql-stat-label">Tiền dịch vụ</p>
+            <p class="ql-stat-value">@HienThiDatSan.Tien(kq.TienDichVu)</p>
+        </div>
+    </div>
+    @if (kq.SoDonHoanThanh == 0)
+    {
+        <p class="text-muted mt-2">Chưa có đơn hoàn thành trong khoảng này nên doanh thu bằng 0.</p>
+    }
+</section>
+
+<section class="ql-panel mb-4" aria-labelledby="so-don-trang-thai">
+    <h2 id="so-don-trang-thai" class="ql-section-title">Số đơn theo trạng thái <small class="text-muted">(theo ngày tạo đơn)</small></h2>
+    <table class="table align-middle mb-0">
+        <tbody>
+            @foreach (var dong in kq.SoDonTrangThai)
+            {
+                <tr>
+                    <td><span class="@HienThiDatSan.LopMau(dong.TrangThai)">@HienThiDatSan.TenTrangThai(dong.TrangThai)</span></td>
+                    <td class="text-end">@dong.SoDon</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+<section class="ql-panel mb-4" aria-labelledby="bieu-do-doanh-thu">
+    <h2 id="bieu-do-doanh-thu" class="ql-section-title">Doanh thu theo @(Model.BoLoc.CheDo == CheDoThongKe.Ngay ? "ngày" : "tháng")</h2>
+    <div style="position: relative; height: 340px">
+        <canvas id="bieuDoDoanhThu" role="img"
+                aria-label="Biểu đồ cột doanh thu theo @(Model.BoLoc.CheDo == CheDoThongKe.Ngay ? "ngày" : "tháng"), gồm tiền sân và tiền dịch vụ"></canvas>
+    </div>
+    <script type="application/json" id="duLieuBieuDo">@Json.Serialize(kq.TheoKy.Select(x => new { x.Nhan, x.SoDon, x.TienSan, x.TienDichVu, x.TongTien }))</script>
+
+    <details class="mt-3">
+        <summary class="fw-semibold">Xem bảng chi tiết</summary>
+        <div class="table-responsive mt-2">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>@(Model.BoLoc.CheDo == CheDoThongKe.Ngay ? "Ngày" : "Tháng")</th>
+                        <th class="text-end">Số đơn</th>
+                        <th class="text-end">Tiền sân</th>
+                        <th class="text-end">Tiền dịch vụ</th>
+                        <th class="text-end">Tổng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var dong in kq.TheoKy)
+                    {
+                        <tr>
+                            <td>@dong.Nhan</td>
+                            <td class="text-end">@dong.SoDon</td>
+                            <td class="text-end">@HienThiDatSan.Tien(dong.TienSan)</td>
+                            <td class="text-end">@HienThiDatSan.Tien(dong.TienDichVu)</td>
+                            <td class="text-end">@HienThiDatSan.Tien(dong.TongTien)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </details>
+</section>
+
+<section class="ql-panel mb-4" aria-labelledby="doanh-thu-theo-san">
+    <h2 id="doanh-thu-theo-san" class="ql-section-title">Doanh thu theo sân</h2>
+    @if (kq.TheoSan.Count == 0)
+    {
+        <p class="text-muted mb-0">Chưa có dữ liệu.</p>
+    }
+    else
+    {
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr><th>Sân</th><th class="text-end">Số đơn</th><th class="text-end">Doanh thu</th><th style="width: 30%"></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var dong in kq.TheoSan)
+                {
+                    <tr>
+                        <td>@dong.TenSan</td>
+                        <td class="text-end">@dong.SoDon</td>
+                        <td class="text-end">@HienThiDatSan.Tien(dong.TongTien)</td>
+                        <td>
+                            <div class="progress" role="img" aria-label="@dong.TenSan: @HienThiDatSan.Tien(dong.TongTien)">
+                                <div class="progress-bar" style="width: @(Phan(dong.TongTien, maxSan))%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section class="ql-panel mb-4" aria-labelledby="dich-vu-ban-chay">
+    <h2 id="dich-vu-ban-chay" class="ql-section-title">Dịch vụ bán chạy</h2>
+    @if (kq.TopDichVu.Count == 0)
+    {
+        <p class="text-muted mb-0">Chưa có dữ liệu.</p>
+    }
+    else
+    {
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr><th>Dịch vụ</th><th class="text-end">Số lượng</th><th class="text-end">Doanh thu</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var dong in kq.TopDichVu)
+                {
+                    <tr>
+                        <td>@dong.TenDichVu</td>
+                        <td class="text-end">@dong.SoLuong</td>
+                        <td class="text-end">@HienThiDatSan.Tien(dong.DoanhThu)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script>
+        (function () {
+            var canvas = document.getElementById('bieuDoDoanhThu');
+            var nguon = document.getElementById('duLieuBieuDo');
+            if (!canvas || !nguon || typeof Chart === 'undefined') return;
+
+            var du = JSON.parse(nguon.textContent);
+            var tien = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
+            function gon(v) {
+                if (v >= 1e6) return (v / 1e6).toLocaleString('vi-VN') + ' tr';
+                if (v >= 1e3) return (v / 1e3).toLocaleString('vi-VN') + ' k';
+                return v;
+            }
+
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: du.map(function (x) { return x.nhan; }),
+                    datasets: [
+                        { label: 'Tiền sân', data: du.map(function (x) { return x.tienSan; }),
+                          backgroundColor: '#2563eb', borderRadius: 4, stack: 'doanhThu' },
+                        { label: 'Tiền dịch vụ', data: du.map(function (x) { return x.tienDichVu; }),
+                          backgroundColor: '#14b8a6', borderRadius: 4, stack: 'doanhThu' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function (ctx) { return ctx.dataset.label + ': ' + tien.format(ctx.parsed.y); },
+                                footer: function (items) {
+                                    var tong = items.reduce(function (s, i) { return s + i.parsed.y; }, 0);
+                                    return 'Tổng: ' + tien.format(tong) + ' · ' + du[items[0].dataIndex].soDon + ' đơn';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, beginAtZero: true, ticks: { callback: gon } }
+                    }
+                }
+            });
+        })();
+    </script>
+}

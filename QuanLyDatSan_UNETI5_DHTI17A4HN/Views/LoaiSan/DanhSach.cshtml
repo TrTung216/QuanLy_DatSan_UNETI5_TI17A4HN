@@ -40,10 +40,17 @@
                     @foreach (var loai in Model.DanhSach)
                     {
                         var hoatDong = loai.TrangThai == TrangThaiLoaiSan.HoatDong;
+                        var lopTrangThai = "ql-status--cancelled";
+                        var tenTrangThai = "Ngừng hoạt động";
+                        if (hoatDong)
+                        {
+                            lopTrangThai = "ql-status--completed";
+                            tenTrangThai = "Hoạt động";
+                        }
                         <tr>
                             <th scope="row"><a asp-action="ChiTiet" asp-route-id="@loai.MaLoaiSan">@loai.TenLoai</a></th>
                             <td>@loai.SoNguoiToiDa</td><td>@loai.DonGiaTheoGio.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td><td>@loai.SoSan</td>
-                            <td><span class="ql-status @(hoatDong ? "ql-status--completed" : "ql-status--cancelled")">@(hoatDong ? "Hoạt động" : "Ngừng hoạt động")</span></td>
+                            <td><span class="ql-status @lopTrangThai">@tenTrangThai</span></td>
                             <td><div class="d-flex flex-wrap gap-2">
                                 <a class="btn btn-sm btn-outline-primary" asp-action="Sua" asp-route-id="@loai.MaLoaiSan" aria-label="Cập nhật @loai.TenLoai">Cập nhật</a>
                                 <a class="btn btn-sm btn-outline-danger" asp-action="Xoa" asp-route-id="@loai.MaLoaiSan" aria-label="Kiểm tra xóa @loai.TenLoai">Xóa</a>

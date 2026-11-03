@@ -98,9 +98,17 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
     private async Task NapLoaiSan(ThemSanViewModel model, CancellationToken cancellationToken, int? maLoaiSanHienTai = null)
     {
         var cacLoai = await sanService.LayLuaChonAsync(maLoaiSanHienTai, cancellationToken);
-        model.CacLoaiSan = cacLoai.Select(x => new LuaChonLoaiSan(x.MaLoaiSan,
-            x.DangHoatDong ? x.TenLoai : x.TenLoai + " (ngừng hoạt động)",
-            x.DonGiaTheoGio, x.DonGiaCaoDiem, x.DonGiaCuoiTuan)).ToList();
+        model.CacLoaiSan = cacLoai.Select(x =>
+        {
+            var tenLoai = x.TenLoai;
+            if (!x.DangHoatDong)
+            {
+                tenLoai += " (ngừng hoạt động)";
+            }
+
+            return new LuaChonLoaiSan(x.MaLoaiSan, tenLoai,
+                x.DonGiaTheoGio, x.DonGiaCaoDiem, x.DonGiaCuoiTuan);
+        }).ToList();
     }
 
     [HttpGet]
@@ -112,12 +120,19 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
         {
             dieuKien.TuKhoa = dieuKien.TuKhoa?.Trim();
             var ketQua = await sanService.LayDanhSachAsync(new(dieuKien.TuKhoa, dieuKien.MaLoaiSan,
-                dieuKien.TrangThai, dieuKien.GiaTu, dieuKien.GiaDen, dieuKien.SapXep, dieuKien.Trang), cancellationToken);
+                dieuKien.TrangThai, dieuKien.GiaTu, dieuKien.GiaDen, dieuKien.SapXep, dieuKien.Trang,
+                dieuKien.NgaySuDung, dieuKien.GioBatDau, dieuKien.GioKetThuc), cancellationToken);
             switch (ketQua.MaLoi)
             {
                 case MaLoiSan.ThanhCong: trangSan = ketQua.DuLieu; break;
                 case MaLoiSan.DuLieuKhongHopLe:
                     ModelState.AddModelError(string.Empty, "Điều kiện tra cứu sân không hợp lệ.");
+                    break;
+                case MaLoiSan.BatDauKhongTuongLai:
+                    ModelState.AddModelError(nameof(TraCuuSanViewModel.GioBatDau), "Vui lòng chọn ngày và giờ bắt đầu trong tương lai.");
+                    break;
+                case MaLoiSan.KhoangGioKhongHopLe:
+                    ModelState.AddModelError(nameof(TraCuuSanViewModel.GioKetThuc), "Giờ kết thúc phải sau giờ bắt đầu trong cùng ngày.");
                     break;
                 default: throw new InvalidOperationException("Mã lỗi tra cứu sân chưa được ánh xạ.");
             }
@@ -130,6 +145,7 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
             TongSoSan = trangSan.TongSoSan,
             TuKhoa = dieuKien.TuKhoa, MaLoaiSan = dieuKien.MaLoaiSan, TrangThai = dieuKien.TrangThai,
             GiaTu = dieuKien.GiaTu, GiaDen = dieuKien.GiaDen, SapXep = dieuKien.SapXep, Trang = trangSan.Trang,
+            NgaySuDung = dieuKien.NgaySuDung, GioBatDau = dieuKien.GioBatDau, GioKetThuc = dieuKien.GioKetThuc,
             CacLoaiSan = cacLoai.Select(x => new LoaiSanTraCuuViewModel(x.MaLoaiSan, x.TenLoai)).ToList()
         });
     }
@@ -170,7 +186,12 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var san = await sanService.LayChiTietAsync(id, cancellationToken);
-        return san is null ? NotFound() : View(ThanhViewModel(san));
+        if (san is null)
+        {
+            return NotFound();
+        }
+
+        return View(ThanhViewModel(san));
     }
 
     [Authorize(Roles = nameof(VaiTro.Admin) + "," + nameof(VaiTro.NhanVien))]

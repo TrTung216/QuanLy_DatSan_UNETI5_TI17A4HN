@@ -58,8 +58,15 @@ public sealed class KetQuaTaoDon
     public int? MaDatSan { get; }
     public LoiDatSan? Loi { get; }
     public bool ThanhCong => MaDatSan.HasValue;
-    public static KetQuaTaoDon DaTao(int maDatSan) => maDatSan > 0
-        ? new(maDatSan, null) : throw new ArgumentOutOfRangeException(nameof(maDatSan));
+    public static KetQuaTaoDon DaTao(int maDatSan)
+    {
+        if (maDatSan <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maDatSan));
+        }
+
+        return new(maDatSan, null);
+    }
     public static KetQuaTaoDon ThatBai(LoiDatSan loi)
     {
         ArgumentNullException.ThrowIfNull(loi);
@@ -74,8 +81,15 @@ public sealed class KetQuaXuLyDon
     public MaLoiDatSan? Loi { get; }
     public bool ThanhCong => Loi is null;
     public static KetQuaXuLyDon ThanhCongResult() => new(null);
-    public static KetQuaXuLyDon ThatBai(MaLoiDatSan loi) => Enum.IsDefined(loi)
-        ? new(loi) : throw new ArgumentOutOfRangeException(nameof(loi));
+    public static KetQuaXuLyDon ThatBai(MaLoiDatSan loi)
+    {
+        if (!Enum.IsDefined(loi))
+        {
+            throw new ArgumentOutOfRangeException(nameof(loi));
+        }
+
+        return new(loi);
+    }
 }
 
 public sealed record TaoDonYeuCau(int MaTaiKhoan, int MaSan, DateOnly NgaySuDung,

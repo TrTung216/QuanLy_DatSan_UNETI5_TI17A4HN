@@ -32,7 +32,12 @@ public class LoaiSanController(ILoaiSanService service) : Controller
     public async Task<IActionResult> ChiTiet(int id, CancellationToken cancellationToken)
     {
         var chiTiet = await service.LayChiTietAsync(id, cancellationToken);
-        return chiTiet is null ? NotFound() : View(ThanhViewModel(chiTiet));
+        if (chiTiet is null)
+        {
+            return NotFound();
+        }
+
+        return View(ThanhViewModel(chiTiet));
     }
 
     [HttpGet]
@@ -87,7 +92,12 @@ public class LoaiSanController(ILoaiSanService service) : Controller
     public async Task<IActionResult> Xoa(int id, CancellationToken cancellationToken)
     {
         var chiTiet = await service.LayChiTietAsync(id, cancellationToken);
-        return chiTiet is null ? NotFound() : View(ThanhViewModel(chiTiet));
+        if (chiTiet is null)
+        {
+            return NotFound();
+        }
+
+        return View(ThanhViewModel(chiTiet));
     }
 
     [HttpPost, ActionName(nameof(Xoa)), ValidateAntiForgeryToken]

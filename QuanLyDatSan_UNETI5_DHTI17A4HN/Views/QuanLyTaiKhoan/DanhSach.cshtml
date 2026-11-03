@@ -64,10 +64,17 @@
                 @foreach (var taiKhoan in Model.DanhSach)
                 {
                     var hoatDong = taiKhoan.TrangThai == TrangThaiTaiKhoan.HoatDong;
+                    var lopTrangThai = "ql-status--cancelled";
+                    var tenTrangThai = "Bị khóa";
+                    if (hoatDong)
+                    {
+                        lopTrangThai = "ql-status--completed";
+                        tenTrangThai = "Hoạt động";
+                    }
                     <tr>
                         <th scope="row">@taiKhoan.TenDangNhap</th>
                         <td>@taiKhoan.HoTen</td><td>@taiKhoan.Email</td><td>@TenVaiTro(taiKhoan.VaiTro)</td>
-                        <td><span class="ql-status @(hoatDong ? "ql-status--completed" : "ql-status--cancelled")">@(hoatDong ? "Hoạt động" : "Bị khóa")</span></td>
+                        <td><span class="ql-status @lopTrangThai">@tenTrangThai</span></td>
                         <td><a class="btn btn-sm btn-outline-primary" asp-action="Sua" asp-route-id="@taiKhoan.MaTaiKhoan"
                                aria-label="Cập nhật tài khoản @taiKhoan.TenDangNhap">Cập nhật</a></td>
                     </tr>

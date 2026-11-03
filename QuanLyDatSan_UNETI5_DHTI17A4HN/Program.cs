@@ -29,24 +29,35 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+    if (builder.Environment.IsDevelopment())
+    {
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    }
+    else
+    {
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    }
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IDongHo, DongHoHeThong>();
-builder.Services.AddScoped<IDatSanService, DatSanService>();
 builder.Services.AddScoped<ITaiKhoanHienTai, TaiKhoanHienTai>();
 builder.Services.AddScoped<IPasswordHasher<TaiKhoan>, PasswordHasher<TaiKhoan>>();
 builder.Services.AddScoped<PhienDangNhap>();
 builder.Services.AddUngDungServices();
 builder.Services.AddSingleton<PhienBanQuyenTaiKhoan>();
-builder.Services.AddSingleton<IDongHo, DongHoHeThong>();
-builder.Services.AddScoped<IDatSanService, DatSanService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {
     options.Cookie.Name = "QuanLyDatSan.Auth";
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+    if (builder.Environment.IsDevelopment())
+    {
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    }
+    else
+    {
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    }
     options.LoginPath = "/TaiKhoan/DangNhap";
     options.AccessDeniedPath = "/TaiKhoan/TuChoiTruyCap";
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);

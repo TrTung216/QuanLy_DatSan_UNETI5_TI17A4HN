@@ -65,8 +65,17 @@ public class DichVuService(IDichVuRepository repository, IDonViCongViec donViCon
             : TrangThaiDichVu.HoatDong;
         await donViCongViec.LuuAsync(cancellationToken);
 
-        return KetQuaNghiepVu.ThanhCongVoi(dichVu.TrangThai == TrangThaiDichVu.HoatDong
-            ? "Đã kích hoạt dịch vụ." : "Đã ngừng hoạt động dịch vụ.");
+        string thongBao;
+        if (dichVu.TrangThai == TrangThaiDichVu.HoatDong)
+        {
+            thongBao = "Đã kích hoạt dịch vụ.";
+        }
+        else
+        {
+            thongBao = "Đã ngừng hoạt động dịch vụ.";
+        }
+
+        return KetQuaNghiepVu.ThanhCongVoi(thongBao);
     }
 
     // Quy ước: giá nhập theo đồng nguyên.
@@ -82,9 +91,22 @@ public class DichVuService(IDichVuRepository repository, IDonViCongViec donViCon
     }
 
     private static KetQuaNghiepVu? KiemTraDonGia(decimal donGia)
-        => donGia != decimal.Truncate(donGia)
-            ? KetQuaNghiepVu.BaoLoi("Đơn giá phải là số đồng nguyên.", nameof(DichVu.DonGia))
-            : null;
+    {
+        if (donGia != decimal.Truncate(donGia))
+        {
+            return KetQuaNghiepVu.BaoLoi("Đơn giá phải là số đồng nguyên.", nameof(DichVu.DonGia));
+        }
 
-    private static string? ChuanHoaMoTa(string? moTa) => string.IsNullOrWhiteSpace(moTa) ? null : moTa;
+        return null;
+    }
+
+    private static string? ChuanHoaMoTa(string? moTa)
+    {
+        if (string.IsNullOrWhiteSpace(moTa))
+        {
+            return null;
+        }
+
+        return moTa;
+    }
 }

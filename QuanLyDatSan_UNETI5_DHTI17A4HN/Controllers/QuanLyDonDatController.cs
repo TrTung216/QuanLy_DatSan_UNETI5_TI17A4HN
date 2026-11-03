@@ -39,7 +39,12 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
     public async Task<IActionResult> ChiTiet(int id, string? quayLai, CancellationToken cancellationToken)
     {
         var model = await LayChiTietViewModelAsync(id, quayLai, cancellationToken);
-        return model is null ? NotFound() : View(model);
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        return View(model);
     }
 
     private async Task<ChiTietDonQuanLyViewModel?> LayChiTietViewModelAsync(int id, string? quayLai,
@@ -52,6 +57,12 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         var laDonCho = don.TrangThai == TrangThaiDatSan.ChoXuLy;
         var laDonXacNhan = don.TrangThai == TrangThaiDatSan.DangXuLy;
         var chuaBatDau = don.GioBatDau > dongHo.BayGio;
+        var quayLaiAnToan = Url.Action(nameof(DanhSach))!;
+        if (Url.IsLocalUrl(quayLai))
+        {
+            quayLaiAnToan = quayLai!;
+        }
+
         return new ChiTietDonQuanLyViewModel
         {
             MaDatSan = don.MaDatSan, MaKhachHang = result.MaKhachHang,
@@ -70,7 +81,7 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
             CoTheGhiCoc = laDonXacNhan && don.TienCoc < don.TongTienDuKien,
             CoTheHoanThanh = laDonXacNhan && don.GioKetThuc <= dongHo.BayGio
                 && don.TienCoc <= don.TongTienDuKien,
-            QuayLai = Url.IsLocalUrl(quayLai) ? quayLai! : Url.Action(nameof(DanhSach))!
+            QuayLai = quayLaiAnToan
         };
     }
 
@@ -137,7 +148,11 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         }
 
         TempData["Success"] = "Đã cập nhật đơn đặt sân.";
-        var anToan = Url.IsLocalUrl(quayLai) ? quayLai : Url.Action(nameof(DanhSach));
+        var anToan = Url.Action(nameof(DanhSach));
+        if (Url.IsLocalUrl(quayLai))
+        {
+            anToan = quayLai;
+        }
         return RedirectToAction(nameof(ChiTiet), new { id = maDon, quayLai = anToan });
     }
 
@@ -148,8 +163,14 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         if (model is null) return NotFound();
         model.LyDoTuChoiNhap = lyDoTuChoi;
         model.LyDoHuyNhap = lyDoHuy;
-        model.TongCocNhap = ModelState.TryGetValue(nameof(GhiCocViewModel.TongCoc), out var coc)
-            ? coc.AttemptedValue : null;
+        if (ModelState.TryGetValue(nameof(GhiCocViewModel.TongCoc), out var coc))
+        {
+            model.TongCocNhap = coc.AttemptedValue;
+        }
+        else
+        {
+            model.TongCocNhap = null;
+        }
         return View(nameof(ChiTiet), model);
     }
 

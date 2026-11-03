@@ -1,9 +1,9 @@
-// M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ kiểm thử ranh giới service và hồi quy xác thực.
 using Microsoft.Extensions.Logging.Abstractions;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyTaiKhoan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyLoaiSan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.TrangChu;
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ kiểm thử ranh giới service và hồi quy xác thực.
 using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +30,7 @@ public class ServiceM1Tests
     [InlineData(typeof(IQuanLyTaiKhoanService))]
     [InlineData(typeof(IXacThucTaiKhoanService))]
     [InlineData(typeof(IDichVuService))]
+    [InlineData(typeof(IDatSanService))]
     [InlineData(typeof(IDonViCongViec))]
     [InlineData(typeof(ITaiKhoanRepository))]
     [InlineData(typeof(ILoaiSanRepository))]
@@ -62,7 +63,8 @@ public class ServiceM1Tests
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var service = new QuanLyTaiKhoanService(new TaiKhoanRepository(db), new DonViCongViec(db, NullLogger<DonViCongViec>.Instance), scope.ServiceProvider.GetRequiredService<IPasswordHasher<TaiKhoan>>(),
-            new NguoiThaoTac(maNguoiThaoTac), scope.ServiceProvider.GetRequiredService<PhienBanQuyenTaiKhoan>());
+            new NguoiThaoTac(maNguoiThaoTac), scope.ServiceProvider.GetRequiredService<PhienBanQuyenTaiKhoan>(),
+            scope.ServiceProvider.GetRequiredService<IDongHo>());
         var ketQua = await service.SuaAsync(3, new("Không được lưu", "test@example.test", VaiTro.Admin, TrangThaiTaiKhoan.HoatDong), default);
         Assert.Contains(MaLoiTaiKhoan.KhongDuQuyen, ketQua.Loi);
         Assert.Equal(VaiTro.KhachHang, (await app.DocTaiKhoanAsync(3)).VaiTro);
@@ -87,15 +89,19 @@ public class ServiceM1Tests
         await using var db = new ApplicationDbContext(options);
         var phienBan = scope.ServiceProvider.GetRequiredService<PhienBanQuyenTaiKhoan>();
         var truoc = phienBan.Lay(2);
-        var service = new QuanLyTaiKhoanService(new TaiKhoanRepository(db), new DonViCongViec(db, NullLogger<DonViCongViec>.Instance), scope.ServiceProvider.GetRequiredService<IPasswordHasher<TaiKhoan>>(), new NguoiThaoTac(1), phienBan);
+        var service = new QuanLyTaiKhoanService(new TaiKhoanRepository(db), new DonViCongViec(db, NullLogger<DonViCongViec>.Instance), scope.ServiceProvider.GetRequiredService<IPasswordHasher<TaiKhoan>>(), new NguoiThaoTac(1), phienBan,
+            scope.ServiceProvider.GetRequiredService<IDongHo>());
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.SuaAsync(2,
-            new("Không được lưu", "test@example.test", VaiTro.KhachHang, TrangThaiTaiKhoan.BiKhoa), default));
+            new("Không được lưu", "test@example.test", VaiTro.KhachHang, TrangThaiTaiKhoan.BiKhoa, "0912345678"), default));
         Assert.Equal(truoc, phienBan.Lay(2));
         var taiKhoan = await app.DocTaiKhoanAsync(2);
         Assert.Equal("nhanvien", taiKhoan.HoTen);
         Assert.Equal(VaiTro.NhanVien, taiKhoan.VaiTro);
         Assert.Equal(TrangThaiTaiKhoan.HoatDong, taiKhoan.TrangThai);
         Assert.Null(db.Database.CurrentTransaction);
+        using var kiemTra = app.Services.CreateScope();
+        Assert.False(await kiemTra.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .KhachHangs.AnyAsync(x => x.MaTaiKhoan == 2));
     }
 
     private sealed class LoiSauKhiGhi : SaveChangesInterceptor

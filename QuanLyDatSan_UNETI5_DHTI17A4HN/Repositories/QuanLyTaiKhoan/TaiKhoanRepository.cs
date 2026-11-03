@@ -30,11 +30,11 @@ public class TaiKhoanRepository(ApplicationDbContext db) : ITaiKhoanRepository
     public Task<TaiKhoanDoc?> LayChiTietAsync(int id, CancellationToken cancellationToken) =>
         Chieu(db.TaiKhoans.AsNoTracking().Where(x => x.MaTaiKhoan == id)).SingleOrDefaultAsync(cancellationToken);
 
-    public Task<TaiKhoan?> LayDeCapNhatAsync(int id, CancellationToken ct) => db.TaiKhoans.SingleOrDefaultAsync(x => x.MaTaiKhoan == id, ct);
+    public Task<TaiKhoan?> LayDeCapNhatAsync(int id, CancellationToken ct) => db.TaiKhoans.Include(x => x.KhachHang).SingleOrDefaultAsync(x => x.MaTaiKhoan == id, ct);
     public Task<TaiKhoan?> LayDeXacThucAsync(string ten, CancellationToken ct) => db.TaiKhoans.SingleOrDefaultAsync(x => x.TenDangNhap == ten, ct);
     public Task<bool> TrungTenAsync(string ten, CancellationToken ct) => db.TaiKhoans.AnyAsync(x => x.TenDangNhap == ten, ct);
     public Task<List<int>> LayMaTheoQuyenAsync(VaiTro vaiTro, TrangThaiTaiKhoan trangThai, CancellationToken ct) => db.TaiKhoans.Where(x => x.VaiTro == vaiTro && x.TrangThai == trangThai).Select(x => x.MaTaiKhoan).ToListAsync(ct);
     public void Them(TaiKhoan taiKhoan) => db.TaiKhoans.Add(taiKhoan);
     private static IQueryable<TaiKhoanDoc> Chieu(IQueryable<TaiKhoan> query) => query.Select(x => new TaiKhoanDoc(
-        x.MaTaiKhoan, x.TenDangNhap, x.HoTen, x.Email, x.VaiTro, x.TrangThai));
+        x.MaTaiKhoan, x.TenDangNhap, x.HoTen, x.Email, x.VaiTro, x.TrangThai, x.KhachHang != null));
 }

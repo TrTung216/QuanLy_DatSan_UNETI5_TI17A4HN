@@ -18,8 +18,4 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\QuanLyDatSan_UNETI5_DHTI17A4HN\QuanLyDatSan_UNETI5_DHTI17A4HN.csproj" />
-  </ItemGroup>
-
 </Project>

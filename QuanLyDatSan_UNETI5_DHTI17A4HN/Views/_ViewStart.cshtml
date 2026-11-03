@@ -4,5 +4,12 @@
     var laQuanTri = User.Identity?.IsAuthenticated == true
         && (User.IsInRole(nameof(QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.VaiTro.Admin))
             || User.IsInRole(nameof(QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.VaiTro.NhanVien)));
-    Layout = laQuanTri ? "_AdminLayout" : "_LayoutKhachHang";
+    if (laQuanTri)
+    {
+        Layout = "_AdminLayout";
+    }
+    else
+    {
+        Layout = "_LayoutKhachHang";
+    }
 }

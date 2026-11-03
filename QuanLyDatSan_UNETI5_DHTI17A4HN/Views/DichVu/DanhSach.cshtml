@@ -5,6 +5,21 @@
 @{
     ViewData["Title"] = "Quản lý dịch vụ";
     var vi = CultureInfo.GetCultureInfo("vi-VN");
+    string? tatCaDuocChon = null;
+    string? hoatDongDuocChon = null;
+    string? ngungHoatDongDuocChon = null;
+    string? tenTangDuocChon = null;
+    string? tenGiamDuocChon = null;
+    string? giaTangDuocChon = null;
+    string? giaGiamDuocChon = null;
+
+    if (Model.TrangThai is null) tatCaDuocChon = "selected";
+    if (Model.TrangThai == TrangThaiDichVu.HoatDong) hoatDongDuocChon = "selected";
+    if (Model.TrangThai == TrangThaiDichVu.NgungHoatDong) ngungHoatDongDuocChon = "selected";
+    if (string.IsNullOrEmpty(Model.SapXep)) tenTangDuocChon = "selected";
+    if (Model.SapXep == "ten_giam") tenGiamDuocChon = "selected";
+    if (Model.SapXep == "gia_tang") giaTangDuocChon = "selected";
+    if (Model.SapXep == "gia_giam") giaGiamDuocChon = "selected";
 }
 <div class="ql-page-header">
     <h1>@ViewData["Title"]</h1>
@@ -19,18 +34,18 @@
         <div class="col-md-3">
             <label for="trangThai" class="visually-hidden">Trạng thái</label>
             <select id="trangThai" name="trangThai" class="form-select">
-                <option value="" selected="@(Model.TrangThai == null ? "selected" : null)">Tất cả trạng thái</option>
-                <option value="1" selected="@(Model.TrangThai == TrangThaiDichVu.HoatDong ? "selected" : null)">Hoạt động</option>
-                <option value="0" selected="@(Model.TrangThai == TrangThaiDichVu.NgungHoatDong ? "selected" : null)">Ngừng hoạt động</option>
+                <option value="" selected="@tatCaDuocChon">Tất cả trạng thái</option>
+                <option value="1" selected="@hoatDongDuocChon">Hoạt động</option>
+                <option value="0" selected="@ngungHoatDongDuocChon">Ngừng hoạt động</option>
             </select>
         </div>
         <div class="col-md-3">
             <label for="sapXep" class="visually-hidden">Sắp xếp</label>
             <select id="sapXep" name="sapXep" class="form-select">
-                <option value="" selected="@(string.IsNullOrEmpty(Model.SapXep) ? "selected" : null)">Tên A → Z</option>
-                <option value="ten_giam" selected="@(Model.SapXep == "ten_giam" ? "selected" : null)">Tên Z → A</option>
-                <option value="gia_tang" selected="@(Model.SapXep == "gia_tang" ? "selected" : null)">Giá tăng dần</option>
-                <option value="gia_giam" selected="@(Model.SapXep == "gia_giam" ? "selected" : null)">Giá giảm dần</option>
+                <option value="" selected="@tenTangDuocChon">Tên A → Z</option>
+                <option value="ten_giam" selected="@tenGiamDuocChon">Tên Z → A</option>
+                <option value="gia_tang" selected="@giaTangDuocChon">Giá tăng dần</option>
+                <option value="gia_giam" selected="@giaGiamDuocChon">Giá giảm dần</option>
             </select>
         </div>
         <div class="col-md-2 d-grid"><button type="submit" class="btn btn-outline-primary">Lọc</button></div>
@@ -63,17 +78,30 @@
                 @foreach (var dv in Model.DanhSach)
                 {
                     var hoatDong = dv.TrangThai == TrangThaiDichVu.HoatDong;
+                    var lopTrangThai = "text-bg-secondary";
+                    var tenTrangThai = "Ngừng hoạt động";
+                    var loiXacNhan = "Kích hoạt lại dịch vụ này?";
+                    var lopNut = "btn-outline-primary";
+                    var tenNut = "Kích hoạt";
+                    if (hoatDong)
+                    {
+                        lopTrangThai = "text-bg-success";
+                        tenTrangThai = "Hoạt động";
+                        loiXacNhan = "Ngừng hoạt động dịch vụ này?";
+                        lopNut = "btn-danger";
+                        tenNut = "Ngừng hoạt động";
+                    }
                     <tr>
                         <td>@dv.TenDichVu</td>
                         <td>@dv.DonViTinh</td>
                         <td class="text-end">@dv.DonGia.ToString("N0", vi) ₫</td>
-                        <td><span class="badge @(hoatDong ? "text-bg-success" : "text-bg-secondary")">@(hoatDong ? "Hoạt động" : "Ngừng hoạt động")</span></td>
+                        <td><span class="badge @lopTrangThai">@tenTrangThai</span></td>
                         <td class="text-nowrap">
                             <a class="btn btn-sm btn-outline-primary" asp-action="Sua" asp-route-id="@dv.MaDichVu">Sửa</a>
                             <form asp-action="DoiTrangThai" asp-route-id="@dv.MaDichVu" method="post" class="d-inline"
-                                  onsubmit="return confirm('@(hoatDong ? "Ngừng hoạt động dịch vụ này?" : "Kích hoạt lại dịch vụ này?")');">
-                                <button type="submit" class="btn btn-sm @(hoatDong ? "btn-danger" : "btn-outline-primary")">
-                                    @(hoatDong ? "Ngừng hoạt động" : "Kích hoạt")
+                                  onsubmit="return confirm('@loiXacNhan');">
+                                <button type="submit" class="btn btn-sm @lopNut">
+                                    @tenNut
                                 </button>
                             </form>
                         </td>

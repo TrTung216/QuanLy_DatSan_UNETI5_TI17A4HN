@@ -5,12 +5,14 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyKhachHang;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDichVu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDichVuTrongDon;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyThongKe;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDatSan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.TrangChu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.DieuHanh;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.DieuHanh;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyThongKe;
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ gom DI M1; giữ đăng ký M5 hiện có.
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. thêm đăng ký service hồ sơ khách hàng.
 //M5 :Nguyễn Hữu Quang MSSV : 23103100184 . Thêm đăng kí dịch vụ tính tiền
@@ -38,7 +40,7 @@ public static class DependencyInjection
         // trong AddUngDungServices(), dưới services.AddModuleDichVu();
         services.AddModuleTinhTien();
         services.AddModuleDichVuTrongDon();
-        // Module khác tự thêm dòng của mình ở đây
+        services.AddModuleThongKe();   // thêm dòng này ngay dưới
         services.AddModuleDatSan();
         return services;
     }
@@ -101,6 +103,13 @@ public static class DependencyInjection
         services.AddScoped<IDichVuTrongDonService, DichVuTrongDonService>();
         return services;
     }
+    // M5: thống kê
+    private static IServiceCollection AddModuleThongKe(this IServiceCollection services)
+    {
+        services.AddScoped<IThongKeRepository, ThongKeRepository>();
+        services.AddScoped<IThongKeService, ThongKeService>();
+        return services;
+    } 
     private static IServiceCollection AddModuleTrangChu(this IServiceCollection services)
     {
         services.AddScoped<ITrangChuRepository, TrangChuRepository>();

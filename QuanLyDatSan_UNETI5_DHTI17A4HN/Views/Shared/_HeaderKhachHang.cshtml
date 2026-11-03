@@ -1,5 +1,5 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. header và menu của giao diện khách hàng; menu đổi theo trạng thái đăng nhập. *@
-@* M1: Trần Trọng Tùng; MSSV: 23103100202. Gom đăng nhập/đăng ký vào khu vực tài khoản bên phải. *@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp menu công khai/khách hàng, liên kết tài khoản và breakpoint thu gọn. *@
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
 @inject ITaiKhoanHienTai TaiKhoanHienTai
@@ -8,28 +8,33 @@
     var action = ViewContext.RouteData.Values["action"]?.ToString();
     var daDangNhap = User.Identity?.IsAuthenticated == true;
     var laKhachHang = daDangNhap && User.IsInRole(nameof(VaiTro.KhachHang));
-    // Chỉ thêm mục khi action và quyền phía server đã tồn tại; "CungNhomAction" giữ trạng thái đang chọn ở trang con.
-    var menu = new List<MucMenu>();
+    var controllerThuongHieu = "Home";
+    var actionThuongHieu = "Index";
     if (laKhachHang)
     {
-        menu.Add(new MucMenu("Trang chủ", "KhachHang", "TrangChu"));
-        menu.Add(new MucMenu("Đặt sân", "DonDat", "Tao"));
-        menu.Add(new MucMenu("Lịch của tôi", "DonDat", "Index", ["ChiTiet"]));
-        menu.Add(new MucMenu("Hồ sơ", "HoSo", "Index", ["Sua"]));
+        controllerThuongHieu = "KhachHang";
+        actionThuongHieu = "TrangChu";
     }
-    else
+
+    // Chỉ thêm mục khi action và quyền phía server đã tồn tại; "CungNhomAction" giữ trạng thái đang chọn ở trang con.
+    var menu = MenuKhachHang.Lay(User);
+    var trangTaiKhoan = new MucMenu("Thông tin tài khoản", "TaiKhoan", "ThongTin").KhopTrang(controller, action);
+    var tenVaiTro = TaiKhoanHienTai.VaiTro switch
     {
-        menu.Add(new MucMenu("Trang chủ", "Home", "Index"));
-    }
+        VaiTro.KhachHang => "Khách hàng",
+        VaiTro.NhanVien => "Nhân viên",
+        VaiTro.Admin => "Quản trị viên",
+        _ => "Tài khoản"
+    };
     var trangDangNhap = string.Equals(controller, "TaiKhoan", StringComparison.OrdinalIgnoreCase)
         && string.Equals(action, "DangNhap", StringComparison.OrdinalIgnoreCase);
     var trangDangKy = string.Equals(controller, "KhachHang", StringComparison.OrdinalIgnoreCase)
         && string.Equals(action, "DangKy", StringComparison.OrdinalIgnoreCase);
 }
 <header class="ql-header">
-    <nav class="navbar navbar-expand-lg navbar-light" aria-label="Điều hướng chính">
+    <nav class="navbar navbar-expand-xl navbar-light" aria-label="Điều hướng chính">
         <div class="container">
-            <a class="navbar-brand ql-brand" asp-area="" asp-controller="@(laKhachHang ? "KhachHang" : "Home")" asp-action="@(laKhachHang ? "TrangChu" : "Index")">
+            <a class="navbar-brand ql-brand" asp-area="" asp-controller="@controllerThuongHieu" asp-action="@actionThuongHieu">
                 <span class="ql-brand-mark" aria-hidden="true">
                     <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6">
                         <rect x="4" y="3" width="24" height="26" rx="3" />
@@ -49,8 +54,15 @@
                     @foreach (var muc in menu)
                     {
                         var hienTai = muc.KhopTrang(controller, action);
+                        var lopTrangHienTai = "";
+                        string? ariaTrangHienTai = null;
+                        if (hienTai)
+                        {
+                            lopTrangHienTai = "active";
+                            ariaTrangHienTai = "page";
+                        }
                         <li class="nav-item">
-                            <a class="nav-link @(hienTai ? "active" : "")" aria-current="@(hienTai ? "page" : null)"
+                            <a class="nav-link @lopTrangHienTai" aria-current="@ariaTrangHienTai"
                                asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">@muc.Ten</a>
                         </li>
                     }
@@ -59,8 +71,9 @@
                     @if (daDangNhap)
                     {
                         <div class="ql-account-info">
-                            <span class="ql-account-name">@TaiKhoanHienTai.HoTen</span>
-                            <span class="ql-account-role">Khách hàng</span>
+                            <a class="ql-account-name" asp-area="" asp-controller="TaiKhoan" asp-action="ThongTin"
+                               title="Thông tin tài khoản" aria-current="@(trangTaiKhoan ? "page" : null)">@TaiKhoanHienTai.HoTen</a>
+                            <span class="ql-account-role">@tenVaiTro</span>
                         </div>
                         <form id="dang-xuat" asp-area="" asp-controller="TaiKhoan" asp-action="DangXuat" method="post" asp-antiforgery="true">
                             <button type="submit" class="btn btn-outline-primary">Đăng xuất</button>
@@ -68,10 +81,21 @@
                     }
                     else
                     {
+                        string? ariaDangNhap = null;
+                        if (trangDangNhap)
+                        {
+                            ariaDangNhap = "page";
+                        }
+
+                        string? ariaDangKy = null;
+                        if (trangDangKy)
+                        {
+                            ariaDangKy = "page";
+                        }
                         <a class="btn btn-primary" asp-area="" asp-controller="TaiKhoan" asp-action="DangNhap"
-                           aria-current="@(trangDangNhap ? "page" : null)">Đăng nhập</a>
+                           aria-current="@ariaDangNhap">Đăng nhập</a>
                         <a class="btn btn-outline-primary" asp-area="" asp-controller="KhachHang" asp-action="DangKy"
-                           aria-current="@(trangDangKy ? "page" : null)">Đăng ký</a>
+                           aria-current="@ariaDangKy">Đăng ký</a>
                     }
                 </div>
             </div>

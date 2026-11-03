@@ -10,7 +10,9 @@ public enum MaLoiSan
     DuLieuLienQuanThayDoi,
     DangDuocThamChieu,
     DaBiXoa,
-    GioThueKhongHopLe
+    GioThueKhongHopLe,
+    BatDauKhongTuongLai,
+    KhoangGioKhongHopLe
 }
 
 // Chỉ tạo qua factory: thành công có dữ liệu; thất bại có một mã lỗi hợp lệ.
@@ -19,7 +21,18 @@ public sealed class KetQuaSan<T> where T : notnull
     private readonly T? duLieu;
     public MaLoiSan MaLoi { get; }
     public bool ThanhCong => MaLoi == MaLoiSan.ThanhCong;
-    public T DuLieu => ThanhCong ? duLieu! : throw new InvalidOperationException("Kết quả thất bại không có dữ liệu thành công.");
+    public T DuLieu
+    {
+        get
+        {
+            if (!ThanhCong)
+            {
+                throw new InvalidOperationException("Kết quả thất bại không có dữ liệu thành công.");
+            }
+
+            return duLieu!;
+        }
+    }
 
     private KetQuaSan(MaLoiSan maLoi, T? duLieu)
     {
