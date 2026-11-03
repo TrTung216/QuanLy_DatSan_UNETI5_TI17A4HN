@@ -40,6 +40,23 @@
         <dt class="col-sm-3">Lý do</dt><dd class="col-sm-9">@Model.LyDoHuy</dd>
     }
 </dl>
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+}
+@if (Model.CoTheHuy)
+{
+    <form asp-action="Huy" method="post" asp-antiforgery="true" class="d-flex flex-wrap align-items-end gap-2 mb-3"
+          onsubmit="return confirm('Bạn có chắc muốn hủy đơn này?');">
+        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+        <div>
+            <label for="ly-do-huy" class="form-label">Lý do hủy *</label>
+            <input id="ly-do-huy" name="LyDo" value="@Model.LyDoHuyNhap" class="form-control" required maxlength="1000" />
+        </div>
+        <button type="submit" class="btn btn-danger">Hủy đơn</button>
+    </form>
+}
 <a asp-action="Index" class="btn btn-outline-secondary">Quay lại lịch của tôi</a>
 
 </section>

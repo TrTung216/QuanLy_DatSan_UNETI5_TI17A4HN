@@ -57,13 +57,28 @@ public class HoSoController(IKhachHangService khachHangService) : Controller
             case MaLoiHoSo.HoSoBiKhoa:
                 return HoSoBiKhoa();
             case MaLoiHoSo.NgaySinhKhongHopLe:
-                ModelState.AddModelError(nameof(model.NgaySinh), "Ngày sinh không hợp lệ.");
-                GanTruongChiDoc(model, hoSo);
-                return View(model);
+                return LoiTruong(model, hoSo, nameof(model.NgaySinh), "Ngày sinh không hợp lệ.");
+            case MaLoiHoSo.HoTenKhongHopLe:
+                return LoiTruong(model, hoSo, nameof(model.HoTen), "Họ tên là bắt buộc và tối đa 100 ký tự.");
+            case MaLoiHoSo.EmailKhongHopLe:
+                return LoiTruong(model, hoSo, nameof(model.Email), "Email không hợp lệ hoặc dài quá 254 ký tự.");
+            case MaLoiHoSo.SoDienThoaiKhongHopLe:
+                return LoiTruong(model, hoSo, nameof(model.SoDienThoai), "Số điện thoại không hợp lệ, ví dụ 0912345678.");
+            case MaLoiHoSo.GioiTinhKhongHopLe:
+                return LoiTruong(model, hoSo, nameof(model.GioiTinh), "Giới tính không hợp lệ.");
+            case MaLoiHoSo.DiaChiKhongHopLe:
+                return LoiTruong(model, hoSo, nameof(model.DiaChi), "Địa chỉ tối đa 255 ký tự.");
             default:
                 // Mã lỗi chưa được ánh xạ là lỗi lập trình, để xử lý lỗi chung ghi nhận.
                 throw new InvalidOperationException($"Chưa ánh xạ mã lỗi hồ sơ: {ketQua.Loi}.");
         }
+    }
+
+    private ViewResult LoiTruong(HoSoViewModel model, HoSoKhachDto hoSo, string truong, string thongBao)
+    {
+        ModelState.AddModelError(truong, thongBao);
+        GanTruongChiDoc(model, hoSo);
+        return View(model);
     }
 
     private static HoSoViewModel TaoViewModel(HoSoKhachDto hoSo) => new()
