@@ -1,4 +1,6 @@
 // Phan Giang Tâm - 23103100196. M2: Hợp đồng đọc, ghi sân và tính giá dự kiến.
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh;
+
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
 
 // Người gọi: SanTheThaoController. Quyền đọc lấy qua ITaiKhoanHienTai trong service.
@@ -13,6 +15,7 @@ public interface ISanTheThaoService
     Task<KetQuaSan<int>> TaoAsync(GhiSan yeuCau, CancellationToken cancellationToken);
     Task<KetQuaSan<int>> SuaAsync(int maSan, GhiSan yeuCau, CancellationToken cancellationToken);
     Task<KetQuaSan<int>> XoaAsync(int maSan, CancellationToken cancellationToken);
+    Task<KetQuaAnh> CapNhatAnhAsync(int maSan, YeuCauAnh yeuCau, CancellationToken cancellationToken);
     Task<KetQuaSan<decimal>> TinhGiaAsync(int maSan, DateOnly ngay,
         TimeOnly batDau, TimeOnly ketThuc, CancellationToken cancellationToken);
 }

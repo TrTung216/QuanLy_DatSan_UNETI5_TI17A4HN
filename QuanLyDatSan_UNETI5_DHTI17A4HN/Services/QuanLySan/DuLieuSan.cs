@@ -11,7 +11,7 @@ public record GhiSan(string TenSan, int MaLoaiSan, string DiaChi, string? TienIc
 public record SanDoc(int MaSan, string TenSan, int MaLoaiSan, string TenLoai,
     string DiaChi, string? TienIch, decimal DonGia, decimal? DonGiaCaoDiem,
     decimal? DonGiaCuoiTuan, TrangThaiSan TrangThai, TimeOnly GioMoCua,
-    TimeOnly GioDongCua, DateOnly? NgayBaoTri, string? GhiChu);
+    TimeOnly GioDongCua, DateOnly? NgayBaoTri, string? GhiChu, string? DuongDanAnh = null);
 
 public record TrangSanDoc(IReadOnlyList<SanDoc> DanhSach, int Trang, int TongTrang, int TongSoSan);
 

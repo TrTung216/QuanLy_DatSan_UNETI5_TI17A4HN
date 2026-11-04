@@ -3,11 +3,13 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLySan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
 
-public class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec donViCongViec,
-    ITaiKhoanHienTai taiKhoanHienTai, IDatSanService datSanService) : ISanTheThaoService
+public partial class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec donViCongViec,
+    ITaiKhoanHienTai taiKhoanHienTai, IDatSanService datSanService,
+    IKhoAnh khoAnh, IDonDepAnh donDepAnh, ILogger<SanTheThaoService> logger) : ISanTheThaoService
 {
 
     private bool ChiHoatDong => taiKhoanHienTai.VaiTro is not (VaiTro.Admin or VaiTro.NhanVien);
@@ -94,7 +96,7 @@ public class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec 
         try { await donViCongViec.LuuAsync(cancellationToken); }
         catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan)
         {
-            return KetQuaSan<int>.Loi(MaLoiSan.KhongTonTai);
+            return KetQuaSan<int>.Loi(MaLoiSan.XungDotDuLieu);
         }
         catch (LoiLuuTruException ex) when (ex.MaLoi is MaLoiLuuTru.LoaiSanDangDuocThamChieu or MaLoiLuuTru.ThamChieuSan)
         {
@@ -115,8 +117,9 @@ public class SanTheThaoService(ISanTheThaoRepository repository, IDonViCongViec 
         }
         catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan)
         {
-            return KetQuaSan<int>.Loi(MaLoiSan.DaBiXoa);
+            return KetQuaSan<int>.Loi(MaLoiSan.XungDotDuLieu);
         }
+        await donDepAnh.XoaNeuKhongThamChieuAsync(san.DuongDanAnh);
         return KetQuaSan<int>.Dat(maSan);
     }
 

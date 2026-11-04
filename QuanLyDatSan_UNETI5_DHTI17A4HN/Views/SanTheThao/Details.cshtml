@@ -2,6 +2,8 @@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.SanChiTietViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using System.Globalization
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels
 @{
     ViewData["Title"] = "Chi tiết sân";
     var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
@@ -29,6 +31,7 @@
     <p class="ql-subtitle">@Model.TenLoai · @trangThai</p>
 </div>
 <section class="ql-panel" aria-label="Thông tin sân">
+    <partial name="_AnhDaiDien" model="@(new AnhDaiDienViewModel(NhomAnh.San, Model.MaSan, Model.TenSan, Model.DuongDanAnh is not null, ChiTiet: true, TaiCham: false))" />
     <h2 class="h5 mb-4">Thông tin sân</h2>
     <dl class="row">
         <dt class="col-sm-3">Loại sân</dt><dd class="col-sm-9">@Model.TenLoai</dd>
@@ -50,7 +53,10 @@
     <p class="form-text">Giá được chia theo từng khung giờ. Đây là tiền thuê dự kiến; chưa kiểm tra sân trống và chưa gồm dịch vụ.</p>
     <form asp-action="Details" method="get" class="row g-3 mb-4">
         <input type="hidden" name="id" value="@Model.MaSan" />
-        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        @if (ViewData["LoiAnhSan"] is not true)
+        {
+            <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        }
         <div class="col-md-4">
             <label for="ngay" class="form-label">Ngày thuê</label>
             <input id="ngay" name="ngay" type="date" value="@ViewData["NgayTinhGia"]" class="form-control" required />
@@ -77,3 +83,29 @@
         <a asp-action="Delete" asp-route-id="@Model.MaSan" class="btn btn-outline-danger">Xóa sân</a>
     }
 </section>
+@if (User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien))))
+{
+    <section id="anh-dai-dien" class="ql-panel mt-4" aria-labelledby="tieu-de-anh-san">
+        <h2 id="tieu-de-anh-san" class="h4">Ảnh đại diện sân</h2>
+        <p class="form-text">Ảnh được lưu riêng với thông tin sân. Thay hoặc gỡ ảnh không thay đổi tên, giá hay giờ phục vụ.</p>
+        <form asp-action="CapNhatAnh" asp-route-id="@Model.MaSan" method="post" enctype="multipart/form-data" asp-antiforgery="true">
+            @if (ViewData["LoiAnhSan"] is true)
+            {
+                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+            }
+            <input type="hidden" name="AnhCu" value="@Model.DuongDanAnh" />
+            <div class="mb-3">
+                <label for="tep-anh-san" class="form-label">Chọn ảnh sân mới</label>
+                <input id="tep-anh-san" name="Tep" type="file" accept=".jpg,.jpeg,.png,.webp" class="form-control" aria-describedby="quy-tac-anh-san" />
+                <p id="quy-tac-anh-san" class="form-text">JPEG, PNG hoặc WebP tĩnh; tối đa 5 MiB, 4096 px mỗi chiều và 16 triệu điểm ảnh. Khi gỡ ảnh, để trống ô chọn tệp. Nếu có lỗi, vui lòng chọn lại file.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" name="ThaoTac" value="ThayAnh" class="btn btn-primary">Lưu ảnh sân</button>
+                @if (Model.DuongDanAnh is not null)
+                {
+                    <button type="submit" name="ThaoTac" value="GoAnh" class="btn btn-outline-danger">Gỡ ảnh sân</button>
+                }
+            </div>
+        </form>
+    </section>
+}

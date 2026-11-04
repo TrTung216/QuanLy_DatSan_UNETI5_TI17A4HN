@@ -97,6 +97,7 @@
         <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-primary" disabled="@(Model.CacLoaiSan.Count == 0)">Lưu thay đổi</button>
             <a asp-action="Details" asp-route-id="@Model.MaSan" class="btn btn-outline-secondary">Hủy</a>
+            <a asp-action="Details" asp-route-id="@Model.MaSan" asp-fragment="anh-dai-dien" class="btn btn-outline-primary">Quản lý ảnh sân</a>
         </div>
     </form>
 </section>

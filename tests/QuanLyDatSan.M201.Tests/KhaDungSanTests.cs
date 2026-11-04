@@ -175,7 +175,9 @@ public class KhaDungSanSqlServerTests(TraCuuSanSqlServerFixture fixture) : IClas
             // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Đồng bộ phụ thuộc service sau tích hợp main.
             new DatSanService(new DatSanRepository(db), luu, new DongHoHeThong(), new TinhTienService(),
                 new KhachTraCuu(), new Microsoft.Extensions.Hosting.Internal.HostingEnvironment { EnvironmentName = "Production" },
-                Microsoft.Extensions.Options.Options.Create(new CocMoPhongOptions())));
+                Microsoft.Extensions.Options.Options.Create(new CocMoPhongOptions())),
+            AnhSanTest.Kho(), new AnhSanTest.DonDepKhongCoAnh(),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<SanTheThaoService>.Instance);
     }
 
     [M2SqlServerTheory]
