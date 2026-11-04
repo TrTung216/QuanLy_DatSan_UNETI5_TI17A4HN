@@ -14,6 +14,7 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyThongKe;
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ gom DI M1; giữ đăng ký M5 hiện có.
+// M1: Bind cấu hình CocMoPhong tại điểm đăng ký chung; service M4 kiểm tra thêm môi trường Development.
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. thêm đăng ký service hồ sơ khách hàng.
 //M5 :Nguyễn Hữu Quang MSSV : 23103100184 . Thêm đăng kí dịch vụ tính tiền
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyKhachHang;
@@ -86,6 +87,7 @@ public static class DependencyInjection
     // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Đăng ký service đặt sân.
     private static IServiceCollection AddModuleDatSan(this IServiceCollection services)
     {
+        services.AddOptions<CocMoPhongOptions>().BindConfiguration("CocMoPhong");
         services.AddScoped<IDatSanRepository, DatSanRepository>();
         services.AddScoped<IDatSanService, DatSanService>();
         return services;

@@ -1,3 +1,4 @@
+// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Bổ sung phiên bản chính sách và số tiền cọc yêu cầu.
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. đơn đặt sân (M3 tạo đơn, M4 xử lý trạng thái); chưa có ChiTietDatSan của M5.
 //M5 : Nguyễn Hữu Quang MSSV :  23103100184 thêm Navigation ChiTietDatSans..
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
@@ -16,6 +17,9 @@ public class DatSan
     public DateTime GioKetThuc { get; set; }
     public decimal DonGia { get; set; }
     public decimal TienCoc { get; set; }
+    // Hợp đồng dữ liệu cọc M4; M1 tích hợp mapping/migration trước khi bật luồng.
+    public int PhienBanChinhSachCoc { get; set; }
+    public decimal TienCocYeuCau { get; set; }
     public TrangThaiDatSan TrangThai { get; set; } = TrangThaiDatSan.ChoXuLy;
     public DateTime? NgayXacNhan { get; set; }
     public DateTime? NgayHoanThanh { get; set; }

@@ -172,7 +172,10 @@ public class KhaDungSanSqlServerTests(TraCuuSanSqlServerFixture fixture) : IClas
     {
         var luu = new DonViCongViec(db);
         return new(new SanTheThaoRepository(db), luu, new KhachTraCuu(),
-            new DatSanService(new DatSanRepository(db), luu, new DongHoHeThong(), new TinhTienService()));
+            // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Đồng bộ phụ thuộc service sau tích hợp main.
+            new DatSanService(new DatSanRepository(db), luu, new DongHoHeThong(), new TinhTienService(),
+                new KhachTraCuu(), new Microsoft.Extensions.Hosting.Internal.HostingEnvironment { EnvironmentName = "Production" },
+                Microsoft.Extensions.Options.Options.Create(new CocMoPhongOptions())));
     }
 
     [M2SqlServerTheory]
