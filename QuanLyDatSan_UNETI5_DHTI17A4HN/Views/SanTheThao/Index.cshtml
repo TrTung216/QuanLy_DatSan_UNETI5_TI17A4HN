@@ -2,6 +2,8 @@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DanhSachSanViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using System.Globalization
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels
 @{
     ViewData["Title"] = "Danh sách sân";
     var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
@@ -137,7 +139,7 @@
             <table class="table table-hover align-middle ql-table">
                 <caption>Trang @Model.TrangHienTai / @Model.TongSoTrang</caption>
                 <thead><tr>
-                    <th scope="col">Tên sân</th><th scope="col">Loại sân</th>
+                    <th scope="col">Ảnh sân</th><th scope="col">Tên sân</th><th scope="col">Loại sân</th>
                     <th scope="col">Địa chỉ</th><th scope="col">Giá thuê (đồng/giờ)</th>
                     <th scope="col">Giờ phục vụ</th><th scope="col">Trạng thái</th>
                     <th scope="col">Thao tác</th>
@@ -158,6 +160,11 @@
                             _ => "text-bg-secondary"
                         };
                         <tr>
+                            <td>
+                                <div style="width: 10rem; max-width: 100%; font-weight: normal;">
+                                    <partial name="_AnhDaiDien" model="@(new AnhDaiDienViewModel(NhomAnh.San, san.MaSan, san.TenSan, san.DuongDanAnh is not null))" />
+                                </div>
+                            </td>
                             <th scope="row">@san.TenSan</th>
                             <td>@san.TenLoai</td><td>@san.DiaChi</td>
                             <td class="text-nowrap">

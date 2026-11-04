@@ -1,3 +1,4 @@
+// Phan Giang Tâm - 23103100196. M2: Đọc thông tin ảnh cùng danh sách và chi tiết sân.
 using Microsoft.EntityFrameworkCore;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Data;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
@@ -91,7 +92,7 @@ public class SanTheThaoRepository(ApplicationDbContext db) : ISanTheThaoReposito
     private static SanDoc ThanhDuLieuDoc(SanTheThao x)
         => new(x.MaSan, x.TenSan, x.MaLoaiSan, x.LoaiSan.TenLoai, x.DiaChi, x.TienIch,
             x.DonGia, x.DonGiaCaoDiem, x.DonGiaCuoiTuan, x.TrangThai,
-            x.GioMoCua, x.GioDongCua, x.NgayBaoTri, x.GhiChu);
+            x.GioMoCua, x.GioDongCua, x.NgayBaoTri, x.GhiChu, x.DuongDanAnh);
     public async Task<List<LoaiSan>> LayLoaiSanLuaChonAsync(int? maLoaiSanHienTai, CancellationToken cancellationToken) =>
         await db.LoaiSans.AsNoTracking()
             .Where(x => x.TrangThai == TrangThaiLoaiSan.HoatDong || x.MaLoaiSan == maLoaiSanHienTai)

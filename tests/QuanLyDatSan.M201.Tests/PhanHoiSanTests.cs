@@ -38,6 +38,7 @@ public class PhanHoiSanTests
     [InlineData(MaLoiSan.LoaiSanKhongHopLe, true, "MaLoaiSan", "Loại sân không hợp lệ hoặc đã ngừng hoạt động.")]
     [InlineData(MaLoiSan.DuLieuKhongHopLe, false, "", "Thông tin sân không hợp lệ.")]
     [InlineData(MaLoiSan.DuLieuKhongHopLe, true, "", "Thông tin sân không hợp lệ.")]
+    [InlineData(MaLoiSan.XungDotDuLieu, true, "", "Sân đã thay đổi hoặc bị xóa trong lúc chỉnh sửa. Vui lòng tải lại trang.")]
     [InlineData(MaLoiSan.DuLieuLienQuanThayDoi, false, "", "Dữ liệu không còn hợp lệ. Vui lòng kiểm tra loại sân, giá và giờ hoạt động rồi thử lại.")]
     [InlineData(MaLoiSan.DuLieuLienQuanThayDoi, true, "", "Không lưu được vì dữ liệu liên quan đã thay đổi. Vui lòng kiểm tra lại thông tin sân.")]
     public async Task LoiGhiAnhXaDungTruongVaGiuForm(MaLoiSan ma, bool sua, string truong, string thongBao)
@@ -57,6 +58,7 @@ public class PhanHoiSanTests
     [InlineData(MaLoiSan.KhongTonTai)]
     [InlineData(MaLoiSan.DangDuocThamChieu)]
     [InlineData(MaLoiSan.DaBiXoa)]
+    [InlineData(MaLoiSan.XungDotDuLieu)]
     [InlineData(MaLoiSan.ThanhCong)]
     public async Task XoaAnhXaDayDuKetQua(MaLoiSan ma)
     {
@@ -77,6 +79,10 @@ public class PhanHoiSanTests
             case MaLoiSan.DaBiXoa:
                 Assert.Equal("Index", Assert.IsType<RedirectToActionResult>(result).ActionName);
                 Assert.Contains("một thao tác khác", Assert.IsType<string>(controller.TempData["Warning"]));
+                break;
+            case MaLoiSan.XungDotDuLieu:
+                Assert.Equal("Index", Assert.IsType<RedirectToActionResult>(result).ActionName);
+                Assert.Contains("đã thay đổi", Assert.IsType<string>(controller.TempData["Warning"]));
                 break;
             case MaLoiSan.ThanhCong:
                 Assert.Equal("Index", Assert.IsType<RedirectToActionResult>(result).ActionName);
@@ -150,6 +156,9 @@ public class PhanHoiSanTests
 
     private sealed class ServiceGia : ISanTheThaoService
     {
+        public Task<QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh.KetQuaAnh> CapNhatAnhAsync(int id,
+            QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh.YeuCauAnh yeuCau, CancellationToken token)
+            => throw new NotSupportedException();
         public KetQuaSan<int> KetQuaGhi { get; init; } = KetQuaSan<int>.Dat(1);
         public KetQuaSan<decimal> KetQuaGia { get; init; } = KetQuaSan<decimal>.Dat(550000);
         public Exception? LoiDanhSach { get; init; }

@@ -30,7 +30,9 @@ public class TraCuuSanSqlServerTests(TraCuuSanSqlServerFixture fixture) : IClass
             // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Đồng bộ phụ thuộc service sau tích hợp main.
             new QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien.TinhTienService(),
             new TaiKhoanQuanLy(), new Microsoft.Extensions.Hosting.Internal.HostingEnvironment { EnvironmentName = "Production" },
-            Microsoft.Extensions.Options.Options.Create(new CocMoPhongOptions())));
+            Microsoft.Extensions.Options.Options.Create(new CocMoPhongOptions())),
+        AnhSanTest.Kho(), new AnhSanTest.DonDepKhongCoAnh(),
+        Microsoft.Extensions.Logging.Abstractions.NullLogger<SanTheThaoService>.Instance);
 
     [M2SqlServerTheory]
     [InlineData("gia_tang", "80000,100000,150000,200000,250000,300000,350000,400000,450000,500000")]

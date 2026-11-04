@@ -12,7 +12,8 @@ public enum MaLoiSan
     DaBiXoa,
     GioThueKhongHopLe,
     BatDauKhongTuongLai,
-    KhoangGioKhongHopLe
+    KhoangGioKhongHopLe,
+    XungDotDuLieu
 }
 
 // Chỉ tạo qua factory: thành công có dữ liệu; thất bại có một mã lỗi hợp lệ.

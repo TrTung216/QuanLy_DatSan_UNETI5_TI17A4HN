@@ -14,9 +14,9 @@ namespace QuanLyDatSan.M201.Tests;
 
 public partial class TrangThaiSanTests
 {
-    private static async Task<UngDungKiemThu> TaoAppAsync()
+    private static async Task<UngDungKiemThu> TaoAppAsync(string? thuMucAnh = null)
     {
-        var app = new UngDungKiemThu();
+        var app = new UngDungKiemThu { ThuMucAnhKiemThu = thuMucAnh };
         await app.KhoiTaoAsync();
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

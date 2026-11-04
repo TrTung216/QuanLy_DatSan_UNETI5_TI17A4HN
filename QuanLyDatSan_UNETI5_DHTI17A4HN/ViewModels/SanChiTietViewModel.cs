@@ -6,4 +6,4 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 public record SanChiTietViewModel(int MaSan, string TenSan, int MaLoaiSan, string TenLoai,
     string DiaChi, string? TienIch, decimal DonGia, decimal? DonGiaCaoDiem,
     decimal? DonGiaCuoiTuan, TrangThaiSan TrangThai, TimeOnly GioMoCua,
-    TimeOnly GioDongCua, DateOnly? NgayBaoTri, string? GhiChu);
+    TimeOnly GioDongCua, DateOnly? NgayBaoTri, string? GhiChu, string? DuongDanAnh = null);

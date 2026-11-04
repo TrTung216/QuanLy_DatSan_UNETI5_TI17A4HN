@@ -4,12 +4,55 @@ using Microsoft.AspNetCore.Mvc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Infrastructure.Anh;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public class SanTheThaoController(ISanTheThaoService sanService) : Controller
 {
+    [Authorize(Roles = nameof(VaiTro.Admin) + "," + nameof(VaiTro.NhanVien))]
+    [HttpPost, ValidateAntiForgeryToken]
+    [GioiHanTaiAnh, RequestSizeLimit(ChuanHoaAnh.GioiHanRequest)]
+    [RequestFormLimits(MultipartBodyLengthLimit = ChuanHoaAnh.GioiHanRequest)]
+    public async Task<IActionResult> CapNhatAnh(int id, CapNhatAnhViewModel model, CancellationToken cancellationToken)
+    {
+        ViewData["LoiAnhSan"] = true;
+        var san = await sanService.LayChiTietAsync(id, cancellationToken);
+        if (san is null) return NotFound();
+        if (!ModelState.IsValid || Request.Form.Files.Count > 1
+            || (model.ThaoTac == ThaoTacAnh.ThayAnh && model.Tep is null)
+            || (model.ThaoTac == ThaoTacAnh.GoAnh && Request.Form.Files.Count != 0))
+        {
+            ModelState.AddModelError(string.Empty, "Chọn đúng một ảnh để thay; khi gỡ ảnh không gửi kèm tệp.");
+            return View(nameof(Details), ThanhViewModel(san));
+        }
+        await using var stream = model.Tep?.OpenReadStream();
+        var ketQua = await sanService.CapNhatAnhAsync(id, new(model.ThaoTac!.Value, model.AnhCu,
+            stream is null ? null : new AnhTaiLen(stream, model.Tep!.FileName, model.Tep.Length)), cancellationToken);
+        if (ketQua.MaLoi == MaLoiAnh.KhongTonTai) return NotFound();
+        if (ketQua.MaLoi == MaLoiAnh.KhongDuQuyen) return Forbid();
+        if (ketQua.MaLoi == MaLoiAnh.ThanhCong)
+        {
+            TempData["Success"] = model.ThaoTac == ThaoTacAnh.GoAnh ? "Đã gỡ ảnh sân." : "Đã cập nhật ảnh sân.";
+            if (ketQua.CanDonTep) TempData["Warning"] = "Ảnh đã lưu. Tệp cũ sẽ được kiểm tra dọn sau.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        ModelState.AddModelError(string.Empty, ketQua.MaLoi switch
+        {
+            MaLoiAnh.DuLieuAnhKhongHopLe => "Tệp hoặc thao tác ảnh không hợp lệ.",
+            MaLoiAnh.DinhDangAnhKhongHoTro => "Chỉ nhận JPEG, PNG hoặc WebP tĩnh đúng phần mở rộng.",
+            MaLoiAnh.AnhQuaDungLuong => "Ảnh không được vượt quá 5 MiB.",
+            MaLoiAnh.AnhQuaKichThuoc => "Ảnh tối đa 4096 px mỗi chiều và 16 triệu điểm ảnh.",
+            MaLoiAnh.AnhKhongDocDuoc => "Ảnh bị lỗi hoặc không đọc được. Vui lòng chọn tệp khác.",
+            MaLoiAnh.XungDotAnh => "Ảnh đã thay đổi hoặc sân bị xóa. Tải lại trang trước khi thao tác tiếp.",
+            MaLoiAnh.LuuTruAnhChuaSanSang => "Kho ảnh chưa sẵn sàng. Vui lòng liên hệ quản trị viên.",
+            _ => throw new InvalidOperationException("Mã lỗi ảnh sân chưa được ánh xạ.")
+        });
+        return View(nameof(Details), ThanhViewModel(san));
+    }
+
     [Authorize(Roles = nameof(VaiTro.Admin) + "," + nameof(VaiTro.NhanVien))]
     [HttpGet]
     public async Task<IActionResult> Create(CancellationToken cancellationToken)
@@ -210,6 +253,9 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
             case MaLoiSan.DaBiXoa:
                 TempData["Warning"] = "Sân đã được xóa bởi một thao tác khác. Danh sách đã được cập nhật.";
                 return RedirectToAction(nameof(Index));
+            case MaLoiSan.XungDotDuLieu:
+                TempData["Warning"] = "Sân đã thay đổi hoặc bị xóa bởi thao tác khác. Vui lòng kiểm tra lại trước khi xóa.";
+                return RedirectToAction(nameof(Index));
             case MaLoiSan.ThanhCong:
                 TempData["Success"] = "Đã xóa sân thành công.";
                 return RedirectToAction(nameof(Index));
@@ -225,6 +271,7 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
                 ? "Loại sân không hợp lệ hoặc đã ngừng hoạt động."
                 : "Vui lòng chọn loại sân đang hoạt động."),
             MaLoiSan.DuLieuKhongHopLe => (string.Empty, "Thông tin sân không hợp lệ."),
+            MaLoiSan.XungDotDuLieu => (string.Empty, "Sân đã thay đổi hoặc bị xóa trong lúc chỉnh sửa. Vui lòng tải lại trang."),
             MaLoiSan.DuLieuLienQuanThayDoi => (string.Empty, laSua
                 ? "Không lưu được vì dữ liệu liên quan đã thay đổi. Vui lòng kiểm tra lại thông tin sân."
                 : "Dữ liệu không còn hợp lệ. Vui lòng kiểm tra loại sân, giá và giờ hoạt động rồi thử lại."),
@@ -241,6 +288,6 @@ public class SanTheThaoController(ISanTheThaoService sanService) : Controller
     private static SanChiTietViewModel ThanhViewModel(SanDoc x)
         => new(x.MaSan, x.TenSan, x.MaLoaiSan, x.TenLoai, x.DiaChi, x.TienIch,
             x.DonGia, x.DonGiaCaoDiem, x.DonGiaCuoiTuan, x.TrangThai,
-            x.GioMoCua, x.GioDongCua, x.NgayBaoTri, x.GhiChu);
+            x.GioMoCua, x.GioDongCua, x.NgayBaoTri, x.GhiChu, x.DuongDanAnh);
 
 }
