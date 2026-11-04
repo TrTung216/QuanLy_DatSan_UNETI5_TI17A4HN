@@ -15,7 +15,7 @@ public class LoaiSanServiceRepositoryTests
     public async Task DuLieuSaiBiChanTruocKhiTruyCapRepository()
     {
         var repo = new RepositoryGia(); var uow = new DonViGia();
-        var result = await new LoaiSanService(repo, uow).TaoAsync(new(" ", null, 0, -1, TrangThaiLoaiSan.HoatDong), default);
+        var result = await new LoaiSanService(repo, uow, new DonDepAnhGia()).TaoAsync(new(" ", null, 0, -1, TrangThaiLoaiSan.HoatDong), default);
         Assert.Equal(MaLoiLoaiSan.DuLieuKhongHopLe, result.MaLoi);
         Assert.Equal(0, repo.SoLanTruyVan); Assert.False(uow.DaLuu);
     }
@@ -24,7 +24,7 @@ public class LoaiSanServiceRepositoryTests
     public async Task CoThamChieuKhongXoaVaKhongLuu()
     {
         var repo = new RepositoryGia { CoThamChieu = true }; var uow = new DonViGia();
-        var result = await new LoaiSanService(repo, uow).XoaAsync(1, default);
+        var result = await new LoaiSanService(repo, uow, new DonDepAnhGia()).XoaAsync(1, default);
         Assert.Equal(MaLoiLoaiSan.DangDuocThamChieu, result.MaLoi);
         Assert.False(repo.DaXoa); Assert.False(uow.DaLuu);
     }
@@ -35,14 +35,14 @@ public class LoaiSanServiceRepositoryTests
     public async Task LoiLuuDaBietGiuMaNghiepVu(MaLoiLuuTru loi, MaLoiLoaiSan mongDoi)
     {
         var repo = new RepositoryGia(); var uow = new DonViGia { Loi = loi };
-        var result = await new LoaiSanService(repo, uow).TaoAsync(new("San", null, 10, 100000, TrangThaiLoaiSan.HoatDong), default);
+        var result = await new LoaiSanService(repo, uow, new DonDepAnhGia()).TaoAsync(new("San", null, 10, 100000, TrangThaiLoaiSan.HoatDong), default);
         Assert.Equal(mongDoi, result.MaLoi); Assert.True(uow.DaLuu);
     }
 
     [Fact]
     public async Task LoiKhongThuocLoaiSanKhongBiCheThanhTrungTen()
     {
-        var service = new LoaiSanService(new RepositoryGia(), new DonViGia { Loi = MaLoiLuuTru.TrungTenDangNhap });
+        var service = new LoaiSanService(new RepositoryGia(), new DonViGia { Loi = MaLoiLuuTru.TrungTenDangNhap }, new DonDepAnhGia());
         await Assert.ThrowsAsync<LoiLuuTruException>(() => service.TaoAsync(new("San", null, 10, 100000, TrangThaiLoaiSan.HoatDong), default));
     }
 

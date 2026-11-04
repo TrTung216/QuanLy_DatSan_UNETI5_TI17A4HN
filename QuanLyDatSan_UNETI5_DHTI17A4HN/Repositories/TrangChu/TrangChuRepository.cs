@@ -21,7 +21,7 @@ public class TrangChuRepository(ApplicationDbContext db) : ITrangChuRepository
                 loai.DanhSachSan.Where(san => san.TrangThai == TrangThaiSan.HoatDong)
                     .OrderBy(san => san.TenSan).ThenBy(san => san.MaSan).Take(6)
                     .Select(san => new SanTrangChu(san.MaSan, san.TenSan, san.DiaChi,
-                        san.DonGia, san.GioMoCua, san.GioDongCua)).ToList()))
+                        san.DonGia, san.GioMoCua, san.GioDongCua, san.DuongDanAnh != null)).ToList(), loai.DuongDanAnh != null))
             .ToListAsync(cancellationToken);
     }
 }

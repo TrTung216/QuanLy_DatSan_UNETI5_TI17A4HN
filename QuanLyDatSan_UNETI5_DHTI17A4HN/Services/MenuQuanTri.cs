@@ -52,7 +52,7 @@ public static class MenuQuanTri
         var danhMuc = new List<MucMenu>();
         if (laAdmin)
         {
-            danhMuc.Add(new MucMenu("Loại sân", "LoaiSan", "DanhSach", ["ChiTiet", "Tao", "Sua", "Xoa"],
+            danhMuc.Add(new MucMenu("Loại sân", "LoaiSan", "DanhSach", ["ChiTiet", "Tao", "Sua", "Xoa", "CapNhatAnh"],
                 "Danh mục loại sân và giá mặc định."));
             danhMuc.Add(new MucMenu("Dịch vụ", "DichVu", "DanhSach", ["Tao", "Sua"],
                 "Danh mục dịch vụ đi kèm đơn đặt sân."));

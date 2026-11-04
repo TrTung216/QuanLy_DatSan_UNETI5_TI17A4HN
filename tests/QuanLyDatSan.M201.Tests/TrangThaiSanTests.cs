@@ -22,13 +22,13 @@ public partial class TrangThaiSanTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         // Database thử trong RAM, không chạy migration trên database local của thành viên.
         await db.Database.ExecuteSqlRawAsync("""
-            CREATE TABLE LoaiSan (
+            CREATE TABLE LoaiSan (DuongDanAnh TEXT,
                 MaLoaiSan INTEGER PRIMARY KEY AUTOINCREMENT,
                 TenLoai TEXT NOT NULL COLLATE Vietnamese_100_CI_AS,
                 MoTa TEXT, SoNguoiToiDa INTEGER NOT NULL,
                 DonGiaTheoGio TEXT NOT NULL, TrangThai INTEGER NOT NULL
             );
-            CREATE TABLE SanTheThao (
+            CREATE TABLE SanTheThao (DuongDanAnh TEXT,
                 MaSan INTEGER PRIMARY KEY AUTOINCREMENT, TenSan TEXT NOT NULL,
                 MaLoaiSan INTEGER NOT NULL REFERENCES LoaiSan(MaLoaiSan) ON DELETE NO ACTION,
                 DiaChi TEXT NOT NULL, TienIch TEXT, DonGia TEXT NOT NULL,

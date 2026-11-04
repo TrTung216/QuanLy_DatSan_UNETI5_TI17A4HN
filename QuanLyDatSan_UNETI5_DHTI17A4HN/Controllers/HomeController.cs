@@ -14,7 +14,7 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers
             var cacLoai = await trangChuService.LaySanTheoLoaiAsync(cancellationToken);
             return View(new TrangChuViewModel(cacLoai.Select(loai => new NhomSanTrangChuViewModel(
                 loai.MaLoaiSan, loai.TenLoai, loai.San.Select(san => new TheSanTrangChuViewModel(
-                    san.MaSan, san.TenSan, san.DiaChi, san.DonGia, san.GioMoCua, san.GioDongCua)).ToList())).ToList()));
+                    san.MaSan, san.TenSan, san.DiaChi, san.DonGia, san.GioMoCua, san.GioDongCua, san.CoAnh)).ToList(), loai.CoAnh)).ToList()));
         }
 
         public IActionResult Privacy()

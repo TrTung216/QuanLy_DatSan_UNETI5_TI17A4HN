@@ -11,6 +11,8 @@ public class LoaiSan
     public int MaLoaiSan { get; set; }
     public string TenLoai { get; set; } = string.Empty;
     public string? MoTa { get; set; }
+    // M1: khóa ảnh do server cấp; null khi chưa có ảnh. Không nhận từ form nghiệp vụ.
+    public string? DuongDanAnh { get; set; }
     public int SoNguoiToiDa { get; set; }
     public decimal DonGiaTheoGio { get; set; }
     public TrangThaiLoaiSan TrangThai { get; set; } = TrangThaiLoaiSan.HoatDong;

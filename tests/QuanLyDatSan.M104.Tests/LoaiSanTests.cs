@@ -12,7 +12,7 @@ using Xunit;
 
 namespace QuanLyDatSan.M104.Tests;
 
-public class LoaiSanTests
+public partial class LoaiSanTests
 {
     [Theory]
     [InlineData(-1, 4, 1)]
@@ -31,21 +31,21 @@ public class LoaiSanTests
         Assert.Equal("Loai chua su dung", (await db.LoaiSans.AsNoTracking().SingleAsync(x => x.MaLoaiSan == 2)).TenLoai);
     }
 
-    private static async Task<UngDungKiemThu> TaoAppAsync()
+    private static async Task<UngDungKiemThu> TaoAppAsync(string? thuMucAnh = null)
     {
-        var app = new UngDungKiemThu();
+        var app = new UngDungKiemThu { ThuMucAnhKiemThu = thuMucAnh };
         await app.KhoiTaoAsync();
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         // Schema riêng trong RAM. FK chặn xóa cha được bật bởi provider SQLite; không chạy migration thật.
         await db.Database.ExecuteSqlRawAsync("""
-            CREATE TABLE LoaiSan (
+            CREATE TABLE LoaiSan (DuongDanAnh TEXT,
                 MaLoaiSan INTEGER PRIMARY KEY AUTOINCREMENT,
                 TenLoai TEXT NOT NULL COLLATE Vietnamese_100_CI_AS UNIQUE,
                 MoTa TEXT, SoNguoiToiDa INTEGER NOT NULL CHECK(SoNguoiToiDa > 0),
                 DonGiaTheoGio TEXT NOT NULL, TrangThai INTEGER NOT NULL CHECK(TrangThai IN (0,1))
             );
-            CREATE TABLE SanTheThao (
+            CREATE TABLE SanTheThao (DuongDanAnh TEXT,
                 MaSan INTEGER PRIMARY KEY AUTOINCREMENT, TenSan TEXT NOT NULL,
                 MaLoaiSan INTEGER NOT NULL REFERENCES LoaiSan(MaLoaiSan) ON DELETE NO ACTION,
                 DiaChi TEXT NOT NULL, TienIch TEXT, DonGia TEXT NOT NULL, TrangThai INTEGER NOT NULL,

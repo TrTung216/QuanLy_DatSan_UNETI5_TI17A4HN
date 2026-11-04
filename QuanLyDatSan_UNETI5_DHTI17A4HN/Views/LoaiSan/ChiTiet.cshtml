@@ -2,6 +2,8 @@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.LoaiSanChiTietViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using System.Globalization
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels
 @{
     ViewData["Title"] = "Chi tiết loại sân";
     var hoatDong = Model.TrangThai == TrangThaiLoaiSan.HoatDong;
@@ -29,4 +31,22 @@
         <a class="btn btn-outline-danger" asp-action="Xoa" asp-route-id="@Model.MaLoaiSan">Kiểm tra xóa</a>
         <a class="btn btn-outline-secondary" asp-action="DanhSach">Về danh sách</a>
     </div>
+</section>
+<section class="ql-panel mt-4" aria-labelledby="anh-minh-hoa">
+    <h2 id="anh-minh-hoa" class="h4">Ảnh minh họa loại sân</h2>
+    <partial name="_AnhDaiDien" model="@(new AnhDaiDienViewModel(NhomAnh.LoaiSan, Model.MaLoaiSan, Model.TenLoai, Model.DuongDanAnh is not null, ChiTiet: true, TaiCham: false))" />
+    <form asp-action="CapNhatAnh" asp-route-id="@Model.MaLoaiSan" method="post" enctype="multipart/form-data" asp-antiforgery="true">
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        <input type="hidden" name="AnhCu" value="@Model.DuongDanAnh" />
+        <div class="mb-3">
+            <label for="tep-anh" class="form-label">Chọn ảnh minh họa mới</label>
+            <input id="tep-anh" name="Tep" type="file" accept=".jpg,.jpeg,.png,.webp" class="form-control" aria-describedby="quy-tac-anh" />
+            <p id="quy-tac-anh" class="form-text">JPEG, PNG hoặc WebP tĩnh; tối đa 5 MiB, 4096 px mỗi chiều và 16 triệu điểm ảnh. Ảnh được chuyển sang JPEG, xóa metadata. Khi gỡ ảnh, để trống ô chọn tệp.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary" name="ThaoTac" value="ThayAnh" type="submit">Lưu ảnh</button>
+            @if (Model.DuongDanAnh is not null)
+            { <button class="btn btn-outline-danger" name="ThaoTac" value="GoAnh" type="submit">Gỡ ảnh</button> }
+        </div>
+    </form>
 </section>

@@ -1,0 +1,12 @@
+/* M1: Trần Trọng Tùng - 23103100202. Chỉ tác động component ảnh dùng chung. */
+.ql-photo { margin: 0 0 1rem; width: 100%; }
+.ql-photo--type { max-width: 24rem; }
+.ql-photo-frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid #c8d5e7;
+    border-radius: .75rem; background: #edf2f8; color: #475569; display: grid; place-items: center; }
+.ql-photo-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ql-photo-frame img[hidden] { display: none; }
+.ql-photo-frame--detail img { object-fit: contain; }
+.ql-photo-frame [data-anh-trong] { text-align: center; padding: 1rem; }
+.ql-home-type-title { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.ql-home-type-title .ql-photo { width: 8rem; flex-shrink: 0; margin: 0; }
+.ql-home-type-title h3 { overflow-wrap: anywhere; }

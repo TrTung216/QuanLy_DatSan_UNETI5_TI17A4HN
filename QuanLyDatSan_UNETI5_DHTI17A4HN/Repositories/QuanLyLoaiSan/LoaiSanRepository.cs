@@ -43,5 +43,5 @@ public class LoaiSanRepository(ApplicationDbContext db) : ILoaiSanRepository
     public void Them(LoaiSan loaiSan) => db.LoaiSans.Add(loaiSan);
     public void Xoa(LoaiSan loaiSan) => db.LoaiSans.Remove(loaiSan);
     private static IQueryable<LoaiSanDoc> Chieu(IQueryable<LoaiSan> query) => query.Select(x => new LoaiSanDoc(
-        x.MaLoaiSan, x.TenLoai, x.MoTa, x.SoNguoiToiDa, x.DonGiaTheoGio, x.TrangThai, x.DanhSachSan.Count));
+        x.MaLoaiSan, x.TenLoai, x.MoTa, x.SoNguoiToiDa, x.DonGiaTheoGio, x.TrangThai, x.DanhSachSan.Count, x.DuongDanAnh));
 }

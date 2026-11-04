@@ -12,6 +12,8 @@ public class SanTheThao
 {
     [Key]
     public int MaSan { get; set; }
+    // M1: nền ảnh dùng chung; M2 triển khai thao tác ảnh sân, không tạo migration trùng.
+    public string? DuongDanAnh { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập tên sân.")]
     [StringLength(100, ErrorMessage = "Tên sân không được quá 100 ký tự.")]

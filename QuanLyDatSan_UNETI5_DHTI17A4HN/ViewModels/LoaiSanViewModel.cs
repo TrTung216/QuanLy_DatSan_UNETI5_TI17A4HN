@@ -39,6 +39,7 @@ public class LoaiSanFormViewModel : IValidatableObject
 
 public class LoaiSanChiTietViewModel
 {
+    public string? DuongDanAnh { get; set; }
     public int MaLoaiSan { get; set; }
     public string TenLoai { get; set; } = string.Empty;
     public string? MoTa { get; set; }

@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Infrastructure.Anh;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize(Roles = nameof(VaiTro.Admin))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class LoaiSanController(ILoaiSanService service) : Controller
+public class LoaiSanController(ILoaiSanService service, IAnhService anhService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> DanhSach(string? tuKhoa, TrangThaiLoaiSan? trangThai,
@@ -42,6 +44,45 @@ public class LoaiSanController(ILoaiSanService service) : Controller
 
     [HttpGet]
     public IActionResult Tao() => View(new LoaiSanFormViewModel { TrangThai = TrangThaiLoaiSan.HoatDong });
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [GioiHanTaiAnh, RequestSizeLimit(ChuanHoaAnh.GioiHanRequest)]
+    [RequestFormLimits(MultipartBodyLengthLimit = ChuanHoaAnh.GioiHanRequest)]
+    public async Task<IActionResult> CapNhatAnh(int id, CapNhatAnhViewModel model, CancellationToken ct)
+    {
+        var chiTiet = await service.LayChiTietAsync(id, ct);
+        if (chiTiet is null) return NotFound();
+        if (!ModelState.IsValid || Request.Form.Files.Count > 1
+            || (model.ThaoTac == ThaoTacAnh.ThayAnh && model.Tep is null)
+            || (model.ThaoTac == ThaoTacAnh.GoAnh && Request.Form.Files.Count != 0))
+        {
+            ModelState.AddModelError(string.Empty, "Chọn đúng một ảnh để thay; khi gỡ ảnh không gửi kèm tệp.");
+            return View(nameof(ChiTiet), ThanhViewModel(chiTiet));
+        }
+        await using var stream = model.Tep?.OpenReadStream();
+        var ketQua = await anhService.CapNhatLoaiSanAsync(id, new(model.ThaoTac!.Value, model.AnhCu,
+            stream is null ? null : new AnhTaiLen(stream, model.Tep!.FileName, model.Tep.Length)), ct);
+        if (ketQua.MaLoi == MaLoiAnh.KhongTonTai) return NotFound();
+        if (ketQua.MaLoi == MaLoiAnh.KhongDuQuyen) return Forbid();
+        if (ketQua.MaLoi == MaLoiAnh.ThanhCong)
+        {
+            TempData["Success"] = model.ThaoTac == ThaoTacAnh.GoAnh ? "Đã gỡ ảnh minh họa." : "Đã cập nhật ảnh minh họa.";
+            if (ketQua.CanDonTep) TempData["Warning"] = "Ảnh đã lưu. Tệp cũ sẽ được kiểm tra dọn sau.";
+            return RedirectToAction(nameof(ChiTiet), new { id });
+        }
+        ModelState.AddModelError(string.Empty, ketQua.MaLoi switch
+        {
+            MaLoiAnh.AnhQuaDungLuong => "Ảnh không được vượt quá 5 MiB.",
+            MaLoiAnh.AnhQuaKichThuoc => "Ảnh tối đa 4096 px mỗi chiều và 16 triệu điểm ảnh.",
+            MaLoiAnh.DinhDangAnhKhongHoTro => "Chỉ nhận JPEG, PNG hoặc WebP tĩnh đúng phần mở rộng.",
+            MaLoiAnh.AnhKhongDocDuoc => "Ảnh bị lỗi hoặc không đọc được. Vui lòng chọn tệp khác.",
+            MaLoiAnh.DuLieuAnhKhongHopLe => "Tệp hoặc thao tác ảnh không hợp lệ.",
+            MaLoiAnh.XungDotAnh => "Ảnh đã thay đổi hoặc loại sân bị xóa. Tải lại trang trước khi thao tác tiếp.",
+            MaLoiAnh.LuuTruAnhChuaSanSang => "Kho ảnh chưa sẵn sàng. Vui lòng liên hệ quản trị viên.",
+            _ => throw new InvalidOperationException("Mã lỗi ảnh chưa được ánh xạ.")
+        });
+        return View(nameof(ChiTiet), ThanhViewModel(chiTiet));
+    }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Tao(LoaiSanFormViewModel model, CancellationToken cancellationToken)
@@ -113,6 +154,9 @@ public class LoaiSanController(ILoaiSanService service) : Controller
             case MaLoiLoaiSan.ThanhCong:
                 TempData["Success"] = "Đã xóa loại sân chưa được tham chiếu.";
                 return RedirectToAction(nameof(DanhSach));
+            case MaLoiLoaiSan.XungDotDuLieu:
+                TempData["Error"] = "Loại sân đã thay đổi hoặc bị xóa. Vui lòng kiểm tra lại trước khi xóa.";
+                return RedirectToAction(nameof(DanhSach));
             default: throw new InvalidOperationException("Kết quả xóa loại sân chưa được ánh xạ.");
         }
     }
@@ -122,7 +166,7 @@ public class LoaiSanController(ILoaiSanService service) : Controller
         var (truong, thongBao) = loi switch
         {
             MaLoiLoaiSan.TrungTen => (nameof(LoaiSanFormViewModel.TenLoai), "Tên loại sân đã được sử dụng."),
-            MaLoiLoaiSan.XungDotDuLieu => (string.Empty, "Loại sân đã bị xóa trong lúc chỉnh sửa. Vui lòng trở lại danh sách."),
+            MaLoiLoaiSan.XungDotDuLieu => (string.Empty, "Loại sân đã thay đổi hoặc bị xóa trong lúc chỉnh sửa. Vui lòng tải lại trang."),
             MaLoiLoaiSan.DuLieuKhongHopLe => (string.Empty, "Thông tin loại sân không hợp lệ."),
             _ => throw new InvalidOperationException("Mã lỗi loại sân chưa được ánh xạ.")
         };
@@ -135,6 +179,6 @@ public class LoaiSanController(ILoaiSanService service) : Controller
     private static LoaiSanChiTietViewModel ThanhViewModel(LoaiSanDoc x) => new()
     {
         MaLoaiSan = x.MaLoaiSan, TenLoai = x.TenLoai, MoTa = x.MoTa, SoNguoiToiDa = x.SoNguoiToiDa,
-        DonGiaTheoGio = x.DonGiaTheoGio, TrangThai = x.TrangThai, SoSan = x.SoSan
+        DonGiaTheoGio = x.DonGiaTheoGio, TrangThai = x.TrangThai, SoSan = x.SoSan, DuongDanAnh = x.DuongDanAnh
     };
 }

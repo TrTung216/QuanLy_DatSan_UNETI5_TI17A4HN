@@ -4,6 +4,8 @@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TrangChuViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using System.Globalization
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels
 @{
     ViewData["Title"] = "Trang chủ";
     var daDangNhap = User.Identity?.IsAuthenticated == true;
@@ -51,7 +53,10 @@
     {
         <section class="ql-home-group" aria-labelledby="loai-san-@loai.MaLoaiSan">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                <h3 id="loai-san-@loai.MaLoaiSan" class="h4 mb-0">@loai.TenLoai</h3>
+                <div class="ql-home-type-title">
+                    <partial name="_AnhDaiDien" model="@(new AnhDaiDienViewModel(NhomAnh.LoaiSan, loai.MaLoaiSan, loai.TenLoai, loai.CoAnh))" />
+                    <h3 id="loai-san-@loai.MaLoaiSan" class="h4 mb-0">@loai.TenLoai</h3>
+                </div>
                 <a asp-controller="SanTheThao" asp-action="Index" asp-route-maLoaiSan="@loai.MaLoaiSan"
                    aria-label="Xem tất cả sân @loai.TenLoai">Xem tất cả <span aria-hidden="true">→</span></a>
             </div>
@@ -60,6 +65,7 @@
                 {
                     <div class="col-12 col-md-6 col-xl-4">
                         <article class="ql-home-court">
+                            <partial name="_AnhDaiDien" model="@(new AnhDaiDienViewModel(NhomAnh.San, san.MaSan, san.TenSan, san.CoAnh))" />
                             <h4 class="h5">@san.TenSan</h4>
                             <p class="ql-home-address text-muted">@san.DiaChi</p>
                             <dl class="mb-3">

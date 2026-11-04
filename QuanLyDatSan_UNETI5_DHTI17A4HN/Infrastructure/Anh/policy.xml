@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- M1: Trần Trọng Tùng - 23103100202. Chính sách bộ giải mã; không cấp quyền cho định dạng ngoài hợp đồng. -->
+<policymap>
+  <policy domain="delegate" rights="none" pattern="*" />
+  <policy domain="coder" rights="none" pattern="*" />
+  <policy domain="coder" rights="read|write" pattern="{JPEG,PNG,WEBP}" />
+  <policy domain="resource" name="memory" value="256MiB" />
+  <policy domain="resource" name="map" value="0" />
+  <policy domain="resource" name="disk" value="0" />
+  <policy domain="resource" name="thread" value="2" />
+  <policy domain="resource" name="time" value="15" />
+  <policy domain="resource" name="list-length" value="2" />
+</policymap>
