@@ -28,14 +28,19 @@ public sealed class CocMigrationTests
             await db.GetService<IMigrator>().MigrateAsync("20261014060258_ThemChiTietDatSan");
             var account = new TaiKhoan { TenDangNhap = "migration-coc", MatKhau = "hash-test", HoTen = "Test", Email = "test@example.test" };
             var khach = new KhachHang { TaiKhoan = account, HoTen = "Test", Email = account.Email, SoDienThoai = "0900000000" };
-            var san = new SanTheThao { TenSan = "Test", MaLoaiSan = 1, DiaChi = "Test", DonGia = 200000m, GioMoCua = new(6, 0), GioDongCua = new(22, 0) };
             var dv = new DichVu { TenDichVu = "Test", DonViTinh = "Chai", DonGia = 10000m };
-            db.AddRange(khach, san, dv); await db.SaveChangesAsync();
+            db.AddRange(khach, dv); await db.SaveChangesAsync();
+            // M1: schema trước cọc/ảnh chưa có DuongDanAnh; không INSERT bằng Entity sân hiện tại.
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO SanTheThao (TenSan, MaLoaiSan, DiaChi, DonGia, GioMoCua, GioDongCua, TrangThai)
+                VALUES (N'Test', 1, N'Test', 200000, '06:00', '22:00', {(int)TrangThaiSan.HoatDong})
+                """);
+            var maSan = await db.Database.SqlQuery<int>($"SELECT MaSan AS Value FROM SanTheThao").SingleAsync();
             // Chỉ INSERT các cột tồn tại ở schema cũ, không dùng entity DatSan với hai cột mới.
             await db.Database.ExecuteSqlInterpolatedAsync($"""
                 INSERT INTO DatSan (MaKhachHang, MaSan, NgayDat, GioBatDau, GioKetThuc, DonGia, TienCoc,
                     TrangThai, NgayXacNhan, NgayHoanThanh, TienSan, TienDichVu, TongTien)
-                VALUES ({khach.MaKhachHang}, {san.MaSan}, '20300101', '20300102 10:00', '20300102 11:00',
+                VALUES ({khach.MaKhachHang}, {maSan}, '20300101', '20300102 10:00', '20300102 11:00',
                     200000, 50000, {(int)TrangThaiDatSan.HoanThanh}, '20300101', '20300102 11:00', 200000, 10000, 210000)
                 """);
             var maDon = await db.Database.SqlQuery<int>($"SELECT MaDatSan AS Value FROM DatSan").SingleAsync();

@@ -48,6 +48,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         });
         modelBuilder.Entity<SanTheThao>(entity =>
         {
+            entity.Property(x => x.DuongDanAnh).HasMaxLength(255).IsConcurrencyToken();
             entity.ToTable("SanTheThao", table =>
             {
                 table.HasCheckConstraint(
@@ -99,6 +100,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         modelBuilder.Entity<LoaiSan>(entity =>
         {
+            entity.Property(x => x.DuongDanAnh).HasMaxLength(255).IsConcurrencyToken();
             entity.ToTable("LoaiSan", table =>
             {
                 table.HasCheckConstraint("CK_LoaiSan_SoNguoiToiDa", "[SoNguoiToiDa] > 0");

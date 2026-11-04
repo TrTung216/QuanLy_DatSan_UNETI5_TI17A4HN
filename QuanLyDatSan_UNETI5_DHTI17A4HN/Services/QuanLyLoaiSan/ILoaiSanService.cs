@@ -5,7 +5,7 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 
 public record GhiLoaiSan(string TenLoai, string? MoTa, int SoNguoiToiDa, decimal DonGiaTheoGio, TrangThaiLoaiSan TrangThai);
 public record LoaiSanDoc(int MaLoaiSan, string TenLoai, string? MoTa, int SoNguoiToiDa,
-    decimal DonGiaTheoGio, TrangThaiLoaiSan TrangThai, int SoSan);
+    decimal DonGiaTheoGio, TrangThaiLoaiSan TrangThai, int SoSan, string? DuongDanAnh = null);
 public record TrangLoaiSan(IReadOnlyList<LoaiSanDoc> DanhSach, int Trang, int TongTrang, int TongSo);
 public enum MaLoiLoaiSan { ThanhCong, KhongTonTai, TrungTen, DangDuocThamChieu, XungDotDuLieu, DuLieuKhongHopLe }
 public record KetQuaLoaiSan(MaLoiLoaiSan MaLoi, int? MaLoaiSan = null);

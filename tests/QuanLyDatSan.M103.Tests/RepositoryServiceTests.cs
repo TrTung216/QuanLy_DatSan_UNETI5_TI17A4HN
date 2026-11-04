@@ -17,7 +17,7 @@ public sealed class RepositoryServiceTests
     public async Task DuLieuSaiKhongGoiRepositoryHoacLuu()
     {
         var repo = new KhoGia(); var uow = new LuuGia();
-        var result = await new LoaiSanService(repo, uow).TaoAsync(HopLe with { TenLoai = "" }, default);
+        var result = await new LoaiSanService(repo, uow, new DonDepAnhGia()).TaoAsync(HopLe with { TenLoai = "" }, default);
         Assert.Equal(MaLoiLoaiSan.DuLieuKhongHopLe, result.MaLoi);
         Assert.Equal(0, repo.SoLanKiemTra);
         Assert.Equal(0, uow.SoLanLuu);
@@ -27,7 +27,7 @@ public sealed class RepositoryServiceTests
     public async Task TrungTenTraLoiNghiepVuVaKhongThem()
     {
         var repo = new KhoGia { TrungTen = true }; var uow = new LuuGia();
-        var result = await new LoaiSanService(repo, uow).TaoAsync(HopLe, default);
+        var result = await new LoaiSanService(repo, uow, new DonDepAnhGia()).TaoAsync(HopLe, default);
         Assert.Equal(MaLoiLoaiSan.TrungTen, result.MaLoi);
         Assert.Equal("Loại mới", repo.TenDaKiemTra);
         Assert.Null(repo.DaThem);
@@ -41,7 +41,7 @@ public sealed class RepositoryServiceTests
     {
         var repo = new KhoGia();
         var uow = new LuuGia { Loi = new LoiLuuTruException(loi, new Exception("Giả lập")) };
-        var result = await new LoaiSanService(repo, uow).TaoAsync(HopLe, default);
+        var result = await new LoaiSanService(repo, uow, new DonDepAnhGia()).TaoAsync(HopLe, default);
         Assert.Equal(mongDoi, result.MaLoi);
         Assert.Equal("Loại mới", repo.DaThem!.TenLoai);
     }
@@ -50,7 +50,7 @@ public sealed class RepositoryServiceTests
     public async Task KhongNhanNhamLoiUniqueCuaModuleKhac()
     {
         var uow = new LuuGia { Loi = new LoiLuuTruException(MaLoiLuuTru.TrungTenDangNhap, new Exception()) };
-        await Assert.ThrowsAsync<LoiLuuTruException>(() => new LoaiSanService(new KhoGia(), uow).TaoAsync(HopLe, default));
+        await Assert.ThrowsAsync<LoiLuuTruException>(() => new LoaiSanService(new KhoGia(), uow, new DonDepAnhGia()).TaoAsync(HopLe, default));
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public sealed class RepositoryServiceTests
     {
         using var cts = new CancellationTokenSource();
         var repo = new KhoGia(); var uow = new LuuGia();
-        await new LoaiSanService(repo, uow).TaoAsync(HopLe, cts.Token);
+        await new LoaiSanService(repo, uow, new DonDepAnhGia()).TaoAsync(HopLe, cts.Token);
         Assert.Equal(cts.Token, repo.Token);
         Assert.Equal(cts.Token, uow.Token);
     }

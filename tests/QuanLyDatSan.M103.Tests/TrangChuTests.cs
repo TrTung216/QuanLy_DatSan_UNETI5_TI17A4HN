@@ -18,10 +18,10 @@ public class TrangChuTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         // Chỉ các cột được truy vấn, trong SQLite RAM của fixture; không đụng database local.
         await db.Database.ExecuteSqlRawAsync("""
-            CREATE TABLE LoaiSan (MaLoaiSan INTEGER PRIMARY KEY, TenLoai TEXT, TrangThai INTEGER);
-            CREATE TABLE SanTheThao (MaSan INTEGER PRIMARY KEY, MaLoaiSan INTEGER,
+            CREATE TABLE LoaiSan (DuongDanAnh TEXT,MaLoaiSan INTEGER PRIMARY KEY, TenLoai TEXT, TrangThai INTEGER);
+            CREATE TABLE SanTheThao (DuongDanAnh TEXT,MaSan INTEGER PRIMARY KEY, MaLoaiSan INTEGER,
                 TenSan TEXT, DiaChi TEXT, DonGia TEXT, GioMoCua TEXT, GioDongCua TEXT, TrangThai INTEGER);
-            INSERT INTO LoaiSan VALUES (1, 'Bóng đá', 1), (2, 'Cầu lông', 1), (3, 'Loại ẩn', 0);
+            INSERT INTO LoaiSan (MaLoaiSan, TenLoai, TrangThai) VALUES (1, 'Bóng đá', 1), (2, 'Cầu lông', 1), (3, 'Loại ẩn', 0);
             """);
         return app;
     }
@@ -48,9 +48,9 @@ public class TrangChuTests
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             for (var i = 1; i <= 7; i++)
-                await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO SanTheThao VALUES ({i}, 1, {"Sân " + i}, 'Hà Nội', '200000', '06:00:00', '22:00:00', 1)");
+                await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO SanTheThao (MaSan, MaLoaiSan, TenSan, DiaChi, DonGia, GioMoCua, GioDongCua, TrangThai) VALUES ({i}, 1, {"Sân " + i}, 'Hà Nội', '200000', '06:00:00', '22:00:00', 1)");
             await db.Database.ExecuteSqlRawAsync("""
-                INSERT INTO SanTheThao VALUES (8, 2, 'Sân cầu lông', 'Hà Nội', '100000', '07:00:00', '21:00:00', 1),
+                INSERT INTO SanTheThao (MaSan, MaLoaiSan, TenSan, DiaChi, DonGia, GioMoCua, GioDongCua, TrangThai) VALUES (8, 2, 'Sân cầu lông', 'Hà Nội', '100000', '07:00:00', '21:00:00', 1),
                 (9, 1, 'Sân bảo trì', 'Hà Nội', '200000', '06:00:00', '22:00:00', 2),
                 (10, 3, 'Sân thuộc loại ẩn', 'Hà Nội', '200000', '06:00:00', '22:00:00', 1),
                 (11, 1, 'Sân ngừng hoạt động', 'Hà Nội', '200000', '06:00:00', '22:00:00', 3);

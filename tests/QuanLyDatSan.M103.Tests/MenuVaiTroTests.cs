@@ -79,6 +79,14 @@ public class MenuVaiTroTests
         Assert.DoesNotContain(menu, x => x.KhopTrang("QuanLyDonDat", "KhongTonTai"));
     }
 
+    [Fact]
+    public void LoiCapNhatAnhGiuMenuLoaiSanActive()
+    {
+        var menu = MenuQuanTri.Lay(NguoiDung("Admin")).SelectMany(x => x.DanhSachMuc);
+        Assert.Equal("DanhSach", Assert.Single(menu, x => x.KhopTrang("LoaiSan", "CapNhatAnh")).Action);
+        Assert.DoesNotContain(MenuQuanTri.Lay(NguoiDung("NhanVien")).SelectMany(x => x.DanhSachMuc), x => x.Controller == "LoaiSan");
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("khachhang")]

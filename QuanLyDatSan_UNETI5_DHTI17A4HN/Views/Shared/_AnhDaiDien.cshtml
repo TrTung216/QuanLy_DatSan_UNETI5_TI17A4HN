@@ -1,0 +1,19 @@
+@* M1: Trần Trọng Tùng - 23103100202. Dùng chung ảnh theo ID, không thay ảnh sân bằng ảnh loại sân. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.AnhDaiDienViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh
+@{
+    var laLoai = Model.Nhom == NhomAnh.LoaiSan;
+    var action = laLoai ? "LoaiSan" : "San";
+    var chuThich = laLoai ? $"Ảnh minh họa {Model.Ten}" : $"Ảnh sân {Model.Ten}";
+}
+<figure class="ql-photo @(laLoai ? "ql-photo--type" : "")">
+    <div class="ql-photo-frame @(Model.ChiTiet ? "ql-photo-frame--detail" : "")" data-anh-dai-dien>
+        <span data-anh-trong>@(laLoai ? "Chưa có ảnh minh họa" : "Chưa có ảnh sân")</span>
+        @if (Model.CoAnh)
+        {
+            <img src="@Url.Action(action, "Anh", new { id = Model.Id })" alt="@chuThich"
+                 loading="@(Model.TaiCham ? "lazy" : "eager")" decoding="async" width="640" height="360" />
+        }
+    </div>
+    @if (laLoai) { <figcaption class="text-muted small mt-1">Ảnh minh họa loại sân</figcaption> }
+</figure>

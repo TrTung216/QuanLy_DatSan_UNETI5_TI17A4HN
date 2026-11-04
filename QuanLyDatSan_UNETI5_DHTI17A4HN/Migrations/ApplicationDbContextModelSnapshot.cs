@@ -417,6 +417,11 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("DuongDanAnh")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("MoTa")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -516,6 +521,11 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
                     b.Property<decimal?>("DonGiaCuoiTuan")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("DuongDanAnh")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("GhiChu")
                         .HasMaxLength(1000)

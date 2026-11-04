@@ -6,7 +6,8 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyLoaiSan;
 
-public class LoaiSanService(ILoaiSanRepository repository, IDonViCongViec donViCongViec) : ILoaiSanService
+public class LoaiSanService(ILoaiSanRepository repository, IDonViCongViec donViCongViec,
+    Anh.IDonDepAnh donDepAnh) : ILoaiSanService
 {
     public Task<TrangLoaiSan> LayDanhSachAsync(string? tuKhoa, TrangThaiLoaiSan? trangThai, string sapXep, int trang, CancellationToken cancellationToken) =>
         repository.LayDanhSachAsync(tuKhoa?.Trim(), trangThai, sapXep, trang, cancellationToken);
@@ -45,13 +46,14 @@ public class LoaiSanService(ILoaiSanRepository repository, IDonViCongViec donViC
         {
             // FK NoAction vẫn bảo vệ tham chiếu phát sinh sau AnyAsync.
             await donViCongViec.LuuAsync(cancellationToken);
+            await donDepAnh.XoaNeuKhongThamChieuAsync(loaiSan.DuongDanAnh);
             return new(MaLoiLoaiSan.ThanhCong, id);
         }
         catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.LoaiSanDangDuocThamChieu)
         {
             return new(MaLoiLoaiSan.DangDuocThamChieu);
         }
-        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan) { return new(MaLoiLoaiSan.KhongTonTai); }
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan) { return new(MaLoiLoaiSan.XungDotDuLieu); }
     }
 
     private Task<bool> TrungTenAsync(string ten, int? id, CancellationToken cancellationToken)

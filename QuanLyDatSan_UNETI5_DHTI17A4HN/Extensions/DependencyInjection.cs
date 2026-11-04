@@ -32,6 +32,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddUngDungServices(this IServiceCollection services)
     {
+        services.AddModuleAnh();
         services.AddScoped<IDonViCongViec, DonViCongViec>();
         services.AddModuleTaiKhoanVaLoaiSan();
         services.AddModuleTrangChu();
@@ -43,6 +44,16 @@ public static class DependencyInjection
         services.AddModuleDichVuTrongDon();
         services.AddModuleThongKe();   // thêm dòng này ngay dưới
         services.AddModuleDatSan();
+        return services;
+    }
+
+    // M1: kho file singleton; nghiệp vụ/repository theo scope của request.
+    private static IServiceCollection AddModuleAnh(this IServiceCollection services)
+    {
+        services.AddSingleton<Services.Anh.IKhoAnh, Infrastructure.Anh.KhoAnhDiaPhuong>();
+        services.AddScoped<Repositories.Anh.IAnhRepository, Repositories.Anh.AnhRepository>();
+        services.AddScoped<Services.Anh.IDonDepAnh, Services.Anh.DonDepAnh>();
+        services.AddScoped<Services.Anh.IAnhService, Services.Anh.AnhService>();
         return services;
     }
 

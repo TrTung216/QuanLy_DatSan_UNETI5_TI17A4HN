@@ -7,5 +7,5 @@ public interface ITrangChuService
 }
 
 public record SanTrangChu(int MaSan, string TenSan, string DiaChi, decimal DonGia,
-    TimeOnly GioMoCua, TimeOnly GioDongCua);
-public record NhomSanTrangChu(int MaLoaiSan, string TenLoai, IReadOnlyList<SanTrangChu> San);
+    TimeOnly GioMoCua, TimeOnly GioDongCua, bool CoAnh = false);
+public record NhomSanTrangChu(int MaLoaiSan, string TenLoai, IReadOnlyList<SanTrangChu> San, bool CoAnh = false);

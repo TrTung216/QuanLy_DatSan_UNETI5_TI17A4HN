@@ -77,6 +77,14 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// M1: CLI dọn ảnh giữ khóa độc quyền, không khởi động web hoặc cập nhật database.
+if (args.Contains("--kiem-tra-anh-mo-coi") || args.Contains("--don-anh-mo-coi"))
+{
+    Environment.ExitCode = await QuanLyDatSan_UNETI5_DHTI17A4HN.Infrastructure.Anh.DonAnhMoCoi.ChayAsync(
+        app.Services, xoa: args.Contains("--don-anh-mo-coi"));
+    return;
+}
+
 if (args.Contains("--tao-admin"))
 {
     Environment.ExitCode = await KhoiTaoAdmin.ChayAsync(app.Services, app.Configuration);
@@ -97,6 +105,7 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<QuanLyDatSan_UNETI5_DHTI17A4HN.Infrastructure.Anh.GioiHanAnhMiddleware>();
 app.UseRateLimiter();
 
 app.MapStaticAssets();

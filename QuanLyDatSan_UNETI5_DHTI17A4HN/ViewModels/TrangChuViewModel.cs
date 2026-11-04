@@ -2,6 +2,6 @@
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
 
 public record TrangChuViewModel(IReadOnlyList<NhomSanTrangChuViewModel> CacLoaiSan);
-public record NhomSanTrangChuViewModel(int MaLoaiSan, string TenLoai, IReadOnlyList<TheSanTrangChuViewModel> San);
+public record NhomSanTrangChuViewModel(int MaLoaiSan, string TenLoai, IReadOnlyList<TheSanTrangChuViewModel> San, bool CoAnh = false);
 public record TheSanTrangChuViewModel(int MaSan, string TenSan, string DiaChi, decimal DonGia,
-    TimeOnly GioMoCua, TimeOnly GioDongCua);
+    TimeOnly GioMoCua, TimeOnly GioDongCua, bool CoAnh = false);

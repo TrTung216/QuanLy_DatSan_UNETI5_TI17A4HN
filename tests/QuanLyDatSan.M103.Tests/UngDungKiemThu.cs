@@ -19,6 +19,8 @@ namespace QuanLyDatSan.M103.Tests;
 
 public sealed class UngDungKiemThu : WebApplicationFactory<TaiKhoanController>
 {
+    // M1: mỗi test ảnh cung cấp kho tạm riêng, không dùng cấu hình kho ảnh thật của máy.
+    public string? ThuMucAnhKiemThu { get; init; }
     private readonly SqliteConnection connection;
     private readonly string connectionString = $"Data Source=m103_{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
     public string MatKhau { get; } = Guid.NewGuid().ToString("N") + "!aA1";
@@ -60,6 +62,9 @@ public sealed class UngDungKiemThu : WebApplicationFactory<TaiKhoanController>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.ConfigureAppConfiguration((_, configuration) =>
+            Microsoft.Extensions.Configuration.MemoryConfigurationBuilderExtensions.AddInMemoryCollection(configuration,
+                new Dictionary<string, string?> { ["LuuTruAnh:ThuMucGoc"] = ThuMucAnhKiemThu }));
         builder.UseEnvironment("Development");
         builder.ConfigureLogging(logging => logging.ClearProviders());
         builder.ConfigureServices(services =>
