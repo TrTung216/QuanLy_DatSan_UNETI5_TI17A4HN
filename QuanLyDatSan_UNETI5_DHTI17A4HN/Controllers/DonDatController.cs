@@ -46,6 +46,55 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
         return model is null ? NotFound() : View(model);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Coc(int id, CancellationToken cancellationToken)
+    {
+        if (taiKhoanHienTai.MaTaiKhoan is null) return Challenge();
+
+        var ketQua = await datSanService.LayThongTinCocAsync(id, cancellationToken);
+        if (!ketQua.ThanhCong)
+        {
+            switch (ketQua.Loi!.Value)
+            {
+                case MaLoiCoc.KhongDuQuyen: return Forbid();
+                case MaLoiCoc.KhongTonTai: return NotFound();
+                default:
+                    TempData["Error"] = HienThiCoc.ThongBaoLoi(ketQua.Loi.Value);
+                    return RedirectToAction(nameof(ChiTiet), new { id });
+            }
+        }
+
+        return View(TaoCocViewModel(ketQua.DuLieu!, tongTien: null));
+    }
+
+    private static CocDonViewModel TaoCocViewModel(ThongTinCocDto coc, decimal? tongTien)
+    {
+        var tong = tongTien ?? coc.TienSanDuKien;
+        return new CocDonViewModel
+        {
+            MaDatSan = coc.MaDatSan,
+            TrangThaiDon = coc.TrangThai,
+            TrangThaiCoc = coc.TrangThaiCoc,
+            TienSanDuKien = coc.TienSanDuKien,
+            TienCocYeuCau = coc.TienCocYeuCau,
+            TienCocDaNhan = coc.TienCocDaNhan,
+            ConPhaiThanhToanTamTinh = Math.Max(0m, tong - coc.TienCocDaNhan),
+            ConPhaiThanhToanLaTamTinh = tongTien is null,
+            NoiDungChuyenKhoan = coc.NoiDungChuyenKhoan,
+            CoTheChuyen = coc.CoTheChuyen,
+            NoiDungQrMoPhong = coc.NoiDungQrMoPhong,
+            BienNhan = coc.BienNhan is null ? null : new BienNhanCocViewModel
+            {
+                MaBienNhan = coc.BienNhan.MaBienNhan,
+                SoTien = coc.BienNhan.SoTien,
+                MaGiaoDichNgoai = coc.BienNhan.MaGiaoDichNgoai,
+                Nguon = coc.BienNhan.Nguon,
+                NgayNhan = coc.BienNhan.NgayNhan,
+                NgayXacNhan = coc.BienNhan.NgayXacNhan
+            }
+        };
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Huy(HuyDonCaNhanViewModel model, CancellationToken cancellationToken)
     {
@@ -76,7 +125,7 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
     {
         var chiTiet = await LayChiTietViewModelAsync(maTaiKhoan, model.MaDon, cancellationToken);
         if (chiTiet is null) return NotFound();
-        chiTiet.LyDoHuyNhap = model.LyDo;
+        chiTiet.LyDoHuyDaNhap = model.LyDo;
         return View(nameof(ChiTiet), chiTiet);
     }
 
@@ -85,6 +134,8 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
     {
         var don = await datSanService.LayChiTietCaNhanAsync(maTaiKhoan, id, cancellationToken);
         if (don is null) return null;
+        // Thông tin cọc chỉ để hiển thị; lỗi ở đây không làm hỏng trang chi tiết đơn.
+        var coc = await datSanService.LayThongTinCocAsync(id, cancellationToken);
         return new ChiTietDonViewModel
         {
             MaDatSan = don.MaDatSan,
@@ -105,7 +156,8 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
             TienDichVu = don.TienDichVu,
             TongTien = don.TongTien,
             TienSanDuKien = don.TienSanDuKien,
-            PhienBan = Convert.ToBase64String(don.PhienBan),
+            PhienBanDon = Convert.ToBase64String(don.PhienBan),
+            Coc = coc.ThanhCong ? TaoCocViewModel(coc.DuLieu!, don.TongTien) : null,
             // Chỉ để ẩn/hiện nút; service kiểm tra lại toàn bộ điều kiện khi POST.
             CoTheHuy = don.TrangThai == TrangThaiDatSan.ChoXuLy && don.TienCoc == 0m
                 && don.GioBatDau > dongHo.BayGio,

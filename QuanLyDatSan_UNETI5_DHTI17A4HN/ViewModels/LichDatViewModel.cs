@@ -34,9 +34,10 @@ public class ChiTietDonViewModel
     public decimal? TienDichVu { get; set; }
     public decimal? TongTien { get; set; }
     public decimal TienSanDuKien { get; set; }
-    public string PhienBan { get; set; } = string.Empty;
+    public string PhienBanDon { get; set; } = string.Empty;
     public bool CoTheHuy { get; set; }
-    public string? LyDoHuyNhap { get; set; }
+    public string? LyDoHuyDaNhap { get; set; }
+    public CocDonViewModel? Coc { get; set; }
 }
 
 public sealed class HuyDonCaNhanViewModel
