@@ -17,8 +17,10 @@
         <dt class="col-sm-3">Tiền sân dự kiến</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
         <dt class="col-sm-3">Cọc cần chuyển</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCocYeuCau)</dd>
         <dt class="col-sm-3">Cọc đã ghi nhận</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCocDaNhan)</dd>
-        <dt class="col-sm-3">Còn phải thanh toán</dt>
-        <dd class="col-sm-9">@HienThiDatSan.Tien(Model.ConPhaiThanhToanTamTinh)@(Model.ConPhaiThanhToanLaTamTinh ? " (tạm tính, chưa gồm dịch vụ phát sinh)" : "")</dd>
+        @if (Model.NhanPhanConLai is not null)
+        {
+            <dt class="col-sm-3">Phần còn lại</dt><dd class="col-sm-9">@Model.NhanPhanConLai</dd>
+        }
     </dl>
 
     @switch (Model.TrangThaiCoc)

@@ -64,12 +64,11 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
             }
         }
 
-        return View(TaoCocViewModel(ketQua.DuLieu!, tongTien: null));
+        return View(TaoCocViewModel(ketQua.DuLieu!));
     }
 
-    private static CocDonViewModel TaoCocViewModel(ThongTinCocDto coc, decimal? tongTien)
+    private static CocDonViewModel TaoCocViewModel(ThongTinCocDto coc)
     {
-        var tong = tongTien ?? coc.TienSanDuKien;
         return new CocDonViewModel
         {
             MaDatSan = coc.MaDatSan,
@@ -78,8 +77,7 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
             TienSanDuKien = coc.TienSanDuKien,
             TienCocYeuCau = coc.TienCocYeuCau,
             TienCocDaNhan = coc.TienCocDaNhan,
-            ConPhaiThanhToanTamTinh = Math.Max(0m, tong - coc.TienCocDaNhan),
-            ConPhaiThanhToanLaTamTinh = tongTien is null,
+            NhanPhanConLai = HienThiCoc.NhanPhanConLai(coc.TrangThai),
             NoiDungChuyenKhoan = coc.NoiDungChuyenKhoan,
             CoTheChuyen = coc.CoTheChuyen,
             NoiDungQrMoPhong = coc.NoiDungQrMoPhong,
@@ -136,6 +134,11 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
         if (don is null) return null;
         // Thông tin cọc chỉ để hiển thị; lỗi ở đây không làm hỏng trang chi tiết đơn.
         var coc = await datSanService.LayThongTinCocAsync(id, cancellationToken);
+        var cocHienThi = coc.ThanhCong ? TaoCocViewModel(coc.DuLieu!) : null;
+        // Không tự tính tiền: chỉ chuyển các khoản service đã cung cấp.
+        var lyDoKhongHuy = HienThiCoc.LyDoKhongTheHuy(
+            cocHienThi?.TrangThaiCoc ?? TrangThaiCocHienThi.KhongApDung, don.TienCoc);
+        var conTheHuyTheoDon = don.TrangThai == TrangThaiDatSan.ChoXuLy && don.GioBatDau > dongHo.BayGio;
         return new ChiTietDonViewModel
         {
             MaDatSan = don.MaDatSan,
@@ -157,10 +160,11 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
             TongTien = don.TongTien,
             TienSanDuKien = don.TienSanDuKien,
             PhienBanDon = Convert.ToBase64String(don.PhienBan),
-            Coc = coc.ThanhCong ? TaoCocViewModel(coc.DuLieu!, don.TongTien) : null,
+            Coc = cocHienThi,
+            NhanPhanConLai = HienThiCoc.NhanPhanConLai(don.TrangThai),
+            LyDoKhongTheHuy = conTheHuyTheoDon ? lyDoKhongHuy : null,
             // Chỉ để ẩn/hiện nút; service kiểm tra lại toàn bộ điều kiện khi POST.
-            CoTheHuy = don.TrangThai == TrangThaiDatSan.ChoXuLy && don.TienCoc == 0m
-                && don.GioBatDau > dongHo.BayGio,
+            CoTheHuy = conTheHuyTheoDon && lyDoKhongHuy is null,
         };
     }
 

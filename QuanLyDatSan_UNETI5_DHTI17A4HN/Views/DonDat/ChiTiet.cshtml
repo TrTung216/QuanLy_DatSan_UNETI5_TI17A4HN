@@ -21,8 +21,6 @@
         <dt class="col-sm-3">Cọc cần chuyển</dt><dd class="col-sm-9">@HienThiDatSan.Tien(coc.TienCocYeuCau)</dd>
         <dt class="col-sm-3">Cọc đã ghi nhận</dt><dd class="col-sm-9">@HienThiDatSan.Tien(coc.TienCocDaNhan)</dd>
         <dt class="col-sm-3">Trạng thái cọc</dt><dd class="col-sm-9"><span class="@HienThiCoc.LopMau(coc.TrangThaiCoc)">@HienThiCoc.TenTrangThai(coc.TrangThaiCoc)</span></dd>
-        <dt class="col-sm-3">Còn phải thanh toán</dt>
-        <dd class="col-sm-9">@HienThiDatSan.Tien(coc.ConPhaiThanhToanTamTinh)@(coc.ConPhaiThanhToanLaTamTinh ? " (tạm tính, chưa gồm dịch vụ phát sinh)" : "")</dd>
     }
     else
     {
@@ -30,13 +28,17 @@
     }
     @if (Model.TongTien.HasValue)
     {
-        <dt class="col-sm-3">Tiền sân</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSan ?? 0m)</dd>
-        <dt class="col-sm-3">Tiền dịch vụ</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienDichVu ?? 0m)</dd>
+        <dt class="col-sm-3">Tiền sân</dt><dd class="col-sm-9">@(Model.TienSan.HasValue ? HienThiDatSan.Tien(Model.TienSan.Value) : "Chưa có dữ liệu")</dd>
+        <dt class="col-sm-3">Tiền dịch vụ</dt><dd class="col-sm-9">@(Model.TienDichVu.HasValue ? HienThiDatSan.Tien(Model.TienDichVu.Value) : "Chưa có dữ liệu")</dd>
         <dt class="col-sm-3">Tổng tiền</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TongTien.Value)</dd>
     }
     else
     {
         <dt class="col-sm-3">Tiền sân dự kiến</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
+    }
+    @if (Model.NhanPhanConLai is not null)
+    {
+        <dt class="col-sm-3">Phần còn lại</dt><dd class="col-sm-9">@Model.NhanPhanConLai</dd>
     }
     @if (Model.NgayXacNhan.HasValue)
     {
@@ -55,6 +57,10 @@
 @if (!ViewData.ModelState.IsValid)
 {
     <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+}
+@if (!Model.CoTheHuy && Model.LyDoKhongTheHuy is not null)
+{
+    <div class="alert alert-info" role="status">@Model.LyDoKhongTheHuy</div>
 }
 @if (Model.CoTheHuy)
 {

@@ -26,7 +26,7 @@ public class DonDatCocControllerTests
         public DateOnly HomNay => new(2026, 11, 4);
     }
 
-    private sealed class DichVuGia(KetQuaCoc<ThongTinCocDto> ketQua) : IDatSanService
+    private sealed class DichVuGia(KetQuaCoc<ThongTinCocDto> ketQua, ChiTietDonDto? chiTiet = null) : IDatSanService
     {
         public int SoLanGoiCoc { get; private set; }
         public Task<KetQuaCoc<ThongTinCocDto>> LayThongTinCocAsync(int maDatSan, CancellationToken ct)
@@ -45,7 +45,7 @@ public class DonDatCocControllerTests
         public Task<KetQuaXuLyDon> GhiCocAsync(GhiCocYeuCau yeuCau, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<KetQuaXuLyDon> HoanThanhDonAsync(HoanThanhDonYeuCau yeuCau, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<DanhSachDonDto> LayDanhSachCaNhanAsync(int maTaiKhoan, TrangThaiDatSan? trangThai, int trang, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<ChiTietDonDto?> LayChiTietCaNhanAsync(int maTaiKhoan, int id, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ChiTietDonDto?> LayChiTietCaNhanAsync(int maTaiKhoan, int id, CancellationToken cancellationToken) => Task.FromResult(chiTiet);
         public Task<IReadOnlyList<SanChonDto>> LayLuaChonSanAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<DanhSachDonQuanLyDto> LayDanhSachQuanLyAsync(LocDonQuanLy loc, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<ChiTietDonQuanLyDto?> LayChiTietQuanLyAsync(int id, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -99,31 +99,106 @@ public class DonDatCocControllerTests
     }
 
     [Fact]
-    public async Task ChuaNhanCoTheChuyenHienCocCanChuyenVaConPhaiThanhToanTamTinh()
+    public async Task TrangCocChiTruyenCacKhoanServiceDaCungCapVaKhongTuTinhConLai()
     {
         var dv = new DichVuGia(KetQuaCoc<ThongTinCocDto>.DaXong(Thong(TrangThaiCocHienThi.ChuaNhan, coTheChuyen: true)));
         var view = Assert.IsType<ViewResult>(await TaoController(dv).Coc(7, default));
         var model = Assert.IsType<CocDonViewModel>(view.Model);
+        Assert.Equal(300_000m, model.TienSanDuKien);
         Assert.Equal(150_000m, model.TienCocYeuCau);
         Assert.Equal(0m, model.TienCocDaNhan);
-        Assert.Equal(300_000m, model.ConPhaiThanhToanTamTinh);
-        Assert.True(model.ConPhaiThanhToanLaTamTinh);
         Assert.Equal("DEMO:ORDER:7", model.NoiDungQrMoPhong);
         Assert.Null(model.BienNhan);
+        Assert.Null(model.NhanPhanConLai);
+        // Hồi quy: controller/ViewModel không được có trường tiền "còn lại" tự tính.
+        Assert.DoesNotContain(typeof(CocDonViewModel).GetProperties(), x => x.Name.StartsWith("ConPhai"));
+        Assert.DoesNotContain(typeof(ChiTietDonViewModel).GetProperties(), x => x.Name.StartsWith("ConPhai"));
     }
 
     [Fact]
-    public async Task DaNhanCocGiamConPhaiThanhToanVaKhongAm()
+    public async Task CocVuotTongKhongBiCheGiauVaKhongCoSoTienConLai()
     {
-        var bn = new BienNhanCocDto(1, 7, 150_000m, "TEST-TXN-0001", "MoPhong", new DateTime(2026, 11, 4, 8, 0, 0), new DateTime(2026, 11, 4, 8, 30, 0));
-        var dv = new DichVuGia(KetQuaCoc<ThongTinCocDto>.DaXong(Thong(TrangThaiCocHienThi.DaNhan, cocDaNhan: 150_000m, bienNhan: bn)));
+        // Cọc đã ghi nhận lớn hơn tiền sân: chỉ chuyển nguyên giá trị service, không Math.Max về 0.
+        var dv = new DichVuGia(KetQuaCoc<ThongTinCocDto>.DaXong(Thong(TrangThaiCocHienThi.DaNhan, cocDaNhan: 400_000m)));
         var model = (CocDonViewModel)((ViewResult)await TaoController(dv).Coc(7, default)).Model!;
-        Assert.Equal(150_000m, model.ConPhaiThanhToanTamTinh);
-        Assert.Equal(150_000m, model.BienNhan!.SoTien);
+        Assert.Equal(400_000m, model.TienCocDaNhan);
+        Assert.Equal(300_000m, model.TienSanDuKien);
+    }
 
-        var thua = new DichVuGia(KetQuaCoc<ThongTinCocDto>.DaXong(Thong(TrangThaiCocHienThi.DaNhan, cocDaNhan: 400_000m)));
-        var modelThua = (CocDonViewModel)((ViewResult)await TaoController(thua).Coc(7, default)).Model!;
-        Assert.Equal(0m, modelThua.ConPhaiThanhToanTamTinh);
+    private static ChiTietDonDto Don(TrangThaiDatSan trangThai, decimal tienCoc = 0m, decimal? tienSan = null,
+        decimal? tienDichVu = null, decimal? tong = null, int gioToi = 3) => new()
+    {
+        MaDatSan = 7, TenSan = "Sân A", TenLoai = "Bóng đá", DiaChi = "Hà Nội",
+        NgayDat = new DateTime(2026, 11, 3), GioBatDau = new DateTime(2026, 11, 4, 9 + gioToi, 0, 0),
+        GioKetThuc = new DateTime(2026, 11, 4, 10 + gioToi, 0, 0), DonGia = 200_000m, TienCoc = tienCoc,
+        TrangThai = trangThai, TienSan = tienSan, TienDichVu = tienDichVu, TongTien = tong,
+        TienSanDuKien = 200_000m, PhienBan = new byte[8]
+    };
+
+    [Fact]
+    public async Task DonHoanThanhHienDaThuPhanConLaiVaGiuCacKhoanDaChot()
+    {
+        // Tiền sân 200.000, dịch vụ 60.000, cọc 100.000: controller không được suy ra 160.000 hay 100.000.
+        var don = Don(TrangThaiDatSan.HoanThanh, tienCoc: 100_000m, tienSan: 200_000m, tienDichVu: 60_000m, tong: 260_000m);
+        var dv = new DichVuGia(KetQuaCoc<ThongTinCocDto>.DaXong(
+            Thong(TrangThaiCocHienThi.DaNhan, cocDaNhan: 100_000m) with { TrangThai = TrangThaiDatSan.HoanThanh }), don);
+
+        var view = Assert.IsType<ViewResult>(await TaoController(dv).ChiTiet(7, default));
+        var model = Assert.IsType<ChiTietDonViewModel>(view.Model);
+
+        Assert.Equal("Đã thu phần còn lại", model.NhanPhanConLai);
+        Assert.Equal("Đã thu phần còn lại", model.Coc!.NhanPhanConLai);
+        Assert.Equal(200_000m, model.TienSan);
+        Assert.Equal(60_000m, model.TienDichVu);
+        Assert.Equal(260_000m, model.TongTien);
+        Assert.Equal(100_000m, model.Coc.TienCocDaNhan);
+        Assert.False(model.CoTheHuy);
+    }
+
+    [Theory]
+    [InlineData(TrangThaiDatSan.ChoXuLy)]
+    [InlineData(TrangThaiDatSan.DangXuLy)]
+    public async Task DonChuaHoanThanhKhongCoNhanPhanConLai(TrangThaiDatSan trangThai)
+    {
+        var dv = new DichVuGia(KetQuaCoc<ThongTinCocDto>.DaXong(Thong(TrangThaiCocHienThi.ChuaNhan, coTheChuyen: true)),
+            Don(trangThai));
+        var model = (ChiTietDonViewModel)((ViewResult)await TaoController(dv).ChiTiet(7, default)).Model!;
+        Assert.Null(model.NhanPhanConLai);
+        Assert.Null(model.TongTien);
+    }
+
+    [Theory]
+    [InlineData(TrangThaiCocHienThi.ChoDoiSoat)]
+    [InlineData(TrangThaiCocHienThi.CanXuLyNgoaiLe)]
+    [InlineData(TrangThaiCocHienThi.DaNhan)]
+    public async Task GiaoDichChoDoiSoatHoacNgoaiLeAnNutHuyVaGiaiThich(TrangThaiCocHienThi trangThaiCoc)
+    {
+        var dv = new DichVuGia(KetQuaCoc<ThongTinCocDto>.DaXong(Thong(trangThaiCoc)), Don(TrangThaiDatSan.ChoXuLy));
+        var model = (ChiTietDonViewModel)((ViewResult)await TaoController(dv).ChiTiet(7, default)).Model!;
+        Assert.False(model.CoTheHuy);
+        Assert.False(string.IsNullOrWhiteSpace(model.LyDoKhongTheHuy));
+        Assert.Contains("nhân viên", model.LyDoKhongTheHuy);
+    }
+
+    [Theory]
+    [InlineData(TrangThaiCocHienThi.ChuaNhan)]
+    [InlineData(TrangThaiCocHienThi.KhongApDung)]
+    public async Task DonChoChuaCoGiaoDichChoPhepHuy(TrangThaiCocHienThi trangThaiCoc)
+    {
+        var dv = new DichVuGia(KetQuaCoc<ThongTinCocDto>.DaXong(Thong(trangThaiCoc)), Don(TrangThaiDatSan.ChoXuLy));
+        var model = (ChiTietDonViewModel)((ViewResult)await TaoController(dv).ChiTiet(7, default)).Model!;
+        Assert.True(model.CoTheHuy);
+        Assert.Null(model.LyDoKhongTheHuy);
+    }
+
+    [Fact]
+    public async Task DaQuaGioBatDauKhongHienNutVaKhongHienLyDoHuy()
+    {
+        var dv = new DichVuGia(KetQuaCoc<ThongTinCocDto>.DaXong(Thong(TrangThaiCocHienThi.ChuaNhan)),
+            Don(TrangThaiDatSan.ChoXuLy, gioToi: -1));
+        var model = (ChiTietDonViewModel)((ViewResult)await TaoController(dv).ChiTiet(7, default)).Model!;
+        Assert.False(model.CoTheHuy);
+        Assert.Null(model.LyDoKhongTheHuy);
     }
 
     [Theory]

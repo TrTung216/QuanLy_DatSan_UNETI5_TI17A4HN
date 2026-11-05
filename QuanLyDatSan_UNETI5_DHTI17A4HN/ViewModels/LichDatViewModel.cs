@@ -38,6 +38,8 @@ public class ChiTietDonViewModel
     public bool CoTheHuy { get; set; }
     public string? LyDoHuyDaNhap { get; set; }
     public CocDonViewModel? Coc { get; set; }
+    public string? LyDoKhongTheHuy { get; set; }
+    public string? NhanPhanConLai { get; set; }
 }
 
 public sealed class HuyDonCaNhanViewModel
