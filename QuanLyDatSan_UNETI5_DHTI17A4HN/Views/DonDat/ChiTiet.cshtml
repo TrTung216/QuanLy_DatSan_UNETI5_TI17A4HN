@@ -1,6 +1,7 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. giao diện chi tiết đơn đặt sân của khách hàng. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ChiTietDonViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels
 @{ ViewData["Title"] = "Đơn đặt sân #" + Model.MaDatSan; }
 <div class="ql-page-header">
     <p class="ql-eyebrow">Khách hàng</p>
@@ -15,18 +16,29 @@
     <dd class="col-sm-9">@Model.GioBatDau.ToString("dd/MM/yyyy") @Model.GioBatDau.ToString("HH:mm") - @Model.GioKetThuc.ToString("HH:mm")</dd>
     <dt class="col-sm-3">Ngày đặt</dt><dd class="col-sm-9">@Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</dd>
     <dt class="col-sm-3">Đơn giá</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.DonGia)/giờ</dd>
-    <dt class="col-sm-3">Tiền cọc</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCoc)</dd>
+    @if (Model.Coc is { } coc && coc.TrangThaiCoc != TrangThaiCocHienThi.KhongApDung)
+    {
+        <dt class="col-sm-3">Cọc cần chuyển</dt><dd class="col-sm-9">@HienThiDatSan.Tien(coc.TienCocYeuCau)</dd>
+        <dt class="col-sm-3">Cọc đã ghi nhận</dt><dd class="col-sm-9">@HienThiDatSan.Tien(coc.TienCocDaNhan)</dd>
+        <dt class="col-sm-3">Trạng thái cọc</dt><dd class="col-sm-9"><span class="@HienThiCoc.LopMau(coc.TrangThaiCoc)">@HienThiCoc.TenTrangThai(coc.TrangThaiCoc)</span></dd>
+    }
+    else
+    {
+        <dt class="col-sm-3">Tiền cọc</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCoc)</dd>
+    }
     @if (Model.TongTien.HasValue)
     {
-        <dt class="col-sm-3">Tiền sân</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSan ?? 0m)</dd>
-        <dt class="col-sm-3">Tiền dịch vụ</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienDichVu ?? 0m)</dd>
+        <dt class="col-sm-3">Tiền sân</dt><dd class="col-sm-9">@(Model.TienSan.HasValue ? HienThiDatSan.Tien(Model.TienSan.Value) : "Chưa có dữ liệu")</dd>
+        <dt class="col-sm-3">Tiền dịch vụ</dt><dd class="col-sm-9">@(Model.TienDichVu.HasValue ? HienThiDatSan.Tien(Model.TienDichVu.Value) : "Chưa có dữ liệu")</dd>
         <dt class="col-sm-3">Tổng tiền</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TongTien.Value)</dd>
     }
     else
     {
         <dt class="col-sm-3">Tiền sân dự kiến</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
-        <dt class="col-sm-3">Tiền dịch vụ</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienDichVu ?? 0m)</dd>
-        <dt class="col-sm-3">Tổng tiền dự kiến</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSanDuKien + (Model.TienDichVu ?? 0m))</dd>
+    }
+    @if (Model.NhanPhanConLai is not null)
+    {
+        <dt class="col-sm-3">Phần còn lại</dt><dd class="col-sm-9">@Model.NhanPhanConLai</dd>
     }
     @if (Model.NgayXacNhan.HasValue)
     {
@@ -42,6 +54,31 @@
         <dt class="col-sm-3">Lý do</dt><dd class="col-sm-9">@Model.LyDoHuy</dd>
     }
 </dl>
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+}
+@if (!Model.CoTheHuy && Model.LyDoKhongTheHuy is not null)
+{
+    <div class="alert alert-info" role="status">@Model.LyDoKhongTheHuy</div>
+}
+@if (Model.CoTheHuy)
+{
+    <form asp-action="Huy" method="post" asp-antiforgery="true" class="d-flex flex-wrap align-items-end gap-2 mb-3"
+          onsubmit="return confirm('Bạn có chắc muốn hủy đơn này?');">
+        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+        <input type="hidden" name="PhienBan" value="@Model.PhienBanDon" />
+        <div>
+            <label for="ly-do-huy" class="form-label">Lý do hủy *</label>
+            <input id="ly-do-huy" name="LyDo" value="@Model.LyDoHuyDaNhap" class="form-control" required maxlength="1000" />
+        </div>
+        <button type="submit" class="btn btn-danger">Hủy đơn</button>
+    </form>
+}
+@if (Model.Coc is { } cocLink && cocLink.TrangThaiCoc != TrangThaiCocHienThi.KhongApDung)
+{
+    <a asp-action="Coc" asp-route-id="@Model.MaDatSan" class="btn btn-primary">Thông tin đặt cọc</a>
+}
 <a asp-action="Index" class="btn btn-outline-secondary">Quay lại lịch của tôi</a>
 
 </section>

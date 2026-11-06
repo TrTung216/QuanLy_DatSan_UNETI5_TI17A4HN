@@ -1,0 +1,70 @@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. Trang thông tin đặt cọc của khách hàng (chỉ đọc, mô phỏng). *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.CocDonViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels
+@{ ViewData["Title"] = "Đặt cọc đơn #" + Model.MaDatSan; }
+<div class="ql-page-header">
+    <p class="ql-eyebrow">Khách hàng</p>
+    <h1>Đặt cọc đơn #@Model.MaDatSan</h1>
+    <p class="mt-2 mb-0">
+        <span class="@HienThiDatSan.LopMau(Model.TrangThaiDon)">@HienThiDatSan.TenTrangThai(Model.TrangThaiDon)</span>
+        <span class="@HienThiCoc.LopMau(Model.TrangThaiCoc)">@HienThiCoc.TenTrangThai(Model.TrangThaiCoc)</span>
+    </p>
+</div>
+<section class="ql-panel ql-details" aria-label="Thông tin đặt cọc">
+    <div class="alert alert-warning" role="alert"><strong>MÔ PHỎNG — không chuyển tiền thật.</strong></div>
+    <dl class="row">
+        <dt class="col-sm-3">Tiền sân dự kiến</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
+        <dt class="col-sm-3">Cọc cần chuyển</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCocYeuCau)</dd>
+        <dt class="col-sm-3">Cọc đã ghi nhận</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCocDaNhan)</dd>
+        @if (Model.NhanPhanConLai is not null)
+        {
+            <dt class="col-sm-3">Phần còn lại</dt><dd class="col-sm-9">@Model.NhanPhanConLai</dd>
+        }
+    </dl>
+
+    @switch (Model.TrangThaiCoc)
+    {
+        case TrangThaiCocHienThi.ChuaNhan when Model.CoTheChuyen:
+            <h2 class="h5">Thông tin chuyển khoản</h2>
+            <dl class="row">
+                <dt class="col-sm-3">Số tiền</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCocYeuCau)</dd>
+                <dt class="col-sm-3">Nội dung</dt><dd class="col-sm-9"><code>@Model.NoiDungChuyenKhoan</code></dd>
+                @if (!string.IsNullOrEmpty(Model.NoiDungQrMoPhong))
+                {
+                    <dt class="col-sm-3">Mã QR mô phỏng</dt><dd class="col-sm-9"><code>@Model.NoiDungQrMoPhong</code></dd>
+                }
+            </dl>
+            <p>Sau khi chuyển, nhân viên sẽ đối soát giao dịch. Đơn chỉ được xác nhận sau khi nhân viên ghi nhận cọc.</p>
+            break;
+        case TrangThaiCocHienThi.ChuaNhan:
+            <p>Hiện chưa thể chuyển cọc cho đơn này (đơn không còn ở trạng thái chờ hoặc đã đến giờ bắt đầu). Vui lòng liên hệ nhân viên.</p>
+            break;
+        case TrangThaiCocHienThi.ChoDoiSoat:
+            <p>Hệ thống đang có giao dịch chờ nhân viên đối soát. Bạn không cần chuyển lại.</p>
+            break;
+        case TrangThaiCocHienThi.DaNhan:
+            <p>Cọc đã được nhân viên xác nhận.</p>
+            @if (Model.BienNhan is { } bn)
+            {
+                <dl class="row">
+                    <dt class="col-sm-3">Biên nhận</dt><dd class="col-sm-9">#@bn.MaBienNhan</dd>
+                    <dt class="col-sm-3">Số tiền</dt><dd class="col-sm-9">@HienThiDatSan.Tien(bn.SoTien)</dd>
+                    <dt class="col-sm-3">Mã giao dịch</dt><dd class="col-sm-9">@bn.MaGiaoDichNgoai (@bn.Nguon)</dd>
+                    <dt class="col-sm-3">Thời điểm nhận</dt><dd class="col-sm-9">@bn.NgayNhan.ToString("dd/MM/yyyy HH:mm")</dd>
+                    <dt class="col-sm-3">Xác nhận lúc</dt><dd class="col-sm-9">@bn.NgayXacNhan.ToString("dd/MM/yyyy HH:mm")</dd>
+                </dl>
+            }
+            break;
+        case TrangThaiCocHienThi.CanXuLyNgoaiLe:
+            <p>Giao dịch của đơn này cần nhân viên xử lý thủ công. Vui lòng liên hệ nhân viên.</p>
+            break;
+        case TrangThaiCocHienThi.KhongSanSang:
+            <p>Chuyển khoản chưa sẵn sàng. Vui lòng liên hệ nhân viên.</p>
+            break;
+        default:
+            <p>Đơn này không áp dụng cọc.</p>
+            break;
+    }
+    <a asp-action="ChiTiet" asp-route-id="@Model.MaDatSan" class="btn btn-outline-secondary">Quay lại chi tiết đơn</a>
+</section>

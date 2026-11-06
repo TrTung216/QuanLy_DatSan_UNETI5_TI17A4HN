@@ -15,7 +15,13 @@ public enum MaLoiHoSo
 {
     KhongTonTai,
     HoSoBiKhoa,
-    NgaySinhKhongHopLe
+    NgaySinhKhongHopLe,
+    // Các mã dưới đây thêm sau; không đổi giá trị số của các mã ở trên.
+    HoTenKhongHopLe,
+    EmailKhongHopLe,
+    SoDienThoaiKhongHopLe,
+    GioiTinhKhongHopLe,
+    DiaChiKhongHopLe
 }
 
 // Thành công thì không có mã lỗi; thất bại luôn có đúng một mã lỗi.

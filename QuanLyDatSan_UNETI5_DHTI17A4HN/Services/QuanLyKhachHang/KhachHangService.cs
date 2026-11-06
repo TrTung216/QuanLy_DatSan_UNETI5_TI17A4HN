@@ -1,11 +1,13 @@
 // Codex: tách truy cập dữ liệu sang Repository, giữ nghiệp vụ và tác giả gốc.
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. nghiệp vụ xem và sửa hồ sơ cá nhân của khách hàng đang đăng nhập.
+using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyKhachHang;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyKhachHang;
 
-public class KhachHangService(IKhachHangRepository repository, IDonViCongViec donViCongViec, ITaiKhoanHienTai taiKhoanHienTai, IDongHo dongHo)
+public partial class KhachHangService(IKhachHangRepository repository, IDonViCongViec donViCongViec, ITaiKhoanHienTai taiKhoanHienTai, IDongHo dongHo)
     : IKhachHangService
 {
     public async Task<HoSoKhachDto?> LayHoSoAsync(CancellationToken cancellationToken)
@@ -22,8 +24,8 @@ public class KhachHangService(IKhachHangRepository repository, IDonViCongViec do
             return KetQuaCapNhatHoSo.ThatBai(MaLoiHoSo.KhongTonTai);
 
         // Service tự kiểm tra lại, không phụ thuộc việc Controller đã validate.
-        if (dto.NgaySinh is { } ngaySinh && (ngaySinh > dongHo.HomNay || ngaySinh.Year < 1900))
-            return KetQuaCapNhatHoSo.ThatBai(MaLoiHoSo.NgaySinhKhongHopLe);
+        var loi = KiemTraDuLieu(dto);
+        if (loi is not null) return KetQuaCapNhatHoSo.ThatBai(loi.Value);
 
         var khachHang = await repository.LayDeCapNhatAsync(maTaiKhoan, cancellationToken);
         if (khachHang is null) return KetQuaCapNhatHoSo.ThatBai(MaLoiHoSo.KhongTonTai);
@@ -51,5 +53,35 @@ public class KhachHangService(IKhachHangRepository repository, IDonViCongViec do
         await donViCongViec.LuuAsync(cancellationToken);
 
         return KetQuaCapNhatHoSo.ThanhCongMoi();
+    }
+
+    private static readonly EmailAddressAttribute KiemTraEmail = new();
+
+    [GeneratedRegex(@"^(0|\+84)\d{9,10}$")]
+    private static partial Regex MauSoDienThoai();
+
+    // Thứ tự kiểm tra cố định để một dữ liệu sai luôn trả cùng một mã lỗi.
+    // Chuỗi null (dữ liệu không đi qua ViewModel) được coi là thiếu, không gây NullReferenceException.
+    private MaLoiHoSo? KiemTraDuLieu(CapNhatHoSoDto dto)
+    {
+        var hoTen = dto.HoTen?.Trim();
+        if (string.IsNullOrEmpty(hoTen) || hoTen.Length > 100) return MaLoiHoSo.HoTenKhongHopLe;
+
+        var email = dto.Email?.Trim();
+        if (string.IsNullOrEmpty(email) || email.Length > 254 || !KiemTraEmail.IsValid(email))
+            return MaLoiHoSo.EmailKhongHopLe;
+
+        var soDienThoai = dto.SoDienThoai?.Trim();
+        if (string.IsNullOrEmpty(soDienThoai) || soDienThoai.Length > 20
+            || !MauSoDienThoai().IsMatch(soDienThoai))
+            return MaLoiHoSo.SoDienThoaiKhongHopLe;
+
+        if (dto.NgaySinh is { } ngaySinh && (ngaySinh > dongHo.HomNay || ngaySinh.Year < 1900))
+            return MaLoiHoSo.NgaySinhKhongHopLe;
+
+        if (!Enum.IsDefined(dto.GioiTinh)) return MaLoiHoSo.GioiTinhKhongHopLe;
+
+        if (dto.DiaChi?.Trim().Length > 255) return MaLoiHoSo.DiaChiKhongHopLe;
+        return null;
     }
 }
