@@ -1,6 +1,7 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nhận yêu cầu quản lý đơn, kiểm tra dữ liệu/RowVersion và gọi service; giữ nội dung nhập khi lỗi.
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp phản hồi Forbid khi service M4 phát hiện quyền đã thay đổi.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. Bổ sung lựa chọn cọc (đã nhận đủ / chưa nhận đủ) khi xác nhận đơn.
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -75,6 +76,7 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
             LyDoHuy = don.LyDoHuy, TienSan = don.TienSan, TienDichVu = don.TienDichVu,
             TongTien = don.TongTien, TienSanDuKien = don.TienSanDuKien,
             TienDichVuDuKien = don.TienDichVuDuKien, TongTienDuKien = don.TongTienDuKien,
+            TienCocToiThieu = ChinhSachCocToiThieu.Tinh(don.TienSanDuKien),
             PhienBan = Convert.ToBase64String(don.PhienBan),
             CoTheXacNhan = laDonCho && chuaBatDau,
             CoTheTuChoi = laDonCho && don.TienCoc == 0m,
@@ -92,7 +94,17 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         if (!KiemTraPhienBan(model.PhienBan, out var phienBan))
             return await HienThiLoiAsync(model.MaDon, model.QuayLai, null, null, cancellationToken);
 
-        var result = await datSanService.XacNhanDonAsync(new XuLyDonYeuCau(model.MaDon, phienBan), cancellationToken);
+        if (model.TinhTrangCoc == TinhTrangCocKhiXacNhan.ChuaNhanDu)
+        {
+            ModelState.AddModelError(nameof(model.TinhTrangCoc),
+                "Chưa nhận đủ cọc nên chưa thể xác nhận đặt sân.");
+            return await HienThiLoiAsync(model.MaDon, model.QuayLai, null, null, cancellationToken);
+        }
+
+        var yeuCau = new XuLyDonYeuCau(model.MaDon, phienBan);
+        var result = model.TinhTrangCoc == TinhTrangCocKhiXacNhan.DaNhanDu
+            ? await datSanService.XacNhanDonKemCocAsync(yeuCau, cancellationToken)
+            : await datSanService.XacNhanDonAsync(yeuCau, cancellationToken);
         return await XuLyKetQuaAsync(model.MaDon, model.QuayLai, result, null, null, cancellationToken);
     }
 
