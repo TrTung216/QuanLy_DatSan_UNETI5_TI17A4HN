@@ -1,4 +1,5 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. giao diện khách hàng tạo đơn đặt sân. *@
+@* M2: Phan Giang Tâm; MSSV: 23103100196. Làm rõ giá áp dụng và liên kết trở về sân đã chọn. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TaoDonViewModel
 @using System.Globalization
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
@@ -10,7 +11,8 @@
     <div class="ql-page-header">
         <p class="ql-eyebrow">Khách hàng</p>
         <h1>Đặt sân</h1>
-        <p class="ql-subtitle">Đơn mới ở trạng thái "Chờ xác nhận" và giữ chỗ cho đến khi nhân viên xử lý. Giá lấy theo bảng giá hiện tại của sân. Các trường có dấu * là bắt buộc.</p>
+        <p class="ql-subtitle">Đơn mới ở trạng thái "Chờ xác nhận" và giữ chỗ cho đến khi nhân viên xử lý.
+            Đơn áp dụng giá giờ thường tại thời điểm đặt cho toàn bộ thời gian thuê. Các trường có dấu * là bắt buộc.</p>
     </div>
     <section class="ql-panel" aria-label="Biểu mẫu đặt sân">
         @if (Model.DanhSachSan.Count == 0)
@@ -54,6 +56,13 @@
             <p class="text-muted">Tiền sân dự kiến (tham khảo): <strong id="tien-du-kien">—</strong>. Hệ thống tính lại khi lưu đơn.</p>
             <button type="submit" class="btn btn-primary" disabled="@(Model.DanhSachSan.Count == 0)">Đặt sân</button>
             <a asp-action="Index" class="btn btn-link">Lịch của tôi</a>
+            @if (Model.DanhSachSan.Any(san => san.MaSan == Model.MaSan))
+            {
+                <a asp-controller="SanTheThao" asp-action="Details" asp-route-id="@Model.MaSan" class="btn btn-link"
+                   asp-route-ngay="@(Model.NgaySuDung?.ToString("yyyy-MM-dd", inv))"
+                   asp-route-batDau="@(Model.GioBatDau?.ToString("HH:mm", inv))"
+                   asp-route-ketThuc="@(Model.GioKetThuc?.ToString("HH:mm", inv))">Xem lại sân</a>
+            }
         </form>
     </section>
 </div>

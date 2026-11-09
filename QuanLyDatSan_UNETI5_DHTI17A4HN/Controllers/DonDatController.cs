@@ -1,6 +1,7 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. khách hàng tạo đơn đặt sân, xem lịch đặt cá nhân và chi tiết đơn của chính mình.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung M4: chuyển truy vấn sang IDatSanService; ánh xạ DTO sang ViewModel và mã lỗi sang thông báo cho luồng đặt sân của khách hàng.
+// M2: Phan Giang Tâm - 23103100196. Nhận sân và khung giờ từ trang tra cứu sang form đặt sân.
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -184,10 +185,22 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
     }
 
     [HttpGet]
-    public async Task<IActionResult> Tao(int? maSan, CancellationToken cancellationToken)
+    public async Task<IActionResult> Tao(int? maSan, CancellationToken cancellationToken,
+        DateOnly? ngaySuDung = null, TimeOnly? gioBatDau = null, TimeOnly? gioKetThuc = null)
     {
-        var model = new TaoDonViewModel { MaSan = maSan };
+        var model = new TaoDonViewModel
+        {
+            MaSan = maSan,
+            NgaySuDung = ngaySuDung,
+            GioBatDau = gioBatDau,
+            GioKetThuc = gioKetThuc
+        };
+        var coKhungGio = ngaySuDung.HasValue || gioBatDau.HasValue || gioKetThuc.HasValue;
+        if (coKhungGio && (!ngaySuDung.HasValue || !gioBatDau.HasValue || !gioKetThuc.HasValue))
+            ModelState.AddModelError(string.Empty, "Nhập đủ ngày sử dụng, giờ bắt đầu và giờ kết thúc.");
         await NapDanhSachSanAsync(model, cancellationToken);
+        if (maSan.HasValue && !model.DanhSachSan.Any(san => san.MaSan == maSan.Value))
+            ModelState.AddModelError(nameof(TaoDonViewModel.MaSan), "Sân đã ngừng nhận đặt hoặc không còn tồn tại. Vui lòng chọn sân khác.");
         return View(model);
     }
 

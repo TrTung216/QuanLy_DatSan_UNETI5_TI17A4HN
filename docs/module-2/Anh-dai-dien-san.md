@@ -63,4 +63,4 @@ Test nền M1 kiểm decoder/pixel/metadata/path traversal; không nhân bản b
 - Build trong lượt test thành công; còn 2 cảnh báo CS0219 sẵn có ở `Views/ThongKe/Index.cshtml`.
 - M4 chạy trên instance LocalDB test sạch tự tạo/dọn vì database mẫu `model` của instance mặc định trên máy có lịch sử migration cũ. Không sửa database mẫu hoặc database ứng dụng.
 - Diff Model/DbContext/migration rỗng; M2 sử dụng nguyên nền ảnh M1. `git diff --check` đạt.
-- Chưa nghiệm thu trực quan browser desktop/mobile hoặc khởi động lại ứng dụng với kho ảnh thật. Chưa áp dụng migration/cấu hình kho ảnh thay người dùng.
+- Kết quả trên là kiểm thử tự động. Nghiệm thu trực quan desktop/mobile và cấu hình kho ảnh thực hiện theo từng máy triển khai.

@@ -8,8 +8,11 @@
     ViewData["Title"] = "Danh sách sân";
     var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
     var laQuanLy = User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien)));
+    var daTraCuuLich = ViewData.ModelState.IsValid && Model.NgaySuDung.HasValue
+        && Model.GioBatDau.HasValue && Model.GioKetThuc.HasValue;
     var coDieuKien = !string.IsNullOrWhiteSpace(Model.TuKhoa) || Model.MaLoaiSan.HasValue
-        || Model.TrangThai.HasValue || Model.GiaTu.HasValue || Model.GiaDen.HasValue;
+        || Model.TrangThai.HasValue || Model.GiaTu.HasValue || Model.GiaDen.HasValue
+        || Model.NgaySuDung.HasValue || Model.GioBatDau.HasValue || Model.GioKetThuc.HasValue;
     var trangThaiLoc = "";
     if (Model.TrangThai.HasValue)
     {
@@ -41,8 +44,15 @@
 <div class="ql-page-header">
     <h1>Danh sách sân</h1>
     <p class="ql-subtitle">Xem thông tin, giá thuê và giờ phục vụ của các sân thể thao.</p>
+    <p class="form-text">Giá cao điểm và cuối tuần là thông tin tham khảo. Đơn đặt hiện áp dụng giá giờ thường được lưu tại thời điểm đặt.</p>
 </div>
 <section class="ql-panel" aria-label="Danh sách sân thể thao">
+    @if (daTraCuuLich)
+    {
+        <p class="alert alert-info" role="status">Kết quả sân còn trống ngày @Model.NgaySuDung!.Value.ToString("dd/MM/yyyy")
+            từ @Model.GioBatDau!.Value.ToString("HH:mm") đến @Model.GioKetThuc!.Value.ToString("HH:mm").
+            Lịch được kiểm tra lại khi gửi yêu cầu đặt sân.</p>
+    }
     <form asp-action="Index" method="get" class="row g-3 mb-4" aria-label="Tìm và lọc sân">
         <div asp-validation-summary="All" class="text-danger col-12" role="alert"></div>
         <div class="col-md-4">
