@@ -7,6 +7,7 @@
 @{
     ViewData["Title"] = "Chi tiết sân";
     var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
+    var daChonKhungGio = ViewData["GiaDuKien"] is decimal;
     var tienIch = Model.TienIch;
     if (string.IsNullOrWhiteSpace(tienIch))
     {
@@ -50,7 +51,8 @@
         <dd class="col-sm-9 text-break">@ghiChu</dd>
     </dl>
     <h2 class="h5 mt-4">Tính thử tiền thuê</h2>
-    <p class="form-text">Giá được chia theo từng khung giờ. Đây là tiền thuê dự kiến; chưa kiểm tra sân trống và chưa gồm dịch vụ.</p>
+    <p class="form-text">Giá tham khảo theo khung giờ, chưa kiểm tra sân trống và chưa gồm dịch vụ.
+        Đơn đặt hiện áp dụng giá giờ thường được lưu tại thời điểm đặt. Tiền trên đơn có thể khác kết quả tham khảo này.</p>
     <form asp-action="Details" method="get" class="row g-3 mb-4">
         <input type="hidden" name="id" value="@Model.MaSan" />
         @if (ViewData["LoiAnhSan"] is not true)
@@ -76,7 +78,22 @@
         }
     </form>
     <p class="text-muted">Sân hoạt động có thể đã được đặt trong giờ bạn muốn sử dụng.</p>
-    <a asp-action="Index" class="btn btn-outline-secondary">Về danh sách sân</a>
+    <a asp-action="Index" class="btn btn-outline-secondary"
+       asp-route-ngaySuDung="@(daChonKhungGio ? ViewData["NgayTinhGia"] : null)"
+       asp-route-gioBatDau="@(daChonKhungGio ? ViewData["GioBatDau"] : null)"
+       asp-route-gioKetThuc="@(daChonKhungGio ? ViewData["GioKetThuc"] : null)">Về danh sách sân</a>
+    @if (Model.TrangThai == TrangThaiSan.HoatDong
+        && (User.Identity?.IsAuthenticated != true || User.IsInRole(nameof(VaiTro.KhachHang))))
+    {
+        <a asp-controller="DonDat" asp-action="Tao" asp-route-maSan="@Model.MaSan" class="btn btn-primary"
+           asp-route-ngaySuDung="@(daChonKhungGio ? ViewData["NgayTinhGia"] : null)"
+           asp-route-gioBatDau="@(daChonKhungGio ? ViewData["GioBatDau"] : null)"
+           asp-route-gioKetThuc="@(daChonKhungGio ? ViewData["GioKetThuc"] : null)">Đặt sân</a>
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <p class="form-text mt-2">Đăng nhập tài khoản khách hàng để tiếp tục đặt sân.</p>
+        }
+    }
     @if (User.Identity?.IsAuthenticated == true && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien))))
     {
         <a asp-action="Edit" asp-route-id="@Model.MaSan" class="btn btn-outline-primary">Sửa sân</a>
