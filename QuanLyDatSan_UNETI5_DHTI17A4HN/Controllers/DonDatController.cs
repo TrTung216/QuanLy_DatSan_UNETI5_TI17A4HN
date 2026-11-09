@@ -12,7 +12,7 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 [Authorize(Roles = nameof(VaiTro.KhachHang))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
-    IDatSanService datSanService) : Controller
+    IDatSanService datSanService, IDongHo dongHo) : Controller
 {
 
     [HttpGet]
@@ -42,9 +42,104 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
     {
         if (taiKhoanHienTai.MaTaiKhoan is not { } maTaiKhoan) return Challenge();
 
+        var model = await LayChiTietViewModelAsync(maTaiKhoan, id, cancellationToken);
+        return model is null ? NotFound() : View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Coc(int id, CancellationToken cancellationToken)
+    {
+        if (taiKhoanHienTai.MaTaiKhoan is null) return Challenge();
+
+        var ketQua = await datSanService.LayThongTinCocAsync(id, cancellationToken);
+        if (!ketQua.ThanhCong)
+        {
+            switch (ketQua.Loi!.Value)
+            {
+                case MaLoiCoc.KhongDuQuyen: return Forbid();
+                case MaLoiCoc.KhongTonTai: return NotFound();
+                default:
+                    TempData["Error"] = HienThiCoc.ThongBaoLoi(ketQua.Loi.Value);
+                    return RedirectToAction(nameof(ChiTiet), new { id });
+            }
+        }
+
+        return View(TaoCocViewModel(ketQua.DuLieu!));
+    }
+
+    private static CocDonViewModel TaoCocViewModel(ThongTinCocDto coc)
+    {
+        return new CocDonViewModel
+        {
+            MaDatSan = coc.MaDatSan,
+            TrangThaiDon = coc.TrangThai,
+            TrangThaiCoc = coc.TrangThaiCoc,
+            TienSanDuKien = coc.TienSanDuKien,
+            TienCocYeuCau = coc.TienCocYeuCau,
+            TienCocDaNhan = coc.TienCocDaNhan,
+            NhanPhanConLai = HienThiCoc.NhanPhanConLai(coc.TrangThai),
+            NoiDungChuyenKhoan = coc.NoiDungChuyenKhoan,
+            CoTheChuyen = coc.CoTheChuyen,
+            NoiDungQrMoPhong = coc.NoiDungQrMoPhong,
+            BienNhan = coc.BienNhan is null ? null : new BienNhanCocViewModel
+            {
+                MaBienNhan = coc.BienNhan.MaBienNhan,
+                SoTien = coc.BienNhan.SoTien,
+                MaGiaoDichNgoai = coc.BienNhan.MaGiaoDichNgoai,
+                Nguon = coc.BienNhan.Nguon,
+                NgayNhan = coc.BienNhan.NgayNhan,
+                NgayXacNhan = coc.BienNhan.NgayXacNhan
+            }
+        };
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Huy(HuyDonCaNhanViewModel model, CancellationToken cancellationToken)
+    {
+        if (taiKhoanHienTai.MaTaiKhoan is not { } maTaiKhoan) return Challenge();
+
+        if (!TryLayPhienBan(model.PhienBan, out var phienBan))
+            ModelState.AddModelError(nameof(HuyDonCaNhanViewModel.PhienBan),
+                "Phiên bản đơn không hợp lệ. Hãy tải lại chi tiết đơn.");
+        if (!ModelState.IsValid)
+            return await HienThiLoiHuyAsync(maTaiKhoan, model, cancellationToken);
+
+        var ketQua = await datSanService.KhachHangHuyDonAsync(
+            new HuyDonYeuCau(model.MaDon, model.LyDo, phienBan), maTaiKhoan, cancellationToken);
+        if (!ketQua.ThanhCong)
+        {
+            if (ketQua.Loi == MaLoiDatSan.KhongTonTai) return NotFound();
+            ModelState.AddModelError(string.Empty,
+                ThongBaoLoiDatSanViewModel.AnhXa(new LoiDatSan(ketQua.Loi!.Value)).ThongBao);
+            return await HienThiLoiHuyAsync(maTaiKhoan, model, cancellationToken);
+        }
+
+        TempData["Success"] = "Đã hủy đơn đặt sân.";
+        return RedirectToAction(nameof(ChiTiet), new { id = model.MaDon });
+    }
+
+    private async Task<IActionResult> HienThiLoiHuyAsync(int maTaiKhoan, HuyDonCaNhanViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var chiTiet = await LayChiTietViewModelAsync(maTaiKhoan, model.MaDon, cancellationToken);
+        if (chiTiet is null) return NotFound();
+        chiTiet.LyDoHuyDaNhap = model.LyDo;
+        return View(nameof(ChiTiet), chiTiet);
+    }
+
+    private async Task<ChiTietDonViewModel?> LayChiTietViewModelAsync(int maTaiKhoan, int id,
+        CancellationToken cancellationToken)
+    {
         var don = await datSanService.LayChiTietCaNhanAsync(maTaiKhoan, id, cancellationToken);
-        if (don is null) return NotFound();
-        return View(new ChiTietDonViewModel
+        if (don is null) return null;
+        // Thông tin cọc chỉ để hiển thị; lỗi ở đây không làm hỏng trang chi tiết đơn.
+        var coc = await datSanService.LayThongTinCocAsync(id, cancellationToken);
+        var cocHienThi = coc.ThanhCong ? TaoCocViewModel(coc.DuLieu!) : null;
+        // Không tự tính tiền: chỉ chuyển các khoản service đã cung cấp.
+        var lyDoKhongHuy = HienThiCoc.LyDoKhongTheHuy(
+            cocHienThi?.TrangThaiCoc ?? TrangThaiCocHienThi.KhongApDung, don.TienCoc);
+        var conTheHuyTheoDon = don.TrangThai == TrangThaiDatSan.ChoXuLy && don.GioBatDau > dongHo.BayGio;
+        return new ChiTietDonViewModel
         {
             MaDatSan = don.MaDatSan,
             TenSan = don.TenSan,
@@ -64,7 +159,28 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
             TienDichVu = don.TienDichVu,
             TongTien = don.TongTien,
             TienSanDuKien = don.TienSanDuKien,
-        });
+            PhienBanDon = Convert.ToBase64String(don.PhienBan),
+            Coc = cocHienThi,
+            NhanPhanConLai = HienThiCoc.NhanPhanConLai(don.TrangThai),
+            LyDoKhongTheHuy = conTheHuyTheoDon ? lyDoKhongHuy : null,
+            // Chỉ để ẩn/hiện nút; service kiểm tra lại toàn bộ điều kiện khi POST.
+            CoTheHuy = conTheHuyTheoDon && lyDoKhongHuy is null,
+        };
+    }
+
+    private static bool TryLayPhienBan(string? encoded, out byte[] phienBan)
+    {
+        phienBan = [];
+        if (string.IsNullOrWhiteSpace(encoded)) return false;
+        try
+        {
+            phienBan = Convert.FromBase64String(encoded);
+            return phienBan.Length == 8;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 
     [HttpGet]
