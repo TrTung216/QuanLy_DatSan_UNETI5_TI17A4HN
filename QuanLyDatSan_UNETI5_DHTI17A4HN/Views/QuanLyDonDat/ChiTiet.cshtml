@@ -3,6 +3,7 @@
    Gửi antiforgery/RowVersion, giữ lý do khi lỗi và nạp JS xác nhận thao tác/chống gửi lặp.
    
    M5 Nguyen Huu Quang : MSSV :23103100184 them link dich vu cua don 
+   M3 Nguyễn Văn Quý; MSSV: 23103100181: bổ sung phần cọc (đã nhận đủ / chưa nhận đủ) khi xác nhận đơn.
    *@
 
 
@@ -44,6 +45,7 @@
             <h2 class="h5">Thông tin tiền</h2>
             <dl class="row">
                 <dt class="col-sm-5">Tiền cọc đã ghi nhận</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienCoc)</dd>
+                <dt class="col-sm-5">Trạng thái cọc</dt><dd class="col-sm-7">@(Model.TienCoc > 0m ? "Đã nhận cọc" : "Chưa nhận cọc")</dd>
                 @if (Model.TongTien.HasValue)
                 {
                     <dt class="col-sm-5">Tiền sân đã chốt</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienSan ?? 0m)</dd>
@@ -92,6 +94,19 @@
                         <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
                         <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
                         <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        <fieldset class="mb-2">
+                            <legend class="h6">Tiền cọc *</legend>
+                            <p class="mb-1 small">Số tiền cọc tối thiểu: <strong>@HienThiDatSan.Tien(Model.TienCocToiThieu)</strong> (50% tiền sân dự kiến)</p>
+                            <div class="form-check">
+                                <input id="coc-da-nhan-du" name="TinhTrangCoc" value="DaNhanDu" type="radio" required class="form-check-input" />
+                                <label for="coc-da-nhan-du" class="form-check-label">Đã nhận đủ</label>
+                            </div>
+                            <div class="form-check">
+                                <input id="coc-chua-nhan-du" name="TinhTrangCoc" value="ChuaNhanDu" type="radio" class="form-check-input" />
+                                <label for="coc-chua-nhan-du" class="form-check-label">Chưa nhận đủ</label>
+                            </div>
+                            <small class="form-text">Chọn "Đã nhận đủ" để xác nhận đơn và ghi nhận tiền cọc cho khách xem. Chưa nhận đủ cọc thì chưa thể xác nhận đặt sân.</small>
+                        </fieldset>
                         <button type="submit" class="btn btn-primary">Xác nhận đơn</button>
                     </form>
                 }

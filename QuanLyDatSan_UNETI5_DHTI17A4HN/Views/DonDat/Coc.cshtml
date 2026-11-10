@@ -26,7 +26,14 @@
     @switch (Model.TrangThaiCoc)
     {
         case TrangThaiCocHienThi.ChuaNhan when Model.CoTheChuyen:
-            <h2 class="h5">Thông tin chuyển khoản</h2>
+            <div class="alert alert-info" role="status">
+                Tiền cọc: <strong>@HienThiDatSan.Tien(Model.TienCocYeuCau)</strong> (số tiền tối thiểu, bằng 50% tiền sân dự kiến).
+            </div>
+            <h2 class="h5">Quét mã QR để chuyển khoản</h2>
+            <div class="text-center my-3">
+                <img src="~/images/qr-mo-phong.jpg" alt="Mã QR mô phỏng" class="border rounded" style="max-width:280px;width:100%" />
+                <p class="text-muted small mb-0">Mã QR mô phỏng, chưa phải mã ngân hàng thật.</p>
+            </div>
             <dl class="row">
                 <dt class="col-sm-3">Số tiền</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCocYeuCau)</dd>
                 <dt class="col-sm-3">Nội dung</dt><dd class="col-sm-9"><code>@Model.NoiDungChuyenKhoan</code></dd>
@@ -35,7 +42,20 @@
                     <dt class="col-sm-3">Mã QR mô phỏng</dt><dd class="col-sm-9"><code>@Model.NoiDungQrMoPhong</code></dd>
                 }
             </dl>
-            <p>Sau khi chuyển, nhân viên sẽ đối soát giao dịch. Đơn chỉ được xác nhận sau khi nhân viên ghi nhận cọc.</p>
+            <p class="text-muted small">Bấm "Đã chuyển" để xem đơn đặt sân. Việc này chưa xác nhận cọc: đơn chỉ được xác nhận sau khi nhân viên đối soát và ghi nhận cọc.</p>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <a asp-action="ChiTiet" asp-route-id="@Model.MaDatSan" class="btn btn-primary">Đã chuyển</a>
+                @if (!string.IsNullOrEmpty(Model.PhienBanDon))
+                {
+                    <form asp-action="Huy" method="post" asp-antiforgery="true"
+                          onsubmit="return confirm('Bạn có chắc muốn hủy đơn này?');">
+                        <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
+                        <input type="hidden" name="PhienBan" value="@Model.PhienBanDon" />
+                        <input type="hidden" name="LyDo" value="Khách hủy tại bước đặt cọc." />
+                        <button type="submit" class="btn btn-outline-danger">Hủy</button>
+                    </form>
+                }
+            </div>
             break;
         case TrangThaiCocHienThi.ChuaNhan:
             <p>Hiện chưa thể chuyển cọc cho đơn này (đơn không còn ở trạng thái chờ hoặc đã đến giờ bắt đầu). Vui lòng liên hệ nhân viên.</p>

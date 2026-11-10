@@ -54,6 +54,7 @@
                 </div>
             </div>
             <p class="text-muted">Tiền sân dự kiến (tham khảo): <strong id="tien-du-kien">—</strong>. Hệ thống tính lại khi lưu đơn.</p>
+            <p class="alert alert-info" role="status" id="khung-coc">Tiền đặt cọc tối thiểu (50% tiền sân, tham khảo): <strong id="coc-du-kien">—</strong>. Chọn sân, ngày và giờ để xem số tiền.</p>
             <button type="submit" class="btn btn-primary" disabled="@(Model.DanhSachSan.Count == 0)">Đặt sân</button>
             <a asp-action="Index" class="btn btn-link">Lịch của tôi</a>
             @if (Model.DanhSachSan.Any(san => san.MaSan == Model.MaSan))
@@ -66,6 +67,23 @@
         </form>
     </section>
 </div>
+<dialog id="hop-qr" class="ql-qr-dialog" aria-labelledby="tieu-de-qr">
+    <h2 class="h5" id="tieu-de-qr">Đặt cọc bằng mã QR</h2>
+    <p class="mb-2">Tiền đặt cọc tối thiểu: <strong id="coc-qr">—</strong> (50% tiền sân dự kiến)</p>
+    <img src="~/images/qr-mo-phong.jpg" alt="Mã QR mô phỏng" class="ql-qr-anh" />
+    <p class="text-muted small">Ảnh QR mô phỏng, không chuyển tiền thật. Bấm "Đã chuyển" để tạo đơn đặt sân; đơn chỉ được xác nhận sau khi nhân viên đối soát cọc.</p>
+    <div class="d-flex gap-2 justify-content-end">
+        <button type="button" id="nut-huy-qr" class="btn btn-outline-danger">Hủy</button>
+        <button type="button" id="nut-da-chuyen" class="btn btn-primary">Đã chuyển</button>
+    </div>
+</dialog>
+@section Styles {
+    <style>
+        .ql-qr-dialog { max-width: 420px; width: calc(100% - 2rem); border: 0; border-radius: .75rem; padding: 1.25rem; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
+        .ql-qr-dialog::backdrop { background: rgba(0, 0, 0, .5); }
+        .ql-qr-anh { display: block; width: 100%; max-width: 280px; margin: .5rem auto; border: 1px solid #dee2e6; border-radius: .5rem; }
+    </style>
+}
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
@@ -74,6 +92,7 @@
             var batDau = document.getElementById('GioBatDau');
             var ketThuc = document.getElementById('GioKetThuc');
             var hienThi = document.getElementById('tien-du-kien');
+            var hienThiCoc = document.getElementById('coc-du-kien');
             function phut(giaTri) {
                 var phan = giaTri.split(':');
                 return parseInt(phan[0], 10) * 60 + parseInt(phan[1], 10);
@@ -86,16 +105,34 @@
                 } else {
                     donGia = NaN;
                 }
-                if (isNaN(donGia) || !batDau.value || !ketThuc.value) { hienThi.textContent = '—'; return; }
+                if (isNaN(donGia) || !batDau.value || !ketThuc.value) { hienThi.textContent = '—'; hienThiCoc.textContent = '—'; return; }
                 var soPhut = phut(ketThuc.value) - phut(batDau.value);
-                if (soPhut <= 0) { hienThi.textContent = '—'; return; }
-                hienThi.textContent = new Intl.NumberFormat('vi-VN').format(Math.round(soPhut * donGia / 60)) + ' ₫';
+                if (soPhut <= 0) { hienThi.textContent = '—'; hienThiCoc.textContent = '—'; return; }
+                var tienSan = Math.round(soPhut * donGia / 60);
+                hienThi.textContent = new Intl.NumberFormat('vi-VN').format(tienSan) + ' ₫';
+                hienThiCoc.textContent = new Intl.NumberFormat('vi-VN').format(Math.round(tienSan / 2)) + ' ₫';
             }
             [san, batDau, ketThuc].forEach(function (phanTu) { phanTu.addEventListener('change', capNhat); });
             capNhat();
-            document.getElementById('dat-san').addEventListener('submit', function () {
-                if ($(this).valid()) this.querySelector('button[type="submit"]').disabled = true;
+            var form = document.getElementById('dat-san');
+            var hopQr = document.getElementById('hop-qr');
+            var cocQr = document.getElementById('coc-qr');
+            var nutDaChuyen = document.getElementById('nut-da-chuyen');
+            var nutHuy = document.getElementById('nut-huy-qr');
+            // Bấm "Đặt sân": kiểm tra form rồi hiện QR; đơn chỉ được gửi lên server khi bấm "Đã chuyển".
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (window.jQuery && $.fn.valid && !$(form).valid()) return;
+                if (hienThiCoc.textContent === '—') { form.submit(); return; } // giờ chưa hợp lệ: để server báo lỗi
+                cocQr.textContent = hienThiCoc.textContent;
+                hopQr.showModal();
             });
+            nutDaChuyen.addEventListener('click', function () {
+                nutDaChuyen.disabled = true;
+                nutHuy.disabled = true;
+                form.submit();
+            });
+            nutHuy.addEventListener('click', function () { hopQr.close(); });
         })();
     </script>
 }

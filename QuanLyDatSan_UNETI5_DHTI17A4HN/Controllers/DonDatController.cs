@@ -50,7 +50,7 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
     [HttpGet]
     public async Task<IActionResult> Coc(int id, CancellationToken cancellationToken)
     {
-        if (taiKhoanHienTai.MaTaiKhoan is null) return Challenge();
+        if (taiKhoanHienTai.MaTaiKhoan is not { } maTaiKhoan) return Challenge();
 
         var ketQua = await datSanService.LayThongTinCocAsync(id, cancellationToken);
         if (!ketQua.ThanhCong)
@@ -65,7 +65,11 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
             }
         }
 
-        return View(TaoCocViewModel(ketQua.DuLieu!));
+        var model = TaoCocViewModel(ketQua.DuLieu!);
+        // Phiên bản chỉ để nút Hủy trên trang QR gửi lại cho service kiểm tra; không phải căn cứ cấp quyền.
+        var don = await datSanService.LayChiTietCaNhanAsync(maTaiKhoan, id, cancellationToken);
+        if (don is not null) model.PhienBanDon = Convert.ToBase64String(don.PhienBan);
+        return View(model);
     }
 
     private static CocDonViewModel TaoCocViewModel(ThongTinCocDto coc)

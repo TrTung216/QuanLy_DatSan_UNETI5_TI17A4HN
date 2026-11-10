@@ -24,7 +24,15 @@
     }
     else
     {
-        <dt class="col-sm-3">Tiền cọc</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCoc)</dd>
+        <dt class="col-sm-3">Tiền cọc đã ghi nhận</dt>
+        <dd class="col-sm-9">
+            @HienThiDatSan.Tien(Model.TienCoc)
+            @if (Model.TienCoc == 0m && Model.TrangThai == QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.TrangThaiDatSan.ChoXuLy)
+            {
+                <div class="text-muted small">Nếu bạn đã chuyển khoản, nhân viên sẽ đối soát và cập nhật sau.</div>
+            }
+        </dd>
+        <dt class="col-sm-3">Trạng thái cọc</dt><dd class="col-sm-9">@(Model.TienCoc > 0m ? "Đã nhận cọc" : "Chưa nhận cọc")</dd>
     }
     @if (Model.TongTien.HasValue)
     {
@@ -77,7 +85,19 @@
 }
 @if (Model.Coc is { } cocLink && cocLink.TrangThaiCoc != TrangThaiCocHienThi.KhongApDung)
 {
-    <a asp-action="Coc" asp-route-id="@Model.MaDatSan" class="btn btn-primary">Thông tin đặt cọc</a>
+    // Chỉ hiện nút "Đặt cọc" khi server cho phép chuyển cọc; số tiền lấy từ service, View không tự tính.
+    var coTheDatCoc = cocLink.TrangThaiCoc == TrangThaiCocHienThi.ChuaNhan && cocLink.CoTheChuyen;
+    if (coTheDatCoc)
+    {
+        <div class="mb-3">
+            <a asp-action="Coc" asp-route-id="@Model.MaDatSan" class="btn btn-primary">Đặt cọc</a>
+            <p class="text-muted small mt-1 mb-0">Số tiền cọc tối thiểu: <strong>@HienThiDatSan.Tien(cocLink.TienCocYeuCau)</strong> (50% tiền sân dự kiến). Vui lòng chuyển đúng số tiền này để nhân viên đối soát.</p>
+        </div>
+    }
+    else
+    {
+        <a asp-action="Coc" asp-route-id="@Model.MaDatSan" class="btn btn-primary">Thông tin đặt cọc</a>
+    }
 }
 <a asp-action="Index" class="btn btn-outline-secondary">Quay lại lịch của tôi</a>
 

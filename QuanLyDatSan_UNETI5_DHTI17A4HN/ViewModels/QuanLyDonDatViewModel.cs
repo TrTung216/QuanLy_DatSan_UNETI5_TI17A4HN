@@ -78,6 +78,8 @@ public sealed class ChiTietDonQuanLyViewModel : ChiTietDonViewModel
     public bool CoTheHoanThanh { get; init; }
     public decimal TienDichVuDuKien { get; init; }
     public decimal TongTienDuKien { get; init; }
+    // M3: số tiền cọc tối thiểu hiển thị cho người xác nhận; số ghi nhận thật do service tính.
+    public decimal TienCocToiThieu { get; init; }
     public decimal ConPhaiThu => TrangThai == TrangThaiDatSan.HoanThanh ? 0m
         : Math.Max(0m, (TongTien ?? TongTienDuKien) - TienCoc);
     [BindNever] public string? TongCocNhap { get; set; }

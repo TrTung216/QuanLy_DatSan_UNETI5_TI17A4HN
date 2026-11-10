@@ -28,6 +28,8 @@ public sealed class CocDonViewModel
     public bool CoTheChuyen { get; set; }
     public string? NoiDungQrMoPhong { get; set; }
     public BienNhanCocViewModel? BienNhan { get; set; }
+    // Phiên bản đơn dạng Base64 cho nút Hủy ở màn hình QR; rỗng thì không hiện nút Hủy.
+    public string PhienBanDon { get; set; } = string.Empty;
 }
 
 public static class HienThiCoc
