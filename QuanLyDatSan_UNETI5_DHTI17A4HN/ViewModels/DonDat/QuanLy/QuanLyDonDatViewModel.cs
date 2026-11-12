@@ -1,5 +1,5 @@
-using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.KhachHang;
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Tách dữ liệu quản lý khỏi màn hình khách; nhận tiền từ service.
 // Nội dung: M4-02/03/04 - bộ lọc, chi tiết, tiền dự kiến và điều kiện xử lý/ghi cọc/hoàn thành đơn.
 // Khai báo lý do từ chối/hủy, RowVersion, validation POST và dữ liệu nhập cần giữ lại khi có lỗi.
 
@@ -64,8 +64,26 @@ public sealed class DanhSachDonQuanLyViewModel : LocDonQuanLyViewModel
 public sealed record LoaiSanLocViewModel(int MaLoaiSan, string TenLoai);
 public sealed record DonQuanLyDongViewModel(int MaDatSan, string TenKhachHang, string TenSan, string TenLoai,
     DateTime NgayDat, DateTime GioBatDau, DateTime GioKetThuc, TrangThaiDatSan TrangThai, decimal TienCoc);
-public sealed class ChiTietDonQuanLyViewModel : ChiTietDonViewModel
+public sealed class ChiTietDonQuanLyViewModel
 {
+    public int MaDatSan { get; init; }
+    public string TenSan { get; init; } = string.Empty;
+    public string TenLoai { get; init; } = string.Empty;
+    public string DiaChi { get; init; } = string.Empty;
+    public DateTime NgayDat { get; init; }
+    public DateTime GioBatDau { get; init; }
+    public DateTime GioKetThuc { get; init; }
+    public decimal DonGia { get; init; }
+    public decimal TienCoc { get; init; }
+    public TrangThaiDatSan TrangThai { get; init; }
+    public DateTime? NgayXacNhan { get; init; }
+    public DateTime? NgayHuy { get; init; }
+    public DateTime? NgayHoanThanh { get; init; }
+    public string? LyDoHuy { get; init; }
+    public decimal? TienSan { get; init; }
+    public decimal? TienDichVu { get; init; }
+    public decimal? TongTien { get; init; }
+    public decimal TienSanDuKien { get; init; }
     public int MaKhachHang { get; init; }
     public string TenKhachHang { get; init; } = "";
     public string SoDienThoai { get; init; } = "";
@@ -80,26 +98,18 @@ public sealed class ChiTietDonQuanLyViewModel : ChiTietDonViewModel
     public decimal TienDichVuDuKien { get; init; }
     public decimal TongTienDuKien { get; init; }
     // M3: số tiền cọc tối thiểu hiển thị cho người xác nhận; số ghi nhận thật do service tính.
-    public decimal TienCocToiThieu { get; init; }
-    public decimal ConPhaiThu => TrangThai == TrangThaiDatSan.HoanThanh ? 0m
-        : Math.Max(0m, (TongTien ?? TongTienDuKien) - TienCoc);
+    public decimal? TienCocToiThieu { get; init; }
+    public decimal? ConPhaiThu { get; init; }
+    public string? ThongBaoLoiTien { get; init; }
     [BindNever] public string? TongCocNhap { get; set; }
     [BindNever] public string? LyDoTuChoiNhap { get; set; }
     [BindNever] public string? LyDoHuyNhap { get; set; }
 }
 
-public sealed class HuyDonQuanLyViewModel
+public sealed class HuyDonQuanLyViewModel : XuLyDonViewModel
 {
-    [Range(1, int.MaxValue)]
-    public int MaDon { get; set; }
-
     [Required(ErrorMessage = "Vui lòng nhập lý do.")]
     [StringLength(1000, MinimumLength = 1, ErrorMessage = "Lý do tối đa 1000 ký tự.")]
     [Display(Name = "Lý do")]
     public string LyDo { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "Thiếu phiên bản đơn. Vui lòng tải lại trang.")]
-    public string PhienBan { get; set; } = string.Empty;
-
-    public string? QuayLai { get; set; }
 }

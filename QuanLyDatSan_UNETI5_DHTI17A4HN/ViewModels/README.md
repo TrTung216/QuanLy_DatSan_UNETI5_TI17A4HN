@@ -26,8 +26,15 @@ ViewModel được nhóm theo chức năng giao diện. Namespace theo đường
 - Các DTO/hợp đồng service tiếp tục nằm ở `Services`; Entity EF nằm ở `Models`. ViewModel phục vụ form, validation định dạng và dữ liệu hiển thị, theo [quy ước Controller/Service/Repository](../../docs/Quy_uoc_Controller_Service_Repository.md).
 - Thay đổi phần dùng chung cần trao đổi với người chủ trì và kiểm tra các module sử dụng.
 
-## Phạm vi đợt sắp xếp này
+## Lịch sử sắp xếp và refactor
 
-Chỉ chuyển file, namespace và các tham chiếu; không đổi tên lớp, thuộc tính, validation, kế thừa, công thức tiền hoặc nghiệp vụ. Không cần migration.
+PR #73 chỉ chuyển file, namespace và các tham chiếu; không đổi tên lớp, thuộc tính, validation, kế thừa, công thức tiền hoặc nghiệp vụ.
 
-`ThanhToanDonViewModel.cs` vẫn chứa hai lớp `GhiCocViewModel` và `HoanThanhDonViewModel`. `HienThiCoc` vẫn nằm cùng file `CocDonViewModel.cs`; `ThongBaoLoiDatSanViewModel` giữ tên hiện có. `ChiTietDonQuanLyViewModel` vẫn kế thừa `ChiTietDonViewModel` thuộc nhánh khách hàng. Việc tách helper, điều chỉnh kế thừa và đưa phép tính tiền về service được xử lý trong đợt refactor riêng.
+Đợt kế tiếp ngày 12/11/2026:
+
+- `ChiTietDonQuanLyViewModel` độc lập với `ChiTietDonViewModel`: mỗi màn hình ánh xạ DTO vào dữ liệu riêng, không kế thừa các trường hủy/cọc của khách hàng.
+- `XuLyDonViewModel` chứa `MaDon`, `PhienBan`, `QuayLai` và validation chung cho xác nhận, ghi cọc, hoàn thành, hủy/từ chối của quản lý. `TinhTrangCoc` chỉ thuộc `XacNhanDonViewModel`.
+- `ConPhaiThu`, `TienCocToiThieu` chỉ nhận kết quả service; không viết công thức trong ViewModel. Hai khoản này có thể null khi dữ liệu tiền sai, đi cùng `ThongBaoLoiTien`; giao diện không đổi null thành số 0.
+- `ThanhToanDonViewModel.cs` vẫn chứa `GhiCocViewModel`/`HoanThanhDonViewModel`. `HienThiCoc` vẫn nằm trong `CocDonViewModel.cs`; `ThongBaoLoiDatSanViewModel` giữ tên hiện có. Tách helper là đầu việc riêng.
+
+Cả hai đợt không thay schema và không cần migration. Chi tiết hợp đồng tiền/DTO xem [hợp đồng M3/M4/M5](../../docs/Hop_dong_M3_M4_M5.md).

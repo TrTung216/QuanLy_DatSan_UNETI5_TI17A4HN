@@ -1,5 +1,6 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. Xác nhận đơn kèm ghi nhận cọc "đã nhận đủ" trong cùng một giao dịch.
 // Dùng lại XuLyDonCoKhoaSanAsync của M4 (khóa sân, kiểm RowVersion, kiểm quyền quản lý); không thêm transaction riêng.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Dùng công thức cọc từ ITinhTienService.
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
@@ -15,7 +16,7 @@ public partial class DatSanService
 
             var tien = await TinhTienDonAsync(don, token);
             if (tien.Tong > TienToiDa) return MaLoiDatSan.TienVuotGioiHan;
-            var tienCoc = ChinhSachCocToiThieu.Tinh(tien.San);
+            var tienCoc = tinhTien.TinhTienCocYeuCau(tien.San);
             if (tienCoc <= 0m) return MaLoiDatSan.TienCocKhongHopLe;
             if (tienCoc > tien.Tong) return MaLoiDatSan.CocVuotTongTien;
 

@@ -2,6 +2,7 @@
 // Nhận yêu cầu quản lý đơn, kiểm tra dữ liệu/RowVersion và gọi service; giữ nội dung nhập khi lỗi.
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp phản hồi Forbid khi service M4 phát hiện quyền đã thay đổi.
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. Bổ sung lựa chọn cọc (đã nhận đủ / chưa nhận đủ) khi xác nhận đơn.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Chỉ ánh xạ tiền do service trả về, không tự tính cọc/còn phải thu.
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +58,7 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
         var result = await datSanService.LayChiTietQuanLyAsync(id, cancellationToken);
         if (result is null) return null;
         var don = result.Don;
+        var tienHopLe = result.LoiTien is null && result.ConPhaiThu.HasValue && result.TienCocToiThieu.HasValue;
         var laDonCho = don.TrangThai == TrangThaiDatSan.ChoXuLy;
         var laDonXacNhan = don.TrangThai == TrangThaiDatSan.DangXuLy;
         var chuaBatDau = don.GioBatDau > dongHo.BayGio;
@@ -77,13 +79,15 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
             LyDoHuy = don.LyDoHuy, TienSan = don.TienSan, TienDichVu = don.TienDichVu,
             TongTien = don.TongTien, TienSanDuKien = don.TienSanDuKien,
             TienDichVuDuKien = don.TienDichVuDuKien, TongTienDuKien = don.TongTienDuKien,
-            TienCocToiThieu = ChinhSachCocToiThieu.Tinh(don.TienSanDuKien),
+            TienCocToiThieu = result.TienCocToiThieu, ConPhaiThu = result.ConPhaiThu,
+            ThongBaoLoiTien = tienHopLe ? null
+                : "Dữ liệu tiền của đơn không hợp lệ hoặc chưa đủ. Vui lòng kiểm tra các khoản đã chốt, dịch vụ và tiền cọc trước khi xử lý thanh toán.",
             PhienBan = Convert.ToBase64String(don.PhienBan),
-            CoTheXacNhan = laDonCho && chuaBatDau,
+            CoTheXacNhan = tienHopLe && laDonCho && chuaBatDau,
             CoTheTuChoi = laDonCho && don.TienCoc == 0m,
             CoTheNhanVienHuy = chuaBatDau && don.TienCoc == 0m && (laDonCho || laDonXacNhan),
-            CoTheGhiCoc = laDonXacNhan && don.TienCoc < don.TongTienDuKien,
-            CoTheHoanThanh = laDonXacNhan && don.GioKetThuc <= dongHo.BayGio
+            CoTheGhiCoc = tienHopLe && laDonXacNhan && don.TienCoc < don.TongTienDuKien,
+            CoTheHoanThanh = tienHopLe && laDonXacNhan && don.GioKetThuc <= dongHo.BayGio
                 && don.TienCoc <= don.TongTienDuKien,
             QuayLai = quayLaiAnToan
         };
@@ -192,7 +196,7 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
     private bool KiemTraPhienBan(string? encoded, out byte[] phienBan)
     {
         if (!TryLayPhienBan(encoded, out phienBan))
-            ModelState.AddModelError(nameof(XacNhanDonViewModel.PhienBan),
+            ModelState.AddModelError(nameof(XuLyDonViewModel.PhienBan),
                 "Phiên bản đơn không hợp lệ. Hãy tải lại chi tiết đơn.");
         return ModelState.IsValid;
     }

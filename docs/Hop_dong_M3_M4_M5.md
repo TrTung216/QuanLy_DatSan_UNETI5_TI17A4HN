@@ -1,10 +1,12 @@
 # Hợp đồng M3/M4/M5 — đặt sân, tiền cọc và chốt tiền
 
-**Phiên bản 1.0 — 23/10/2026. Điều phối: Trần Trọng Tùng — MSSV 23103100202 (M1).**
+**Phiên bản 1.1 — 12/11/2026. Điều phối: Trần Trọng Tùng — MSSV 23103100202 (M1).**
 
 Nội dung thực hiện: chốt hợp đồng phương thức, dữ liệu, quyền, trạng thái, mã lỗi và nguồn tính tiền giữa M3/M4/M5.
 
-Căn cứ: `main` tại `1a97883` sau PR #52, #53, #54; quy ước nhóm v1.4; yêu cầu khách chuyển cọc 50% trước, nhân viên/Admin đối soát rồi xác nhận đặt sân. Đây là hợp đồng triển khai được chốt theo yêu cầu của Tùng, không phải xác nhận các thành viên đã review hoặc code đã đáp ứng. Lần này chỉ cập nhật tài liệu, không triển khai lại QR, sửa schema hay chạy Update-Database.
+Căn cứ phiên bản 1.0: `main` tại `1a97883` sau PR #52, #53, #54; quy ước nhóm v1.4; yêu cầu khách chuyển cọc 50% trước, nhân viên/Admin đối soát rồi xác nhận đặt sân. Đây là hợp đồng triển khai được chốt theo yêu cầu của Tùng, không phải xác nhận các thành viên đã review hoặc code đã đáp ứng toàn bộ.
+
+Phiên bản 1.1 đi cùng refactor kế thừa ViewModel và nguồn tiền từ nền `main` tại `701d57f` (sau PR #73). Các mục mô tả code cũ bên dưới là căn cứ lịch sử; phạm vi tích hợp mới được ghi ở mục 3.1. Không kích hoạt chính sách cọc mới, đổi transaction hoặc schema trong đợt này.
 
 Trong phạm vi cọc/tính tiền, tài liệu này là nguồn thống nhất cho phương thức, DTO, trạng thái và lỗi; thay thế các chỗ “cần chốt” tương ứng trong [phân công](Phan_cong_chuyen_khoan_QR.md) và [quy ước cọc](Quy_uoc_dat_coc_chuyen_khoan.md). Mọi thay đổi tiếp theo cần tăng phiên bản và cập nhật nơi gọi trong cùng PR.
 
@@ -67,6 +69,17 @@ public interface ITinhTienService
 - M5 bổ sung validation cho `TinhTongTien` hiện chỉ cộng trực tiếp. `TinhConPhaiThu` từ chối cọc âm hoặc vượt tổng.
 - V1 giữ giá đơn hiện tại (đơn giá thường đã chụp), **không tự đổi sang tính từng khung cao điểm/cuối tuần**. `GiaThueSan` M2 chỉ là ước tính tham khảo hiện có; M2/M3 phải ghi rõ trên giao diện, thông tin cọc lấy từ số tiền chính thức của đơn. Áp dụng giá nhiều khung cần hợp đồng snapshot giá riêng sau này, không tính lại đơn cũ bằng giá danh mục.
 - Ví dụ nghiệm thu: 90 phút × 200.000 = 300.000; cọc 150.000; dịch vụ 60.000 → tổng 360.000, còn 210.000. Tiền sân 101 → cọc 51; không có dịch vụ → còn 50.
+
+### 3.1. Tích hợp nguồn tiền hiển thị — 12/11/2026
+
+- Bổ sung `ITinhTienService.TinhTienCocYeuCau(decimal tienSan)` và `TinhConPhaiThu(decimal tongTien, decimal tienCoc)` theo chữ ký mục 3. Hai hàm từ chối tiền âm/vượt giới hạn `decimal(18,2)`; hàm còn phải thu từ chối cọc vượt tổng. Giữ nguyên ba phương thức tiền sân/dịch vụ/tổng hiện có; việc bổ sung validation toàn bộ các hàm cũ không thuộc đợt này.
+- Công thức cọc 50%/làm tròn của M3 được chuyển từ `ChinhSachCocToiThieu` vào implementation M5, giữ ghi nhận tác giả. `XacNhanDonKemCocAsync` và phần đọc quản lý gọi cùng `ITinhTienService`; bỏ helper cũ khi đã đổi hết caller trong repo.
+- Giữ chữ ký `IDatSanService.LayChiTietQuanLyAsync` và constructor DTO hiện có. Bổ sung ba thuộc tính init trên `ChiTietDonQuanLyDto`: `decimal? TienCocToiThieu`, `decimal? ConPhaiThu`, `MaLoiCoc? LoiTien`.
+- Khi thành công, `LoiTien = null`; Controller chỉ gán các khoản tiền vào ViewModel. Đơn chưa hoàn thành lấy tổng đã có hoặc tổng dự kiến từ giá chụp của đơn/dịch vụ, rồi gọi M5 tính phần còn phải thu.
+- Khi hoàn thành, bắt buộc có `TienSan`, `TienDichVu`, `TongTien` đã chốt, không âm và tổng khớp; không tính lại từ dòng dịch vụ/danh mục hiện tại. Sau kiểm tra tổng/cọc, `ConPhaiThu` của **DTO đọc quản lý** là 0 vì đã xác nhận thu đủ. Đây khác số còn lại của lần chốt trong DTO kết quả thao tác hoàn thành ở mục 9.
+- Khi dữ liệu tiền thiếu, mâu thuẫn, âm, overflow hoặc cọc vượt tổng: trả `LoiTien = MaLoiCoc.DuLieuTienKhongHopLe` và hai khoản mới bằng null. Giao diện hiển thị lỗi/“Chưa xác định”, ẩn nút xác nhận, ghi cọc, hoàn thành; không thay bằng số 0 hoặc tự sửa dữ liệu. Kiểm tra nghiệp vụ phía server ở các thao tác ghi được giữ nguyên.
+- Các fake/implementation bên ngoài repo của `ITinhTienService` phải bổ sung hai phương thức; fake DTO chi tiết quản lý phải điền các khoản tiền mới hoặc mã lỗi tương ứng. Controller/View không tính dự phòng nếu service thiếu dữ liệu.
+- M1 thực hiện tích hợp theo yêu cầu điều phối; M4/M5 review hợp đồng và caller liên quan trước khi merge. Không coi đây là hoàn thành toàn bộ luồng cọc/đối soát hoặc phần việc M5 còn lại.
 
 ## 4. Phương thức M3/M4 và dữ liệu vào
 
