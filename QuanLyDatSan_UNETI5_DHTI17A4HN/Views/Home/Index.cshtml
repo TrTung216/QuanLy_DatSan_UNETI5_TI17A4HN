@@ -1,11 +1,11 @@
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Codex hỗ trợ trang chủ và liên kết theo trạng thái đăng nhập. *@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. trang chủ gọn: banner ngắn và ba bước đặt sân, lối vào theo vai trò. *@
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Danh sách sân thật theo loại, bỏ CTA đăng nhập/đăng ký lặp lại. *@
-@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TrangChuViewModel
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TrangChu.TrangChuViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using System.Globalization
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh
-@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.Chung.Anh
 @{
     ViewData["Title"] = "Trang chủ";
     var daDangNhap = User.Identity?.IsAuthenticated == true;

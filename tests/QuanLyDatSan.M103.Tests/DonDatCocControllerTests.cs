@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.KhachHang;
 using Xunit;
 
 namespace QuanLyDatSan.M103.Tests;
