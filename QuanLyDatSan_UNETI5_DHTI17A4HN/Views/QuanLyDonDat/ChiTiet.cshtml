@@ -4,6 +4,7 @@
    
    M5 Nguyen Huu Quang : MSSV :23103100184 them link dich vu cua don 
    M3 Nguyễn Văn Quý; MSSV: 23103100181: bổ sung phần cọc (đã nhận đủ / chưa nhận đủ) khi xác nhận đơn.
+   M1 Trần Trọng Tùng; MSSV: 23103100202: hiển thị tiền/lỗi do service cung cấp, không thay lỗi bằng số 0.
    *@
 
 
@@ -48,11 +49,11 @@
                 <dt class="col-sm-5">Trạng thái cọc</dt><dd class="col-sm-7">@(Model.TienCoc > 0m ? "Đã nhận cọc" : "Chưa nhận cọc")</dd>
                 @if (Model.TongTien.HasValue)
                 {
-                    <dt class="col-sm-5">Tiền sân đã chốt</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienSan ?? 0m)</dd>
-                    <dt class="col-sm-5">Tiền dịch vụ đã chốt</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienDichVu ?? 0m)</dd>
+                    <dt class="col-sm-5">Tiền sân đã chốt</dt><dd class="col-sm-7">@(Model.TienSan.HasValue ? HienThiDatSan.Tien(Model.TienSan.Value) : "Chưa xác định")</dd>
+                    <dt class="col-sm-5">Tiền dịch vụ đã chốt</dt><dd class="col-sm-7">@(Model.TienDichVu.HasValue ? HienThiDatSan.Tien(Model.TienDichVu.Value) : "Chưa xác định")</dd>
                     <dt class="col-sm-5">Tổng tiền đã chốt</dt><dd class="col-sm-7"><strong>@HienThiDatSan.Tien(Model.TongTien.Value)</strong></dd>
                 }
-                else
+                else if (Model.ThongBaoLoiTien is null)
                 {
                     <dt class="col-sm-5">Tiền sân dự kiến</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienSanDuKien)</dd>
                     <dt class="col-sm-5">Tiền dịch vụ hiện tại</dt><dd class="col-sm-7">@HienThiDatSan.Tien(Model.TienDichVuDuKien)</dd>
@@ -62,12 +63,12 @@
                 @if (Model.TrangThai == QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.TrangThaiDatSan.DangXuLy
                     || Model.TrangThai == QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.TrangThaiDatSan.HoanThanh)
                 {
-                    <dt class="col-sm-5">Còn phải thu</dt><dd class="col-sm-7"><strong>@HienThiDatSan.Tien(Model.ConPhaiThu)</strong></dd>
+                    <dt class="col-sm-5">Còn phải thu</dt><dd class="col-sm-7"><strong>@(Model.ConPhaiThu.HasValue ? HienThiDatSan.Tien(Model.ConPhaiThu.Value) : "Chưa xác định")</strong></dd>
                 }
             </dl>
-            @if (!Model.TongTien.HasValue && Model.TienCoc > Model.TongTienDuKien)
+            @if (Model.ThongBaoLoiTien is not null)
             {
-                <p class="text-danger" role="alert">Tiền cọc vượt tổng tiền hiện tại. Cần kiểm tra lại dịch vụ trước khi hoàn thành; chưa hỗ trợ hoàn cọc.</p>
+                <p class="text-danger" role="alert">@Model.ThongBaoLoiTien</p>
             }
             <h2 class="h5">Các mốc xử lý</h2>
             <dl class="row">
@@ -96,7 +97,7 @@
                         <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
                         <fieldset class="mb-2">
                             <legend class="h6">Tiền cọc *</legend>
-                            <p class="mb-1 small">Số tiền cọc tối thiểu: <strong>@HienThiDatSan.Tien(Model.TienCocToiThieu)</strong> (50% tiền sân dự kiến)</p>
+                            <p class="mb-1 small">Số tiền cọc tối thiểu: <strong>@(Model.TienCocToiThieu.HasValue ? HienThiDatSan.Tien(Model.TienCocToiThieu.Value) : "Chưa xác định")</strong> (50% tiền sân dự kiến)</p>
                             <div class="form-check">
                                 <input id="coc-da-nhan-du" name="TinhTrangCoc" value="DaNhanDu" type="radio" required class="form-check-input" />
                                 <label for="coc-da-nhan-du" class="form-check-label">Đã nhận đủ</label>
@@ -154,7 +155,7 @@
                         <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
                         <div class="form-check mb-2">
                             <input id="da-thu-du" name="DaThuDu" value="true" type="checkbox" required class="form-check-input" />
-                            <label for="da-thu-du" class="form-check-label">Đã thu đủ phần còn lại: @HienThiDatSan.Tien(Model.ConPhaiThu) *</label>
+                            <label for="da-thu-du" class="form-check-label">Đã thu đủ phần còn lại: @(Model.ConPhaiThu.HasValue ? HienThiDatSan.Tien(Model.ConPhaiThu.Value) : "Chưa xác định") *</label>
                         </div>
                         <button type="submit" class="btn btn-success">Hoàn thành đơn</button>
                     </form>

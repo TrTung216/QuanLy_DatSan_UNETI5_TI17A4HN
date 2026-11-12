@@ -1,5 +1,6 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Bộ lọc và DTO danh sách, chi tiết đơn dành cho quản lý.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Bổ sung tiền hiển thị do service cung cấp và mã lỗi tiền.
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 
@@ -14,4 +15,10 @@ public sealed record DonQuanLyDongDto(int MaDatSan, string TenKhachHang, string 
     DateTime NgayDat, DateTime GioBatDau, DateTime GioKetThuc, TrangThaiDatSan TrangThai, decimal TienCoc);
 public sealed record DanhSachDonQuanLyDto(IReadOnlyList<DonQuanLyDongDto> Dong, int Trang, int TongTrang, int TongSo);
 public sealed record ChiTietDonQuanLyDto(ChiTietDonDto Don, int MaKhachHang,
-    string TenKhachHang, string SoDienThoai, string Email);
+    string TenKhachHang, string SoDienThoai, string Email)
+{
+    public decimal? TienCocToiThieu { get; init; }
+    // Công nợ hiển thị: 0 sau khi hoàn thành; null khi dữ liệu tiền không hợp lệ.
+    public decimal? ConPhaiThu { get; init; }
+    public MaLoiCoc? LoiTien { get; init; }
+}
