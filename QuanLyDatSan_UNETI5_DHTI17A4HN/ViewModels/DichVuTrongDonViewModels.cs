@@ -8,6 +8,9 @@ public class ThemDichVuTrongDonViewModel
 {
     public int MaDatSan { get; set; }
 
+    [Required]
+    public string PhienBan { get; set; } = "";
+
     [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn dịch vụ.")]
     [Display(Name = "Dịch vụ")]
     public int MaDichVu { get; set; }
@@ -21,6 +24,9 @@ public class SuaSoLuongDichVuViewModel
 {
     public int MaDatSan { get; set; }
     public int MaChiTiet { get; set; }
+
+    [Required]
+    public string PhienBan { get; set; } = "";
 
     [Range(1, 100, ErrorMessage = "Số lượng phải từ 1 đến 100.")]
     [Display(Name = "Số lượng")]

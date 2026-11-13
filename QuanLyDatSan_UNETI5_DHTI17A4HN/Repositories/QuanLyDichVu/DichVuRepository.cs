@@ -44,5 +44,12 @@ public class DichVuRepository(ApplicationDbContext db) : IDichVuRepository
 
     public Task<DichVu?> LayDeCapNhatAsync(int maDichVu, CancellationToken cancellationToken) =>
         db.DichVus.SingleOrDefaultAsync(x => x.MaDichVu == maDichVu, cancellationToken);
+    public Task<TrangThaiDichVu?> LayTrangThaiTenTrungAsync(string tenDichVu, int? maDichVuNgoaiTru,
+        CancellationToken cancellationToken) =>
+        db.DichVus.AsNoTracking()
+            .Where(x => x.TenDichVu.Trim() == tenDichVu.Trim()
+                && (!maDichVuNgoaiTru.HasValue || x.MaDichVu != maDichVuNgoaiTru.Value))
+            .Select(x => (TrangThaiDichVu?)x.TrangThai)
+            .FirstOrDefaultAsync(cancellationToken);
     public void Them(DichVu dichVu) => db.DichVus.Add(dichVu);
 }

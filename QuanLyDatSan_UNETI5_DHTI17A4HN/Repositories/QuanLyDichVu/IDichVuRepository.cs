@@ -11,5 +11,6 @@ public interface IDichVuRepository
     Task<DanhSachDichVu> LayDanhSachAsync(string? tuKhoa, TrangThaiDichVu? trangThai, string? sapXep, int trang, CancellationToken cancellationToken);
     Task<DichVuDoc?> LayChiTietAsync(int maDichVu, CancellationToken cancellationToken);
     Task<DichVu?> LayDeCapNhatAsync(int maDichVu, CancellationToken cancellationToken);
+    Task<TrangThaiDichVu?> LayTrangThaiTenTrungAsync(string tenDichVu, int? maDichVuNgoaiTru, CancellationToken cancellationToken);
     void Them(DichVu dichVu);
 }

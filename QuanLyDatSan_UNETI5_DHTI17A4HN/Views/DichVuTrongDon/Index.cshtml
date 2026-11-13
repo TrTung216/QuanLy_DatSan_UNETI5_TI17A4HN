@@ -28,7 +28,7 @@
             <th>Dịch vụ</th>
             <th>Đơn vị</th>
             <th class="text-end">Đơn giá</th>
-            <th style="width: 180px">Số lượng</th>
+            <th style="width: 180px">Số lượng / lịch sử</th>
             <th class="text-end">Thành tiền</th>
             <th></th>
         </tr>
@@ -37,15 +37,33 @@
         @foreach (var dong in Model.Dong)
         {
             <tr>
-                <td>@dong.TenDichVu</td>
+                <td>
+                    @dong.TenDichVu
+                    @if (dong.DaHuy)
+                    {
+                        <span class="badge text-bg-secondary">Đã hủy</span>
+                    }
+                </td>
                 <td>@dong.DonViTinh</td>
                 <td class="text-end">@HienThiDatSan.Tien(dong.DonGia)</td>
                 <td>
-                    @if (Model.ChoPhepSua)
+                    @if (dong.DaHuy)
+                    {
+                        <span>@dong.SoLuong</span>
+                        <small class="d-block text-muted">
+                            @dong.NgayHuy?.ToString("yyyy-MM-dd HH:mm 'UTC'")
+                            @if (dong.MaTaiKhoanHuy.HasValue)
+                            {
+                                <span> · tài khoản #@dong.MaTaiKhoanHuy</span>
+                            }
+                        </small>
+                    }
+                    else if (Model.ChoPhepSua)
                     {
                         <form asp-action="SuaSoLuong" method="post" class="d-flex gap-1">
                             <input type="hidden" name="MaDatSan" value="@Model.MaDatSan" />
                             <input type="hidden" name="MaChiTiet" value="@dong.MaChiTiet" />
+                            <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
                             <input type="number" name="SoLuong" value="@dong.SoLuong" min="1" max="100"
                                    class="form-control form-control-sm" />
                             <button type="submit" class="btn btn-sm btn-outline-primary">Lưu</button>
@@ -58,11 +76,12 @@
                 </td>
                 <td class="text-end">@HienThiDatSan.Tien(dong.ThanhTien)</td>
                 <td class="text-end">
-                    @if (Model.ChoPhepSua)
+                    @if (Model.ChoPhepSua && !dong.DaHuy)
                     {
                         <form asp-action="Huy" method="post" onsubmit="return confirm('Hủy dịch vụ này khỏi đơn?');">
                             <input type="hidden" name="maDatSan" value="@Model.MaDatSan" />
                             <input type="hidden" name="maChiTiet" value="@dong.MaChiTiet" />
+                            <input type="hidden" name="phienBan" value="@Model.PhienBan" />
                             <button type="submit" class="btn btn-sm btn-outline-danger">Hủy</button>
                         </form>
                     }
@@ -88,6 +107,7 @@
     <h5>Thêm dịch vụ</h5>
     <form asp-action="Them" method="post" class="row g-2 align-items-end">
         <input type="hidden" name="MaDatSan" value="@Model.MaDatSan" />
+        <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
         <div class="col-md-5">
             <label class="form-label" for="MaDichVu">Dịch vụ</label>
             <select name="MaDichVu" id="MaDichVu" class="form-select">

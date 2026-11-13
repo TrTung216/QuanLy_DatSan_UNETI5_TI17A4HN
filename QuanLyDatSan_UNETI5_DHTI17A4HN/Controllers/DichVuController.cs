@@ -22,7 +22,7 @@ public class DichVuController(IDichVuService service) : Controller
         {
             DanhSach = ketQua.DanhSach,
             TuKhoa = ketQua.TuKhoa,
-            TrangThai = trangThai,
+            TrangThai = trangThai, 
             SapXep = sapXep,
             Trang = ketQua.Trang,
             TongTrang = ketQua.TongTrang

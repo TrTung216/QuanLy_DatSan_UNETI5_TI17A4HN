@@ -1,9 +1,11 @@
 // M5: Nguyễn Hữu Quang; MSSV: 23103100184
 // Nội dung: Entity danh mục dịch vụ đi kèm đơn đặt sân., navigation di tiết đặt sân
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 
+[Index(nameof(TenDichVu), IsUnique = true, Name = "IX_DichVu_TenDichVu")]
 public class DichVu
 {
     public int MaDichVu { get; set; }

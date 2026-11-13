@@ -7,21 +7,24 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Chung;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon;
 
 public record DongDichVuTrongDon(int MaChiTiet, int MaDichVu, string TenDichVu, string DonViTinh, int SoLuong,
-    decimal DonGia)
+    decimal DonGia, bool DaHuy, DateTime? NgayHuy, int? MaTaiKhoanHuy)
 {
     public decimal ThanhTien => SoLuong * DonGia;
 }
 
 public record ChiTietDichVuTrongDon(int MaDatSan, TrangThaiDatSan TrangThai, bool ChoPhepSua, decimal TongTienDichVu,
-    List<DongDichVuTrongDon> Dong, List<DichVuDoc> DichVuCoTheThem);
+    string PhienBan, List<DongDichVuTrongDon> Dong, List<DichVuDoc> DichVuCoTheThem);
 
 public interface IDichVuTrongDonService
 {
     Task<ChiTietDichVuTrongDon?> LayTheoDonAsync(int maDatSan, CancellationToken cancellationToken);
 
-    Task<KetQuaNghiepVu> ThemAsync(int maDatSan, int maDichVu, int soLuong, CancellationToken cancellationToken);
+    Task<KetQuaNghiepVu> ThemAsync(int maDatSan, int maDichVu, int soLuong, string phienBan,
+        CancellationToken cancellationToken);
 
-    Task<KetQuaNghiepVu> SuaSoLuongAsync(int maDatSan, int maChiTiet, int soLuong, CancellationToken cancellationToken);
+    Task<KetQuaNghiepVu> SuaSoLuongAsync(int maDatSan, int maChiTiet, int soLuong, string phienBan,
+        CancellationToken cancellationToken);
 
-    Task<KetQuaNghiepVu> HuyAsync(int maDatSan, int maChiTiet, CancellationToken cancellationToken);
+    Task<KetQuaNghiepVu> HuyAsync(int maDatSan, int maChiTiet, string phienBan,
+        CancellationToken cancellationToken);
 }

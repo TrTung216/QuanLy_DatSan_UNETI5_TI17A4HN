@@ -21,16 +21,25 @@ public class DichVuService(IDichVuRepository repository, IDonViCongViec donViCon
     {
         var loiDonGia = KiemTraDuLieu(tenDichVu, donViTinh, donGia, moTa);
         if (loiDonGia is not null) return loiDonGia;
+        var loiTen = await KiemTraTenTrungAsync(tenDichVu, null, cancellationToken);
+        if (loiTen is not null) return loiTen;
 
         repository.Them(new DichVu
         {
-            TenDichVu = tenDichVu,
+            TenDichVu = tenDichVu.Trim(),
             DonViTinh = donViTinh,
-            DonGia = donGia,
+            DonGia = donGia, 
             MoTa = ChuanHoaMoTa(moTa),
             TrangThai = TrangThaiDichVu.HoatDong // do server quyết định, không nhận từ form
         });
-        await donViCongViec.LuuAsync(cancellationToken);
+        try
+        {
+            await donViCongViec.LuuAsync(cancellationToken);
+        }
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.TrungTenDichVu)
+        {
+            return await KetQuaTenTrungAsync(tenDichVu, null, cancellationToken);
+        }
 
         return KetQuaNghiepVu.ThanhCongVoi("Đã thêm dịch vụ.");
     }
@@ -43,16 +52,44 @@ public class DichVuService(IDichVuRepository repository, IDonViCongViec donViCon
 
         var dichVu = await repository.LayDeCapNhatAsync(maDichVu, cancellationToken);
         if (dichVu is null) return KetQuaNghiepVu.KhongThay();
+        var loiTen = await KiemTraTenTrungAsync(tenDichVu, maDichVu, cancellationToken);
+        if (loiTen is not null) return loiTen;
 
         // Chỉ ảnh hưởng đơn mới: ChiTietDatSan sẽ lưu bản chụp DonGia lúc thêm.
-        dichVu.TenDichVu = tenDichVu;
+        dichVu.TenDichVu = tenDichVu.Trim();
         dichVu.DonViTinh = donViTinh;
         dichVu.DonGia = donGia;
         dichVu.MoTa = ChuanHoaMoTa(moTa);
-        await donViCongViec.LuuAsync(cancellationToken);
+        try
+        {
+            await donViCongViec.LuuAsync(cancellationToken);
+        }
+        catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.TrungTenDichVu)
+        {
+            return await KetQuaTenTrungAsync(tenDichVu, maDichVu, cancellationToken);
+        }
 
         return KetQuaNghiepVu.ThanhCongVoi("Đã cập nhật dịch vụ.");
     }
+
+    private async Task<KetQuaNghiepVu?> KiemTraTenTrungAsync(string tenDichVu, int? maDichVuNgoaiTru,
+        CancellationToken cancellationToken)
+    {
+        var trangThai = await repository.LayTrangThaiTenTrungAsync(tenDichVu.Trim(), maDichVuNgoaiTru, cancellationToken);
+        return trangThai switch
+        {
+            null => null,
+            TrangThaiDichVu.HoatDong => KetQuaNghiepVu.BaoLoi("Tên dịch vụ đã được sử dụng.", nameof(DichVu.TenDichVu)),
+            TrangThaiDichVu.NgungHoatDong => KetQuaNghiepVu.BaoLoi(
+                "Tên dịch vụ đã tồn tại nhưng đang ngừng hoạt động.", nameof(DichVu.TenDichVu)),
+            _ => throw new InvalidOperationException("Trạng thái dịch vụ trùng tên chưa được hỗ trợ.")
+        };
+    }
+
+    private async Task<KetQuaNghiepVu> KetQuaTenTrungAsync(string tenDichVu, int? maDichVuNgoaiTru,
+        CancellationToken cancellationToken) =>
+        await KiemTraTenTrungAsync(tenDichVu, maDichVuNgoaiTru, cancellationToken)
+        ?? KetQuaNghiepVu.BaoLoi("Tên dịch vụ vừa được sử dụng. Vui lòng kiểm tra lại.", nameof(DichVu.TenDichVu));
 
     // Không xóa cứng: chỉ chuyển HoatDong <-> NgungHoatDong.
     public async Task<KetQuaNghiepVu> DoiTrangThaiAsync(int maDichVu, CancellationToken cancellationToken)
@@ -85,7 +122,7 @@ public class DichVuService(IDichVuRepository repository, IDonViCongViec donViCon
         if (tenDichVu.Length > 100) return KetQuaNghiepVu.BaoLoi("Tên dịch vụ tối đa 100 ký tự.", nameof(DichVu.TenDichVu));
         if (string.IsNullOrWhiteSpace(donViTinh)) return KetQuaNghiepVu.BaoLoi("Vui lòng nhập đơn vị tính.", nameof(DichVu.DonViTinh));
         if (donViTinh.Length > 30) return KetQuaNghiepVu.BaoLoi("Đơn vị tính tối đa 30 ký tự.", nameof(DichVu.DonViTinh));
-        if (donGia is < 0 or > 1000000000) return KetQuaNghiepVu.BaoLoi("Đơn giá phải từ 0 đến 1.000.000.000.", nameof(DichVu.DonGia));
+        if (donGia is <= 0 or > 1000000000) return KetQuaNghiepVu.BaoLoi("Đơn giá phải lớn hơn 0 và tối đa 1.000.000.000.", nameof(DichVu.DonGia));
         if (moTa?.Length > 1000) return KetQuaNghiepVu.BaoLoi("Mô tả tối đa 1000 ký tự.", nameof(DichVu.MoTa));
         return KiemTraDonGia(donGia);
     }
