@@ -154,7 +154,8 @@ public partial class DatSanRepository(ApplicationDbContext db) : IDatSanReposito
                 TienSan = x.TienSan,
                 TienDichVu = x.TienDichVu,
                 TongTien = x.TongTien
-            }, x.MaKhachHang, x.KhachHang.HoTen, x.KhachHang.SoDienThoai, x.KhachHang.Email),
+            }, x.MaKhachHang, x.KhachHang.HoTen, x.KhachHang.SoDienThoai, x.KhachHang.Email)
+            { PhienBanChinhSachCoc = x.PhienBanChinhSachCoc, TienCocYeuCau = x.TienCocYeuCau },
                 x.ChiTietDatSans.Select(d => new DongDichVu(d.SoLuong, d.DonGia)).ToList()))
             .SingleOrDefaultAsync(cancellationToken);
         if (duLieu is null) return null;

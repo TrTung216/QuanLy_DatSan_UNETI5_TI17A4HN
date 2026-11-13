@@ -91,6 +91,7 @@ public sealed class ChiTietDonQuanLyViewModel
     public string QuayLai { get; init; } = "";
     public string PhienBan { get; init; } = "";
     public bool CoTheXacNhan { get; init; }
+    public bool XacNhanKhongCanCoc { get; init; }
     public bool CoTheTuChoi { get; init; }
     public bool CoTheNhanVienHuy { get; init; }
     public bool CoTheGhiCoc { get; init; }
