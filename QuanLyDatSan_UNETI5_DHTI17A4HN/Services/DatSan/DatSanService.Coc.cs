@@ -52,8 +52,12 @@ public partial class DatSanService
         {
             var tienSan = don.TrangThai == TrangThaiDatSan.HoanThanh && don.TienSan.HasValue
                 ? don.TienSan.Value : tinhTien.TinhTienSan(don.DonGia, don.GioBatDau, don.GioKetThuc);
+            // Luồng cũ xác nhận kèm cọc 50% nhưng không lưu snapshot cọc yêu cầu.
+            // Chỉ bổ sung số hiển thị; chính sách mới luôn dùng snapshot đã lưu.
+            var cocYeuCau = don.PhienBanChinhSachCoc == 0
+                ? tinhTien.TinhTienCocYeuCau(tienSan) : don.TienCocYeuCau;
             return KetQuaCoc<ThongTinCocDto>.DaXong(new(don.MaDatSan, don.TrangThai, don.PhienBanChinhSachCoc,
-                tienSan, don.TienCocYeuCau, don.TienCoc, NoiDungCoc(don.MaDatSan), trangThai, true, coTheChuyen,
+                tienSan, cocYeuCau, don.TienCoc, NoiDungCoc(don.MaDatSan), trangThai, true, coTheChuyen,
                 coTheChuyen ? $"DEMO:ORDER:{don.MaDatSan}" : null, bienNhan is null ? null : Dto(bienNhan)));
         }
         catch (Exception ex) when (ex is ArgumentException or OverflowException)
@@ -70,7 +74,8 @@ public partial class DatSanService
         var giaoDich = await repository.LayGiaoDichCuaDonAsync(NoiDungCoc(maDatSan), ct);
         return KetQuaCoc<DoiSoatCocDto>.DaXong(new(info.DuLieu!, don.RowVersion, giaoDich.Select(Dto).ToList(),
             MoPhongSanSang && don.PhienBanChinhSachCoc == 1 && don.TienCocYeuCau > 0 && don.TienCoc == 0
-            && don.TrangThai == TrangThaiDatSan.ChoXuLy && dongHo.BayGio < don.GioBatDau));
+            && don.TrangThai == TrangThaiDatSan.ChoXuLy && dongHo.BayGio < don.GioBatDau)
+            { CoTheMoPhong = MoPhongSanSang });
     }
 
     public async Task<KetQuaCoc<GiaoDichCocDto>> TaoGiaoDichMoPhongAsync(TaoGiaoDichMoPhongYeuCau yc, CancellationToken ct)

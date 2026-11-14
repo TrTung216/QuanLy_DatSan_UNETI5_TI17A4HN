@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.Chung.Anh;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.SanTheThao;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Infrastructure.Anh;

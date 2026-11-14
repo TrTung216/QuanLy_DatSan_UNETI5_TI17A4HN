@@ -1,12 +1,14 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. khách hàng tạo đơn đặt sân, xem lịch đặt cá nhân và chi tiết đơn của chính mình.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Nội dung M4: chuyển truy vấn sang IDatSanService; ánh xạ DTO sang ViewModel và mã lỗi sang thông báo cho luồng đặt sân của khách hàng.
+// M2: Phan Giang Tâm - 23103100196. Nhận sân và khung giờ từ trang tra cứu sang form đặt sân.
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.Chung;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.KhachHang;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize(Roles = nameof(VaiTro.KhachHang))]
@@ -49,7 +51,7 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
     [HttpGet]
     public async Task<IActionResult> Coc(int id, CancellationToken cancellationToken)
     {
-        if (taiKhoanHienTai.MaTaiKhoan is null) return Challenge();
+        if (taiKhoanHienTai.MaTaiKhoan is not { } maTaiKhoan) return Challenge();
 
         var ketQua = await datSanService.LayThongTinCocAsync(id, cancellationToken);
         if (!ketQua.ThanhCong)
@@ -64,7 +66,11 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
             }
         }
 
-        return View(TaoCocViewModel(ketQua.DuLieu!));
+        var model = TaoCocViewModel(ketQua.DuLieu!);
+        // Phiên bản chỉ để nút Hủy trên trang QR gửi lại cho service kiểm tra; không phải căn cứ cấp quyền.
+        var don = await datSanService.LayChiTietCaNhanAsync(maTaiKhoan, id, cancellationToken);
+        if (don is not null) model.PhienBanDon = Convert.ToBase64String(don.PhienBan);
+        return View(model);
     }
 
     private static CocDonViewModel TaoCocViewModel(ThongTinCocDto coc)
@@ -184,10 +190,22 @@ public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
     }
 
     [HttpGet]
-    public async Task<IActionResult> Tao(int? maSan, CancellationToken cancellationToken)
+    public async Task<IActionResult> Tao(int? maSan, CancellationToken cancellationToken,
+        DateOnly? ngaySuDung = null, TimeOnly? gioBatDau = null, TimeOnly? gioKetThuc = null)
     {
-        var model = new TaoDonViewModel { MaSan = maSan };
+        var model = new TaoDonViewModel
+        {
+            MaSan = maSan,
+            NgaySuDung = ngaySuDung,
+            GioBatDau = gioBatDau,
+            GioKetThuc = gioKetThuc
+        };
+        var coKhungGio = ngaySuDung.HasValue || gioBatDau.HasValue || gioKetThuc.HasValue;
+        if (coKhungGio && (!ngaySuDung.HasValue || !gioBatDau.HasValue || !gioKetThuc.HasValue))
+            ModelState.AddModelError(string.Empty, "Nhập đủ ngày sử dụng, giờ bắt đầu và giờ kết thúc.");
         await NapDanhSachSanAsync(model, cancellationToken);
+        if (maSan.HasValue && !model.DanhSachSan.Any(san => san.MaSan == maSan.Value))
+            ModelState.AddModelError(nameof(TaoDonViewModel.MaSan), "Sân đã ngừng nhận đặt hoặc không còn tồn tại. Vui lòng chọn sân khác.");
         return View(model);
     }
 

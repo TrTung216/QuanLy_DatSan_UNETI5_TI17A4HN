@@ -1,7 +1,8 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Lọc, phân trang và đọc chi tiết đơn quản lý; tính tiền dự kiến qua M5.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Nguồn tiền hiển thị thống nhất; giữ snapshot khi hoàn thành.
 
-using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
@@ -24,10 +25,36 @@ public partial class DatSanService
         var duLieu = await repository.LayChiTietQuanLyAsync(id, cancellationToken);
         if (duLieu is null) return null;
         var result = duLieu.ChiTiet;
-        result.Don.TienSanDuKien = tinhTien.TinhTienSan(result.Don.DonGia, result.Don.GioBatDau, result.Don.GioKetThuc);
-        result.Don.TienDichVuDuKien = tinhTien.TinhTienDichVu(duLieu.DichVu);
-        result.Don.TongTienDuKien = tinhTien.TinhTongTien(result.Don.TienSanDuKien, result.Don.TienDichVuDuKien);
-        return result;
+        var don = result.Don;
+        try
+        {
+            var daHoanThanh = don.TrangThai == TrangThaiDatSan.HoanThanh;
+            if (daHoanThanh)
+            {
+                if (don.TienSan is not >= 0m || don.TienDichVu is not >= 0m || !don.TongTien.HasValue
+                    || tinhTien.TinhTongTien(don.TienSan.Value, don.TienDichVu.Value) != don.TongTien.Value)
+                    return result with { LoiTien = MaLoiCoc.DuLieuTienKhongHopLe };
+                don.TienSanDuKien = don.TienSan.Value;
+                don.TienDichVuDuKien = don.TienDichVu.Value;
+                don.TongTienDuKien = don.TongTien.Value;
+            }
+            else
+            {
+                don.TienSanDuKien = tinhTien.TinhTienSan(don.DonGia, don.GioBatDau, don.GioKetThuc);
+                don.TienDichVuDuKien = tinhTien.TinhTienDichVu(duLieu.DichVu);
+                don.TongTienDuKien = tinhTien.TinhTongTien(don.TienSanDuKien, don.TienDichVuDuKien);
+            }
+            var conLai = tinhTien.TinhConPhaiThu(don.TongTien ?? don.TongTienDuKien, don.TienCoc);
+            return result with
+            {
+                TienCocToiThieu = tinhTien.TinhTienCocYeuCau(don.TienSanDuKien),
+                ConPhaiThu = daHoanThanh ? 0m : conLai
+            };
+        }
+        catch (Exception ex) when (ex is ArgumentException or OverflowException)
+        {
+            return result with { LoiTien = MaLoiCoc.DuLieuTienKhongHopLe };
+        }
     }
 
     public Task<IReadOnlyList<LoaiSanLocDto>> LayLoaiSanLocDonAsync(CancellationToken cancellationToken) =>

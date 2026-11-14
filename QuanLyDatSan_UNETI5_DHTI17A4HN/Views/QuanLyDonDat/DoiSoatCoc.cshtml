@@ -1,0 +1,103 @@
+@* M4: Phạm Thành Nghĩa; MSSV: 23103100308. Đối soát giao dịch và xác nhận đơn. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.QuanLy.DoiSoatCocViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.KhachHang
+@{
+    var don = Model.DuLieu.Don;
+    ViewData["Title"] = $"Đối soát cọc đơn #{don.MaDatSan}";
+    string TrangThaiGiaoDich(TrangThaiGiaoDichCoc value) => value switch
+    {
+        TrangThaiGiaoDichCoc.ChuaDoiSoat => "Chưa đối soát",
+        TrangThaiGiaoDichCoc.DaGanBienNhan => "Đã ghi biên nhận",
+        _ => "Cần xử lý ngoại lệ"
+    };
+}
+<div class="ql-page-header d-flex flex-wrap justify-content-between gap-3">
+    <h1>@ViewData["Title"]</h1>
+    <a asp-action="ChiTiet" asp-route-id="@don.MaDatSan" class="btn btn-outline-secondary">Chi tiết đơn</a>
+</div>
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<section class="ql-panel mb-4">
+    <h2 class="h5">Thông tin cọc</h2>
+    <p>@HienThiCoc.TenTrangThai(don.TrangThaiCoc)</p>
+    <dl class="row">
+        <dt class="col-sm-4">Tiền sân dự kiến</dt><dd class="col-sm-8">@HienThiDatSan.Tien(don.TienSanDuKien)</dd>
+        <dt class="col-sm-4">Cọc yêu cầu</dt><dd class="col-sm-8">@HienThiDatSan.Tien(don.TienCocYeuCau)</dd>
+        <dt class="col-sm-4">Cọc đã nhận</dt><dd class="col-sm-8">@HienThiDatSan.Tien(don.TienCocDaNhan)</dd>
+        <dt class="col-sm-4">Nội dung chuyển khoản</dt><dd class="col-sm-8">@don.NoiDungChuyenKhoan</dd>
+    </dl>
+    @if (don.BienNhan is { } bienNhan)
+    {
+        <p>Biên nhận #@bienNhan.MaBienNhan — giao dịch @bienNhan.MaGiaoDichNgoai,
+            @HienThiDatSan.Tien(bienNhan.SoTien), xác nhận lúc @bienNhan.NgayXacNhan.ToString("dd/MM/yyyy HH:mm").</p>
+    }
+    @if (don.TrangThaiCoc == TrangThaiCocHienThi.DaNhan)
+    {
+        <p class="text-success">Đơn đã ghi nhận cọc, không cần xác nhận cọc lần nữa.</p>
+    }
+    else if (!Model.DuLieu.CoTheXacNhan)
+    {
+        <p class="text-warning">Đơn hiện không đủ điều kiện xác nhận cọc. Kiểm tra trạng thái đơn, thời gian sử dụng và nguồn giao dịch.</p>
+    }
+</section>
+<section class="ql-panel mb-4">
+    <h2 class="h5">Giao dịch khớp nội dung đơn</h2>
+    @if (Model.DuLieu.GiaoDich.Count == 0)
+    {
+        @if (don.PhienBanChinhSachCoc == 0 && don.TienCocDaNhan > 0m)
+        {
+            <p>Cọc đã được ghi nhận qua luồng cũ; không có giao dịch đối soát kèm theo.</p>
+        }
+        else
+        {
+        <p>Chưa có giao dịch khớp nội dung. Không xác nhận cọc chỉ dựa vào lời báo hoặc ảnh chuyển khoản.</p>
+        }
+    }
+    @foreach (var gd in Model.DuLieu.GiaoDich)
+    {
+        <article class="border rounded p-3 mb-3">
+            <h3 class="h6">@gd.MaGiaoDichNgoai — @TrangThaiGiaoDich(gd.TrangThai)</h3>
+            <p>@HienThiDatSan.Tien(gd.SoTien) · @gd.NgayNhan.ToString("dd/MM/yyyy HH:mm:ss")</p>
+            <p>Nội dung: @gd.NoiDung · Nguồn: @gd.Nguon · Tài khoản nhận: @gd.TaiKhoanNhan</p>
+            @if (Model.DuLieu.CoTheXacNhan && gd.TrangThai == TrangThaiGiaoDichCoc.ChuaDoiSoat)
+            {
+                <form asp-action="XacNhanCoc" method="post" asp-antiforgery="true" data-xu-ly-don data-xac-nhan="Xác nhận giao dịch này và đặt sân?">
+                    <input type="hidden" name="MaDon" value="@don.MaDatSan" />
+                    <input type="hidden" name="MaGiaoDich" value="@gd.MaGiaoDich" />
+                    <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
+                    <div class="form-check mb-2">
+                        <input type="checkbox" name="DaKiemTraGiaoDich" value="true" id="kiem-tra-@gd.MaGiaoDich" required class="form-check-input" />
+                        <label for="kiem-tra-@gd.MaGiaoDich" class="form-check-label">Đã kiểm tra số tiền, nội dung, tài khoản nhận và thời điểm nhận</label>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Đối soát và xác nhận đặt sân</button>
+                </form>
+            }
+            @if (gd.TrangThai == TrangThaiGiaoDichCoc.CanXuLyNgoaiLe)
+            {
+                <p class="text-danger">Cần xử lý ngoại lệ thủ công; giao dịch này chưa được ghi nhận cọc.</p>
+            }
+        </article>
+    }
+</section>
+@if (Model.CoTheMoPhong)
+{
+    <section class="ql-panel">
+        <h2 class="h5">Tạo giao dịch mô phỏng</h2>
+        <p>Dữ liệu thử nghiệm, không phải tiền thật. Tạo giao dịch không tự xác nhận đặt sân.</p>
+        <form asp-action="TaoGiaoDichMoPhong" method="post" asp-antiforgery="true" data-xu-ly-don>
+            <input type="hidden" name="MaDon" value="@don.MaDatSan" />
+            <div class="mb-3"><label for="MaGiaoDichNgoai" class="form-label">Mã giao dịch ngoài *</label>
+                @Html.TextBox("MaGiaoDichNgoai", null, new { @class = "form-control", required = "required", maxlength = 100, minlength = 3 })</div>
+            <div class="mb-3"><label for="NoiDung" class="form-label">Nội dung *</label>
+                @Html.TextBox("NoiDung", don.NoiDungChuyenKhoan, new { @class = "form-control", required = "required", maxlength = 100 })</div>
+            <div class="mb-3"><label for="SoTien" class="form-label">Số tiền (đồng) *</label>
+                @Html.TextBox("SoTien", don.TienCocYeuCau.ToString(System.Globalization.CultureInfo.InvariantCulture), new { @class = "form-control", type = "number", min = "0.01", step = "0.01", required = "required" })</div>
+            <div class="mb-3"><label for="NgayNhan" class="form-label">Thời điểm nhận *</label>
+                @Html.TextBox("NgayNhan", null, new { @class = "form-control", type = "datetime-local", step = "1", required = "required" })</div>
+            <button type="submit" class="btn btn-outline-primary">Ghi giao dịch mô phỏng</button>
+        </form>
+    </section>
+}
+@section Scripts {
+    <script src="~/js/quan-ly-don-dat.js" asp-append-version="true"></script>
+}

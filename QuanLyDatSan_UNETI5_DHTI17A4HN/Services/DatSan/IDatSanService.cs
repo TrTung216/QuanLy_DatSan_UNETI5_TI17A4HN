@@ -1,6 +1,7 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Bổ sung hợp đồng đọc, mô phỏng và xác nhận cọc.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Hợp đồng tra cứu khả dụng, tạo và xử lý đơn dùng chung M2/M3/M4.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. Bổ sung XacNhanDonKemCocAsync (xác nhận đơn kèm ghi nhận cọc đã nhận đủ).
 
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
@@ -22,6 +23,9 @@ public interface IDatSanService
     Task KhoaSanAsync(int maSan, CancellationToken cancellationToken);
 
     Task<KetQuaXuLyDon> XacNhanDonAsync(XuLyDonYeuCau yeuCau, CancellationToken cancellationToken);
+    // Triển khai mặc định để các lớp giả trong test không phải sửa; DatSanService ghi đè bằng bản thật.
+    Task<KetQuaXuLyDon> XacNhanDonKemCocAsync(XuLyDonYeuCau yeuCau, CancellationToken cancellationToken)
+        => throw new NotSupportedException();
     Task<KetQuaXuLyDon> TuChoiDonAsync(HuyDonYeuCau yeuCau, CancellationToken cancellationToken);
     Task<KetQuaXuLyDon> KhachHangHuyDonAsync(HuyDonYeuCau yeuCau, int maTaiKhoan, CancellationToken cancellationToken);
     Task<KetQuaXuLyDon> NhanVienHuyDonAsync(HuyDonYeuCau yeuCau,

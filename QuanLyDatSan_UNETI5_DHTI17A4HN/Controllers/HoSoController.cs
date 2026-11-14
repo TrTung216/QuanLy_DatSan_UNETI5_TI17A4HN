@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyKhachHang;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.KhachHang;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize(Roles = nameof(VaiTro.KhachHang))]

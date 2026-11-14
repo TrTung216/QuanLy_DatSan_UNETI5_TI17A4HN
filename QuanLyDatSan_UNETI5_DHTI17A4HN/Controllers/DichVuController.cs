@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DichVu;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 

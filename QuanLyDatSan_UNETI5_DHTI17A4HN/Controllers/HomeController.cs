@@ -1,7 +1,8 @@
 // M1: Trần Trọng Tùng; MSSV: 23103100202. Nạp danh mục sân công khai qua service cho trang chủ.
 using Microsoft.AspNetCore.Mvc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.TrangChu;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.Chung;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TrangChu;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using System.Diagnostics;
 

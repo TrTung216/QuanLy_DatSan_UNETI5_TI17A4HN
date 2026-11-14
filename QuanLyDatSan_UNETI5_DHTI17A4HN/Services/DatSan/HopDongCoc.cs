@@ -39,7 +39,10 @@ public sealed record TaoGiaoDichMoPhongYeuCau(string MaGiaoDichNgoai, string Noi
 public sealed record ThongTinCocDto(int MaDatSan, TrangThaiDatSan TrangThai, int PhienBanChinhSachCoc,
     decimal TienSanDuKien, decimal TienCocYeuCau, decimal TienCocDaNhan, string NoiDungChuyenKhoan,
     TrangThaiCocHienThi TrangThaiCoc, bool MoPhong, bool CoTheChuyen, string? NoiDungQrMoPhong, BienNhanCocDto? BienNhan);
-public sealed record DoiSoatCocDto(ThongTinCocDto Don, byte[] PhienBan, IReadOnlyList<GiaoDichCocDto> GiaoDich, bool CoTheXacNhan);
+public sealed record DoiSoatCocDto(ThongTinCocDto Don, byte[] PhienBan, IReadOnlyList<GiaoDichCocDto> GiaoDich, bool CoTheXacNhan)
+{
+    public bool CoTheMoPhong { get; init; }
+}
 public sealed record GiaoDichCocDto(int MaGiaoDich, string MaGiaoDichNgoai, string NoiDung, string Nguon,
     string TaiKhoanNhan, decimal SoTien, DateTime NgayNhan, TrangThaiGiaoDichCoc TrangThai);
 public sealed record BienNhanCocDto(int MaBienNhan, int MaDatSan, decimal SoTien, string MaGiaoDichNgoai,

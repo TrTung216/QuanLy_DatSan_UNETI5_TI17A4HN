@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyThongKe;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.ThongKe;
 
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 

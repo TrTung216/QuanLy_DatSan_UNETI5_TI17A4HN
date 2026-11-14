@@ -13,7 +13,7 @@ using QuanLyDatSan.M103.Tests;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLySan;
-using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.SanTheThao;
 using Xunit;
 
 namespace QuanLyDatSan.M201.Tests;

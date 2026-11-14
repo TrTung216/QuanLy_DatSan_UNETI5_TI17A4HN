@@ -1,5 +1,7 @@
 ﻿// M5: Nguyễn Hữu Quang; MSSV: 23103100184
 // Nội dung: tính tiền đơn đặt sân theo mục 5 quy ước (số phút / 60 x đơn giá, làm tròn đến đồng).
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Gom công thức cọc/còn phải thu; từ chối dữ liệu tiền sai.
+// M3: Nguyễn Văn Quý; MSSV: 23103100181. Công thức cọc 50% chuyển từ ChinhSachCocToiThieu, giữ cách làm tròn.
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
 
 public class TinhTienService : ITinhTienService
@@ -36,6 +38,21 @@ public class TinhTienService : ITinhTienService
         if (tongTien > TienToiDa)
             throw new ArgumentOutOfRangeException(nameof(tienDichVu), "Tổng tiền vượt giới hạn lưu trữ decimal(18,2).");
         return tongTien;
+    }
+
+    public decimal TinhTienCocYeuCau(decimal tienSan)
+    {
+        KiemTraKhoanTien(tienSan, nameof(tienSan));
+        return Math.Round(tienSan * 0.5m, 0, MidpointRounding.AwayFromZero);
+    }
+
+    public decimal TinhConPhaiThu(decimal tongTien, decimal tienCoc)
+    {
+        KiemTraKhoanTien(tongTien, nameof(tongTien));
+        KiemTraKhoanTien(tienCoc, nameof(tienCoc));
+        if (tienCoc > tongTien)
+            throw new ArgumentException("Tiền cọc không được vượt tổng tiền.", nameof(tienCoc));
+        return tongTien - tienCoc;
     }
 
     private static void KiemTraKhoanTien(decimal tien, string thamSo)
