@@ -17,6 +17,8 @@ public sealed record DanhSachDonQuanLyDto(IReadOnlyList<DonQuanLyDongDto> Dong, 
 public sealed record ChiTietDonQuanLyDto(ChiTietDonDto Don, int MaKhachHang,
     string TenKhachHang, string SoDienThoai, string Email)
 {
+    public int PhienBanChinhSachCoc { get; init; }
+    public decimal TienCocYeuCau { get; init; }
     public decimal? TienCocToiThieu { get; init; }
     // Công nợ hiển thị: 0 sau khi hoàn thành; null khi dữ liệu tiền không hợp lệ.
     public decimal? ConPhaiThu { get; init; }

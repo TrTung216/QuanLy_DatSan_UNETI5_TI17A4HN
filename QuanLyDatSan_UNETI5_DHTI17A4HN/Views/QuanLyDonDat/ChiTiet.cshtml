@@ -95,6 +95,8 @@
                         <input type="hidden" name="MaDon" value="@Model.MaDatSan" />
                         <input type="hidden" name="PhienBan" value="@Model.PhienBan" />
                         <input type="hidden" name="QuayLai" value="@Model.QuayLai" />
+                        @if (!Model.XacNhanKhongCanCoc)
+                        {
                         <fieldset class="mb-2">
                             <legend class="h6">Tiền cọc *</legend>
                             <p class="mb-1 small">Số tiền cọc tối thiểu: <strong>@(Model.TienCocToiThieu.HasValue ? HienThiDatSan.Tien(Model.TienCocToiThieu.Value) : "Chưa xác định")</strong> (50% tiền sân dự kiến)</p>
@@ -108,6 +110,11 @@
                             </div>
                             <small class="form-text">Chọn "Đã nhận đủ" để xác nhận đơn và ghi nhận tiền cọc cho khách xem. Chưa nhận đủ cọc thì chưa thể xác nhận đặt sân.</small>
                         </fieldset>
+                        }
+                        else
+                        {
+                            <p>Đơn không yêu cầu cọc; xác nhận không tạo biên nhận.</p>
+                        }
                         <button type="submit" class="btn btn-primary">Xác nhận đơn</button>
                     </form>
                 }
@@ -164,6 +171,7 @@
         </section>
     }
     <div class="col-12 mt-3">
+        <a asp-action="DoiSoatCoc" asp-route-id="@Model.MaDatSan" class="btn btn-outline-primary">Đối soát cọc / biên nhận</a>
         <a asp-controller="DichVuTrongDon" asp-action="Index" asp-route-maDatSan="@Model.MaDatSan"
            class="btn btn-outline-primary">Dịch vụ của đơn</a>
     </div>

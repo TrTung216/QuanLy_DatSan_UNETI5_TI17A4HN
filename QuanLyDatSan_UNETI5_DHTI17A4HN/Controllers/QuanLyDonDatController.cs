@@ -15,7 +15,7 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize(Roles = nameof(VaiTro.Admin) + "," + nameof(VaiTro.NhanVien))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo) : Controller
+public partial class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> DanhSach([FromQuery] LocDonQuanLyViewModel loc, CancellationToken cancellationToken)
@@ -83,10 +83,12 @@ public class QuanLyDonDatController(IDatSanService datSanService, IDongHo dongHo
             ThongBaoLoiTien = tienHopLe ? null
                 : "Dữ liệu tiền của đơn không hợp lệ hoặc chưa đủ. Vui lòng kiểm tra các khoản đã chốt, dịch vụ và tiền cọc trước khi xử lý thanh toán.",
             PhienBan = Convert.ToBase64String(don.PhienBan),
-            CoTheXacNhan = tienHopLe && laDonCho && chuaBatDau,
+            CoTheXacNhan = tienHopLe && laDonCho && chuaBatDau
+                && (result.PhienBanChinhSachCoc == 0 || result.TienCocYeuCau == 0m),
+            XacNhanKhongCanCoc = result.PhienBanChinhSachCoc == 1 && result.TienCocYeuCau == 0m,
             CoTheTuChoi = laDonCho && don.TienCoc == 0m,
             CoTheNhanVienHuy = chuaBatDau && don.TienCoc == 0m && (laDonCho || laDonXacNhan),
-            CoTheGhiCoc = tienHopLe && laDonXacNhan && don.TienCoc < don.TongTienDuKien,
+            CoTheGhiCoc = result.PhienBanChinhSachCoc == 0 && tienHopLe && laDonXacNhan && don.TienCoc < don.TongTienDuKien,
             CoTheHoanThanh = tienHopLe && laDonXacNhan && don.GioKetThuc <= dongHo.BayGio
                 && don.TienCoc <= don.TongTienDuKien,
             QuayLai = quayLaiAnToan
