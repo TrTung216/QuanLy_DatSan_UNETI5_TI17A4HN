@@ -1,4 +1,5 @@
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Form quản lý đối soát cọc.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Việt hóa nhãn/lỗi form, giữ nguyên giới hạn validation.
 using System.ComponentModel.DataAnnotations;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 
@@ -13,13 +14,22 @@ public sealed class XacNhanCocViewModel : XuLyDonViewModel
 
 public sealed class TaoGiaoDichMoPhongViewModel
 {
-    [Range(1, int.MaxValue)] public int MaDon { get; set; }
-    [Required, StringLength(100, MinimumLength = 3)]
+    [Range(1, int.MaxValue, ErrorMessage = "Mã đơn không hợp lệ.")] public int MaDon { get; set; }
+    [Display(Name = "Mã giao dịch ngoài")]
+    [Required(ErrorMessage = "Vui lòng nhập mã giao dịch ngoài.")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "Mã giao dịch ngoài phải có từ 3 đến 100 ký tự.")]
     public string MaGiaoDichNgoai { get; set; } = "";
-    [Required, StringLength(100)] public string NoiDung { get; set; } = "";
-    [Required, Range(typeof(decimal), "0.01", "9999999999999999.99")]
+    [Display(Name = "Nội dung chuyển khoản")]
+    [Required(ErrorMessage = "Vui lòng nhập nội dung chuyển khoản.")]
+    [StringLength(100, ErrorMessage = "Nội dung chuyển khoản không được quá 100 ký tự.")]
+    public string NoiDung { get; set; } = "";
+    [Display(Name = "Số tiền")]
+    [Required(ErrorMessage = "Vui lòng nhập số tiền.")]
+    [Range(typeof(decimal), "0.01", "9999999999999999.99", ErrorMessage = "Số tiền phải lớn hơn 0 và không vượt quá giới hạn cho phép.")]
     public decimal? SoTien { get; set; }
-    [Required] public DateTime? NgayNhan { get; set; }
+    [Display(Name = "Thời điểm nhận")]
+    [Required(ErrorMessage = "Vui lòng nhập thời điểm nhận.")]
+    public DateTime? NgayNhan { get; set; }
 }
 
 public sealed class DoiSoatCocViewModel

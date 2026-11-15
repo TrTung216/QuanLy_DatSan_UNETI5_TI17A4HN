@@ -97,6 +97,14 @@ Thêm `_ValidationScriptsPartial` trong section Scripts của View form. Dùng `
 
 Phân trang dùng `pagination ql-pagination`, mỗi mục có `page-item`, link có `page-link`, trang hiện tại thêm `active` và `aria-current="page"`. Mục không khả dụng dùng span thay link. Link trang giữ tìm kiếm/lọc/sắp xếp; truy vấn phân trang ở server bằng Skip/Take, mặc định 10 dòng theo quy ước nhóm. Ngày `dd/MM/yyyy`, giờ `HH:mm`, tiền theo `vi-VN` kèm đơn vị; không thêm dữ liệu hoặc thống kê giả.
 
+### Bảng nhiều cột trên mobile (M1, 15/11/2026)
+
+Thêm `ql-table-scroll` vào vùng `table-responsive`, giữ `role="region"`, nhãn rõ ràng và `tabindex="0"` để cuộn bằng bàn phím. Bảng dùng `ql-table`; thêm `ql-table-wide` nếu có nhiều cột. Ô tên dài dùng `ql-table-name`; ngày/giờ/tiền ngắn dùng `text-nowrap`. Thêm gợi ý vuốt ngang có `id` và liên kết bằng `aria-describedby` khi cần.
+
+Các lớp này chỉ áp dụng khi View chủ động sử dụng: bảng rộng tối thiểu 42rem (48rem với `ql-table-wide`), xuống dòng theo từ; vùng cuộn giữ cả nhãn `visually-hidden` bên trong. Không dùng `overflow:hidden` trên body để che lỗi và không ép mọi bảng của module sang cùng kích thước. Nhóm nút cuối trang dùng `ql-actions` để tự xuống hàng và giữ khoảng cách.
+
+Kiểm tra tại 320px, 390px và desktop: trang không cuộn ngang, bảng cuộn được tới cột cuối, tên không bị tách thành từng ký tự, focus nhìn rõ. Trang cọc mô phỏng chỉ hiển thị dữ liệu thử; không gắn ảnh minh họa dưới nhãn QR khi chưa có mã quét thực sự.
+
 ### TempData và trạng thái
 
 Controller đặt `TempData["Success"] = "Đã lưu dữ liệu.";` trước redirect. Layout tự render `_ThongBao` một lần, View không render lại và không dùng `Html.Raw` cho nội dung thông báo.

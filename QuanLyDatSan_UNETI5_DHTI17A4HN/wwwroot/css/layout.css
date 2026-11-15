@@ -83,6 +83,15 @@
 .ql-table > :not(caption) > * > * { padding: .9rem 1rem; }
 .ql-table thead th { background: #edf3fb; font-weight: 650; white-space: nowrap; }
 .ql-table caption { color: var(--ql-muted); }
+/* M1: Bảng nhiều cột dùng vùng cuộn riêng; không ép chữ hay làm tràn cả trang. */
+.ql-table-scroll { position: relative; max-width: 100%; border: 1px solid var(--ql-border); border-radius: .65rem; }
+.ql-table-scroll > table { min-width: 42rem; margin-bottom: 0; overflow-wrap: normal; }
+.ql-table-scroll > .ql-table-wide { min-width: 48rem; }
+.ql-table-scroll :is(th, td) { position: relative; }
+.ql-table-scroll .ql-table-name { min-width: 12rem; max-width: 22rem; overflow-wrap: break-word; }
+.ql-table-scroll caption { padding: .75rem 1rem; }
+.ql-table-hint { color: var(--ql-muted); font-size: .875rem; margin-bottom: .5rem; }
+.ql-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
 .ql-pagination { flex-wrap: wrap; gap: .35rem; }
 .ql-pagination .page-link { border-radius: .4rem; min-width: 2.75rem; min-height: 2.75rem; display: grid; place-items: center; }
 .ql-pagination .active .page-link { background: var(--ql-primary); border-color: var(--ql-primary); color: #fff; }

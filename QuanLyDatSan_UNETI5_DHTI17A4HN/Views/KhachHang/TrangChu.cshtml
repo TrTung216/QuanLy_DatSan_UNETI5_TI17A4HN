@@ -1,4 +1,5 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. trang chủ riêng của khách hàng sau khi đăng nhập: số liệu cá nhân, thao tác nhanh, đơn sắp tới. *@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Giữ bảng đơn sắp tới trong vùng cuộn mobile. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.KhachHang.TrangChuKhachViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
 @{ ViewData["Title"] = "Trang của tôi"; }
@@ -60,7 +61,8 @@
     }
     else
     {
-        <div class="table-responsive" role="region" aria-label="Danh sách đơn sắp tới" tabindex="0">
+        <p id="goi-y-don-sap-toi" class="ql-table-hint d-lg-none">Vuốt ngang bảng để xem trạng thái và mở chi tiết đơn.</p>
+        <div class="table-responsive ql-table-scroll" role="region" aria-label="Danh sách đơn sắp tới" aria-describedby="goi-y-don-sap-toi" tabindex="0">
             <table class="table table-hover align-middle ql-table">
                 <caption>Tối đa 3 đơn gần nhất sắp diễn ra</caption>
                 <thead>
@@ -71,8 +73,8 @@
                     {
                         <tr>
                             <td>@don.MaDatSan</td>
-                            <td>@don.TenSan <span class="text-muted">(@don.TenLoai)</span></td>
-                            <td>@don.GioBatDau.ToString("dd/MM/yyyy") @don.GioBatDau.ToString("HH:mm") - @don.GioKetThuc.ToString("HH:mm")</td>
+                            <td class="ql-table-name">@don.TenSan <span class="text-muted">(@don.TenLoai)</span></td>
+                            <td><span class="text-nowrap">@don.GioBatDau.ToString("dd/MM/yyyy")</span><br /><span class="text-nowrap">@don.GioBatDau.ToString("HH:mm") - @don.GioKetThuc.ToString("HH:mm")</span></td>
                             <td><span class="@HienThiDatSan.LopMau(don.TrangThai)">@HienThiDatSan.TenTrangThai(don.TrangThai)</span></td>
                             <td><a asp-controller="DonDat" asp-action="ChiTiet" asp-route-id="@don.MaDatSan">Chi tiết</a></td>
                         </tr>
