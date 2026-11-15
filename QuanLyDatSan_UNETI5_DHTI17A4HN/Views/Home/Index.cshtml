@@ -3,15 +3,11 @@
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Danh sách sân thật theo loại, bỏ CTA đăng nhập/đăng ký lặp lại. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TrangChu.TrangChuViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
-@using System.Globalization
-@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Anh
-@using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.Chung.Anh
 @{
     ViewData["Title"] = "Trang chủ";
     var daDangNhap = User.Identity?.IsAuthenticated == true;
     var laKhachHang = daDangNhap && User.IsInRole(nameof(VaiTro.KhachHang));
     var laQuanTri = daDangNhap && (User.IsInRole(nameof(VaiTro.Admin)) || User.IsInRole(nameof(VaiTro.NhanVien)));
-    var vanHoa = CultureInfo.GetCultureInfo("vi-VN");
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/trang-chu.css" asp-append-version="true" />
@@ -34,59 +30,7 @@
     </div>
     }
 </section>
-<section class="ql-home-courts mt-4" aria-labelledby="danh-sach-san">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-        <div>
-            <h2 id="danh-sach-san" class="h3 mb-2">Khám phá sân theo loại</h2>
-            <p class="text-muted mb-0">Xem thông tin sân và chọn môn thể thao bạn yêu thích.</p>
-        </div>
-        <a class="btn btn-outline-primary" asp-controller="SanTheThao" asp-action="Index">Tìm kiếm sân</a>
-    </div>
-    @if (Model.CacLoaiSan.Count == 0)
-    {
-        <div class="ql-panel ql-empty">
-            <h3 class="h5">Chưa có sân để hiển thị</h3>
-            <p class="mb-0">Danh sách sẽ được cập nhật khi có sân đang hoạt động.</p>
-        </div>
-    }
-    @foreach (var loai in Model.CacLoaiSan)
-    {
-        <section class="ql-home-group" aria-labelledby="loai-san-@loai.MaLoaiSan">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                <div class="ql-home-type-title">
-                    <partial name="_AnhDaiDien" model="@(new AnhDaiDienViewModel(NhomAnh.LoaiSan, loai.MaLoaiSan, loai.TenLoai, loai.CoAnh))" />
-                    <h3 id="loai-san-@loai.MaLoaiSan" class="h4 mb-0">@loai.TenLoai</h3>
-                </div>
-                <a asp-controller="SanTheThao" asp-action="Index" asp-route-maLoaiSan="@loai.MaLoaiSan"
-                   aria-label="Xem tất cả sân @loai.TenLoai">Xem tất cả <span aria-hidden="true">→</span></a>
-            </div>
-            <div class="row g-3">
-                @foreach (var san in loai.San)
-                {
-                    <div class="col-12 col-md-6 col-xl-4">
-                        <article class="ql-home-court">
-                            <partial name="_AnhDaiDien" model="@(new AnhDaiDienViewModel(NhomAnh.San, san.MaSan, san.TenSan, san.CoAnh))" />
-                            <h4 class="h5">@san.TenSan</h4>
-                            <p class="ql-home-address text-muted">@san.DiaChi</p>
-                            <dl class="mb-3">
-                                <dt>Giờ mở cửa</dt>
-                                <dd>@san.GioMoCua.ToString("HH:mm") – @san.GioDongCua.ToString("HH:mm")</dd>
-                                <dt>Giá giờ thường T2–T6</dt>
-                                <dd class="ql-home-price">@san.DonGia.ToString("N0", vanHoa) ₫<span class="small fw-normal">/giờ</span></dd>
-                            </dl>
-                            <a class="btn btn-outline-primary mt-auto align-self-start" asp-controller="SanTheThao"
-                               asp-action="Details" asp-route-id="@san.MaSan" aria-label="Xem chi tiết @san.TenSan">Xem chi tiết</a>
-                        </article>
-                    </div>
-                }
-            </div>
-        </section>
-    }
-    @if (Model.CacLoaiSan.Count > 0)
-    {
-        <p class="small text-muted mt-3">Giá cao điểm và cuối tuần xem tại chi tiết sân. Lịch trống được kiểm tra theo ngày và giờ khi đặt sân.</p>
-    }
-</section>
+<partial name="_KhamPhaSanTheoLoai" model="Model.CacLoaiSan" />
 <section class="mt-3" aria-labelledby="cach-dat-san">
     <h2 id="cach-dat-san" class="visually-hidden">Cách đặt sân</h2>
     <ol class="ql-steps ql-steps--gon ql-home-booking-steps">

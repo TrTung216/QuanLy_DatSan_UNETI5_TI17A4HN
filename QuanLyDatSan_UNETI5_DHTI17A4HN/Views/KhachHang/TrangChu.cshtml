@@ -1,8 +1,12 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. trang chủ riêng của khách hàng sau khi đăng nhập: số liệu cá nhân, thao tác nhanh, đơn sắp tới. *@
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Giữ bảng đơn sắp tới trong vùng cuộn mobile. *@
+@* M1: Dùng chung mục khám phá sân với trang chủ công khai, giữ thông tin cá nhân bên dưới. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.KhachHang.TrangChuKhachViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
 @{ ViewData["Title"] = "Trang của tôi"; }
+@section Styles {
+    <link rel="stylesheet" href="~/css/trang-chu.css" asp-append-version="true" />
+}
 <div class="ql-page-header">
     <p class="ql-eyebrow">Khách hàng</p>
     <h1>Xin chào, @Model.HoTen</h1>
@@ -14,6 +18,7 @@
         <strong>Lưu ý:</strong> Hồ sơ của bạn đang bị khóa nên chưa thể đặt sân hoặc sửa hồ sơ. Vui lòng liên hệ nhân viên để được hỗ trợ.
     </div>
 }
+<partial name="_KhamPhaSanTheoLoai" model="Model.CacLoaiSan" />
 <section aria-labelledby="so-lieu-ca-nhan">
     <h2 id="so-lieu-ca-nhan" class="ql-section-title">Tình hình của bạn</h2>
     <div class="ql-stat-grid">
