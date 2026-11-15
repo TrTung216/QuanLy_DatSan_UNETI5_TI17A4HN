@@ -6,6 +6,8 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyTinhTien;
 
 public class TinhTienService : ITinhTienService
 {
+    private const decimal TienToiDa = 9999999999999999.99m;
+
     public decimal TinhTienSan(decimal donGia, DateTime batDau, DateTime ketThuc)
     {
         if (donGia < 0) throw new ArgumentOutOfRangeException(nameof(donGia), "Đơn giá không được âm.");
@@ -27,26 +29,37 @@ public class TinhTienService : ITinhTienService
         return tong;
     }
 
-    public decimal TinhTongTien(decimal tienSan, decimal tienDichVu) => tienSan + tienDichVu;
+    public decimal TinhTongTien(decimal tienSan, decimal tienDichVu)
+    {
+        KiemTraKhoanTien(tienSan, nameof(tienSan));
+        KiemTraKhoanTien(tienDichVu, nameof(tienDichVu));
+
+        var tongTien = tienSan + tienDichVu;
+        if (tongTien > TienToiDa)
+            throw new ArgumentOutOfRangeException(nameof(tienDichVu), "Tổng tiền vượt giới hạn lưu trữ decimal(18,2).");
+        return tongTien;
+    }
 
     public decimal TinhTienCocYeuCau(decimal tienSan)
     {
-        KiemTraTien(tienSan, nameof(tienSan));
+        KiemTraKhoanTien(tienSan, nameof(tienSan));
         return Math.Round(tienSan * 0.5m, 0, MidpointRounding.AwayFromZero);
     }
 
     public decimal TinhConPhaiThu(decimal tongTien, decimal tienCoc)
     {
-        KiemTraTien(tongTien, nameof(tongTien));
-        KiemTraTien(tienCoc, nameof(tienCoc));
+        KiemTraKhoanTien(tongTien, nameof(tongTien));
+        KiemTraKhoanTien(tienCoc, nameof(tienCoc));
         if (tienCoc > tongTien)
             throw new ArgumentException("Tiền cọc không được vượt tổng tiền.", nameof(tienCoc));
         return tongTien - tienCoc;
     }
 
-    private static void KiemTraTien(decimal tien, string thamSo)
+    private static void KiemTraKhoanTien(decimal tien, string thamSo)
     {
-        if (tien < 0m || tien > 9999999999999999.99m)
-            throw new ArgumentOutOfRangeException(thamSo, "Tiền phải không âm và trong giới hạn lưu trữ.");
+        if (tien < 0m || tien > TienToiDa)
+            throw new ArgumentOutOfRangeException(thamSo, "Tiền phải không âm và trong giới hạn lưu trữ decimal(18,2).");
+        if (decimal.Round(tien, 2) != tien)
+            throw new ArgumentOutOfRangeException(thamSo, "Tiền không được có quá hai chữ số thập phân.");
     }
 }

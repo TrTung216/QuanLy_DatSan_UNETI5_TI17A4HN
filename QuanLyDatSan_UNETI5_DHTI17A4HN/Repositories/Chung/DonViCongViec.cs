@@ -123,6 +123,7 @@ public sealed class DonViCongViec(ApplicationDbContext db, ILogger<DonViCongViec
         {
             if (sql.Message.Contains("'IX_LoaiSan_TenLoai'", StringComparison.Ordinal)) return MaLoiLuuTru.TrungTenLoaiSan;
             if (sql.Message.Contains("'IX_TaiKhoan_TenDangNhap'", StringComparison.Ordinal)) return MaLoiLuuTru.TrungTenDangNhap;
+            if (sql.Message.Contains("'IX_DichVu_TenDichVu'", StringComparison.Ordinal)) return MaLoiLuuTru.TrungTenDichVu;
             if (sql.Message.Contains("'IX_GiaoDichCoc_Nguon_TaiKhoanNhan_MaGiaoDichNgoai'", StringComparison.Ordinal))
                 return MaLoiLuuTru.TrungGiaoDichCoc;
             if (sql.Message.Contains("'IX_BienNhanCoc_MaDatSan'", StringComparison.Ordinal)

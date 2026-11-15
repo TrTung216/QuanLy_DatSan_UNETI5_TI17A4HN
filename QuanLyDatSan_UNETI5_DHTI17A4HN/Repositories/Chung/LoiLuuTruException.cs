@@ -12,7 +12,8 @@ public enum MaLoiLuuTru
     ThamChieuSan,
     // Hợp đồng lỗi cho service cọc M4; hạ tầng lưu trữ tích hợp mapping riêng.
     TrungGiaoDichCoc,
-    TrungBienNhanCoc
+    TrungBienNhanCoc,
+    TrungTenDichVu
 }
 
 // Không đưa Message/InnerException ra HTTP. Service chỉ ánh xạ MaLoi sang hợp đồng nghiệp vụ.

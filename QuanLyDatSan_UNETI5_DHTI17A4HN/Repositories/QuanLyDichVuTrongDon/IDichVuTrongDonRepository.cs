@@ -13,8 +13,14 @@ public interface IDichVuTrongDonRepository
     Task<List<DongDichVuTrongDon>> LayDongAsync(int maDatSan, CancellationToken cancellationToken);
     Task<List<DichVuDoc>> LayDichVuHoatDongAsync(CancellationToken cancellationToken);
     Task<DichVu?> LayDichVuAsync(int maDichVu, CancellationToken cancellationToken);
+    Task<bool> CoQuyenQuanLyAsync(int maTaiKhoan, CancellationToken cancellationToken);
+    Task<byte[]?> LayRowVersionAsync(int maDatSan, CancellationToken cancellationToken);
+    Task<int?> LayMaSanAsync(int maDatSan, CancellationToken cancellationToken);
+    Task KhoaSanAsync(int maSan, CancellationToken cancellationToken);
     Task<DatSan?> LayDonDeCapNhatAsync(int maDatSan, CancellationToken cancellationToken);
-    void XoaDong(ChiTietDatSan dong);
+    Task<List<DongDichVuTrongDon>> LayLichSuHuyAsync(int maDatSan, CancellationToken cancellationToken);
+    Task GhiLichSuHuyVaXoaDongAsync(ChiTietDatSan dong, int maTaiKhoan, CancellationToken cancellationToken);
     IEnumerable<DongDichVu> LayDongTinhTien(DatSan don);
     void DanhDauCapNhatTienDichVu(DatSan don);
+    void DatRowVersionGoc(DatSan don, byte[] phienBan);
 }

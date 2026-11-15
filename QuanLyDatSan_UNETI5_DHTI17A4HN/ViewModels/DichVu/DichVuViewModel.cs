@@ -19,7 +19,7 @@ public class DichVuTaoViewModel
     public string DonViTinh { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng nhập đơn giá.")]
-    [Range(typeof(decimal), "0", "1000000000", ErrorMessage = "Đơn giá phải từ 0 đến 1.000.000.000.")]
+    [Range(typeof(decimal), "1", "1000000000", ErrorMessage = "Đơn giá phải lớn hơn 0 và tối đa 1.000.000.000.")]
     [Display(Name = "Đơn giá (₫)")]
     public decimal DonGia { get; set; }
 

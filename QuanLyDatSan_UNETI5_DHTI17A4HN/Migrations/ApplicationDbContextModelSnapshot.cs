@@ -249,6 +249,9 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Migrations
 
                     b.HasKey("MaDichVu");
 
+                    b.HasIndex(new[] { "TenDichVu" }, "IX_DichVu_TenDichVu")
+                        .IsUnique();
+
                     b.ToTable("DichVu", null, t =>
                         {
                             t.HasCheckConstraint("CK_DichVu_DonGia", "[DonGia] >= 0");
