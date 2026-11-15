@@ -1,4 +1,4 @@
-// M4: Phạm Thành Nghĩa; MSSV: 23103100308. Nhận phụ thuộc cho service cọc; chưa bật chính sách mới khi tạo đơn.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp chính sách cọc 1 cho đơn mới, giữ nguyên đơn lịch sử.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Tạo đơn: kiểm tra khách, khóa sân, kiểm tra khả dụng và lưu giá tại thời điểm đặt.
 
@@ -47,7 +47,18 @@ public partial class DatSanService(IDatSanRepository repository, IDonViCongViec 
                 return KetQuaTaoDon.ThatBai(new(AnhXaLoiKhaDung(loiSan.Value, khiTao: true),
                     san?.GioMoCua, san?.GioDongCua));
 
-            // Chưa kích hoạt chính sách cọc 1 cho đơn mới trước khi M1/M3/M5 tích hợp đủ luồng.
+            // Luôn áp dụng chính sách mới; cấu hình mô phỏng chỉ điều khiển nguồn giao dịch,
+            // không được hạ chính sách về 0 để đi vòng đối soát khi nguồn chưa sẵn sàng.
+            decimal tienCocYeuCau;
+            try
+            {
+                var tienSan = tinhTien.TinhTienSan(san!.DonGia, batDau, ketThuc);
+                tienCocYeuCau = tinhTien.TinhTienCocYeuCau(tienSan);
+            }
+            catch (Exception ex) when (ex is ArgumentException or OverflowException)
+            {
+                return Loi(MaLoiDatSan.TienVuotGioiHan);
+            }
             var don = new DatSan
             {
                 MaKhachHang = khachHang.MaKhachHang,
@@ -57,6 +68,8 @@ public partial class DatSanService(IDatSanRepository repository, IDonViCongViec 
                 GioKetThuc = ketThuc,
                 DonGia = san.DonGia,
                 TienCoc = 0m,
+                PhienBanChinhSachCoc = 1,
+                TienCocYeuCau = tienCocYeuCau,
                 TrangThai = TrangThaiDatSan.ChoXuLy
             };
             repository.Them(don);

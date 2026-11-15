@@ -1,3 +1,4 @@
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp cọc, dịch vụ cá nhân và kiểm tra tiền trước nghiệm thu.
 // M5: Nguyễn Hữu Quang; MSSV: 23103100184
 // Nội dung: quản lý dịch vụ trong đơn; thay đổi khóa sân, kiểm tra RowVersion và lưu cùng transaction.
 using System.Data;
@@ -141,7 +142,20 @@ public class DichVuTrongDonService(
                 if (loi is not null)
                     return new QuyetDinhLuu<KetQuaNghiepVu>(false, loi);
 
-                don.TienDichVu = tinhTien.TinhTienDichVu(repository.LayDongTinhTien(don));
+                var dongTinhTien = repository.LayDongTinhTien(don);
+                try
+                {
+                    var tienDichVu = tinhTien.TinhTienDichVu(dongTinhTien);
+                    var tienSan = tinhTien.TinhTienSan(don.DonGia, don.GioBatDau, don.GioKetThuc);
+                    var tongTien = tinhTien.TinhTongTien(tienSan, tienDichVu);
+                    tinhTien.TinhConPhaiThu(tongTien, don.TienCoc);
+                    don.TienDichVu = tienDichVu;
+                }
+                catch (Exception ex) when (ex is ArgumentException or OverflowException)
+                {
+                    return new QuyetDinhLuu<KetQuaNghiepVu>(false,
+                        KetQuaNghiepVu.BaoLoi("Tiền dịch vụ không hợp lệ hoặc tổng tiền mới thấp hơn tiền cọc đã nhận."));
+                }
                 repository.DanhDauCapNhatTienDichVu(don);
                 return new QuyetDinhLuu<KetQuaNghiepVu>(true, KetQuaNghiepVu.ThanhCongVoi(thongBao));
             }, IsolationLevel.ReadCommitted, cancellationToken);

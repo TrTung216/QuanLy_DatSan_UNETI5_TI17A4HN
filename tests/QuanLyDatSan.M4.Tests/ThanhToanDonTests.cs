@@ -22,10 +22,10 @@ public sealed partial class QuanLyDonDatTests
         var order = await f.Booking(TrangThaiDatSan.DangXuLy, -1);
         await using (var db = f.Db())
         {
-            var dichVu = new DichVu { TenDichVu = "Nước", DonViTinh = "Chai", DonGia = 10000 };
+            var dichVu = new DichVu { TenDichVu = "Nước " + Guid.NewGuid().ToString("N"), DonViTinh = "Chai", DonGia = 10000 };
             db.Add(dichVu);
             await db.SaveChangesAsync();
-            Assert.True((await DichVuService(db).ThemAsync(order.MaDatSan, dichVu.MaDichVu, 2, default)).ThanhCong);
+            Assert.True((await DichVuService(db).ThemAsync(order.MaDatSan, dichVu.MaDichVu, 2, Convert.ToBase64String(order.RowVersion), default)).ThanhCong);
             // Giá danh mục thay đổi không được đổi giá chụp trên dòng.
             dichVu.DonGia = 99000;
             await db.SaveChangesAsync();
@@ -55,7 +55,7 @@ public sealed partial class QuanLyDonDatTests
         await using var check = f.Db();
         Assert.False((await DichVuService(check).ThemAsync(saved.MaDatSan,
             await check.ChiTietDatSans.Where(x => x.MaDatSan == saved.MaDatSan).Select(x => x.MaDichVu).SingleAsync(),
-            1, default)).ThanhCong);
+            1, Convert.ToBase64String(saved.RowVersion), default)).ThanhCong);
     }
 
     [Theory]
@@ -180,9 +180,9 @@ public sealed partial class QuanLyDonDatTests
         var html = await client.GetStringAsync($"/QuanLyDonDat/ChiTiet/{order.MaDatSan}");
         await using (var db = f.Db())
         {
-            var dv = new DichVu { TenDichVu = "Nước", DonViTinh = "Chai", DonGia = 10000 };
+            var dv = new DichVu { TenDichVu = "Nước " + Guid.NewGuid().ToString("N"), DonViTinh = "Chai", DonGia = 10000 };
             db.Add(dv); await db.SaveChangesAsync();
-            Assert.True((await DichVuService(db).ThemAsync(order.MaDatSan, dv.MaDichVu, 1, default)).ThanhCong);
+            Assert.True((await DichVuService(db).ThemAsync(order.MaDatSan, dv.MaDichVu, 1, Convert.ToBase64String(order.RowVersion), default)).ThanhCong);
         }
         var response = await PostPayment(client, order.MaDatSan, action, Token(html), Hidden(html, "PhienBan"));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -196,8 +196,8 @@ public sealed partial class QuanLyDonDatTests
         Assert.DoesNotContain("checked", returned);
     }
 
-    private static DichVuTrongDonService DichVuService(QuanLyDatSan_UNETI5_DHTI17A4HN.Data.ApplicationDbContext db)
-        => new(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDichVuTrongDon.DichVuTrongDonRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TinhTienService());
+    private DichVuTrongDonService DichVuService(QuanLyDatSan_UNETI5_DHTI17A4HN.Data.ApplicationDbContext db)
+        => new(new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.QuanLyDichVuTrongDon.DichVuTrongDonRepository(db), new QuanLyDatSan_UNETI5_DHTI17A4HN.Repositories.Chung.DonViCongViec(db), new TinhTienService(), new ActorTest(f.AdminAccountId));
 
     private static Task<HttpResponseMessage> PostPayment(HttpClient client, int id, string action,
         string token, string version, Dictionary<string, string>? extra = null)

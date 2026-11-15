@@ -1,3 +1,4 @@
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp cọc, dịch vụ cá nhân và kiểm tra tiền trước nghiệm thu.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Tách truy cập dữ liệu cọc sang file partial riêng.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Truy vấn đơn, kiểm tra trùng lịch và khóa sân; việc lưu do đơn vị công việc quản lý.
@@ -77,6 +78,24 @@ public partial class DatSanRepository(ApplicationDbContext db) : IDatSanReposito
             .SingleOrDefaultAsync(cancellationToken);
         if (don is null) return null;
 
+        // Chỉ tải dịch vụ sau khi đã xác minh chủ đơn; SQL lịch sử tiếp tục lọc chủ sở hữu.
+        var dichVu = await db.ChiTietDatSans.AsNoTracking()
+            .Where(x => x.MaDatSan == id && x.DatSan.KhachHang.MaTaiKhoan == maTaiKhoan)
+            .OrderBy(x => x.MaChiTiet)
+            .Select(x => new DongDichVuDaDatDto(x.MaChiTiet, x.DichVu.TenDichVu,
+                x.DichVu.DonViTinh, x.SoLuong, x.DonGia, false, null))
+            .ToListAsync(cancellationToken);
+        var lichSu = await db.Database.SqlQuery<DongDichVuCaNhanDoc>($"""
+            SELECT h.MaChiTietNguon AS MaChiTiet, h.TenDichVu, h.DonViTinh,
+                   h.SoLuong, h.DonGia, h.NgayHuy
+            FROM dbo.LichSuHuyDichVu h
+            JOIN dbo.DatSan d ON d.MaDatSan = h.MaDatSan
+            JOIN dbo.KhachHang k ON k.MaKhachHang = d.MaKhachHang
+            WHERE h.MaDatSan = {id} AND k.MaTaiKhoan = {maTaiKhoan}
+            """).OrderBy(x => x.MaChiTiet).ToListAsync(cancellationToken);
+        dichVu.AddRange(lichSu.Select(x => new DongDichVuDaDatDto(x.MaChiTiet, x.TenDichVu,
+            x.DonViTinh, x.SoLuong, x.DonGia, true, x.NgayHuy)));
+        don.DichVu = dichVu;
         return don;
     }
 
@@ -224,4 +243,15 @@ public partial class DatSanRepository(ApplicationDbContext db) : IDatSanReposito
         db.ChiTietDatSans.AsNoTracking().Where(x => x.MaDatSan == maDatSan)
             .Select(x => new DongDichVu(x.SoLuong, x.DonGia)).ToListAsync(cancellationToken);
     public void Them(DatSan don) => db.DatSans.Add(don);
+}
+
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Projection đọc bảng lịch sử M5 hiện có.
+public sealed class DongDichVuCaNhanDoc
+{
+    public int MaChiTiet { get; set; }
+    public string TenDichVu { get; set; } = "";
+    public string DonViTinh { get; set; } = "";
+    public int SoLuong { get; set; }
+    public decimal DonGia { get; set; }
+    public DateTime NgayHuy { get; set; }
 }

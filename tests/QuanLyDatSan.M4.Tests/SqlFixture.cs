@@ -55,8 +55,8 @@ public sealed class SqlFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await using var db = Db();
-        // Kiểm thử schema model hiện hành; không áp dụng migration vào DB người dùng.
-        await db.Database.EnsureCreatedAsync();
+        // M1: Database ngẫu nhiên riêng; cần cả bảng audit M5 chỉ có trong migration.
+        await db.Database.MigrateAsync();
         var hasher = new PasswordHasher<TaiKhoan>();
         foreach (var (name, role) in new[] { ("admin", VaiTro.Admin), ("staff", VaiTro.NhanVien),
                      ("customer", VaiTro.KhachHang), ("other", VaiTro.KhachHang) })

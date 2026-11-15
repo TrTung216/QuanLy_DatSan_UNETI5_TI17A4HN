@@ -71,32 +71,41 @@ public sealed partial class QuanLyDonDatTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task DichVuThayDoiNgayTruocKhiGhiTienKhongBiChotDe(bool complete)
+    public async Task DichVuCanhTranhGhiTienDungChungKhoaVaPhienBan(bool complete)
     {
         var order = await f.Booking(TrangThaiDatSan.DangXuLy, -1);
         int serviceId;
         await using (var seed = f.Db())
         {
-            var dv = new DichVu { TenDichVu = "Nước", DonViTinh = "Chai", DonGia = 10000 };
+            var dv = new DichVu { TenDichVu = "Nước " + Guid.NewGuid().ToString("N"), DonViTinh = "Chai", DonGia = 10000 };
             seed.Add(dv); await seed.SaveChangesAsync();
             serviceId = dv.MaDichVu;
         }
-        // SQL M5 chạy thật ở context khác sau khi M4 đã tính tiền nhưng trước UPDATE.
-        var race = new BeforePaymentWrite(async () =>
+        // M1: M5 nay cùng khóa sân. Không await M5 trong khi M4 giữ khóa (sẽ tự deadlock).
+        Task<QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Chung.KetQuaNghiepVu>? dichVuTask = null;
+        async Task<QuanLyDatSan_UNETI5_DHTI17A4HN.Services.Chung.KetQuaNghiepVu> SuaDichVu()
         {
             await using var other = f.Db();
-            Assert.True((await DichVuService(other).ThemAsync(order.MaDatSan, serviceId, 2, default)).ThanhCong);
+            return await DichVuService(other).ThemAsync(order.MaDatSan, serviceId, 2,
+                Convert.ToBase64String(order.RowVersion), default);
+        }
+        var race = new BeforePaymentWrite(() =>
+        {
+            dichVuTask = SuaDichVu();
+            return Task.CompletedTask;
         });
         await using var db = f.Db(race);
         var result = complete
             ? await f.Service(db).HoanThanhDonAsync(new(order.MaDatSan, true, order.RowVersion), default)
             : await f.Service(db).GhiCocAsync(new(order.MaDatSan, 50000m, order.RowVersion), default);
-        Assert.Equal(MaLoiDatSan.XungDotDuLieu, result.Loi);
-        await db.SaveChangesAsync();
+        Assert.True(result.ThanhCong);
+        Assert.NotNull(dichVuTask);
+        Assert.False((await dichVuTask.WaitAsync(TimeSpan.FromSeconds(30))).ThanhCong);
         var saved = await f.Read(order.MaDatSan);
-        Assert.Equal(TrangThaiDatSan.DangXuLy, saved.TrangThai);
-        Assert.Null(saved.TongTien); Assert.Null(saved.NgayHoanThanh);
-        Assert.Equal(20000m, saved.TienDichVu); Assert.Equal(0m, saved.TienCoc);
+        Assert.Equal(complete ? TrangThaiDatSan.HoanThanh : TrangThaiDatSan.DangXuLy, saved.TrangThai);
+        Assert.Equal(complete ? 200000m : (decimal?)null, saved.TongTien);
+        Assert.Equal(complete ? f.Clock.BayGio : (DateTime?)null, saved.NgayHoanThanh);
+        Assert.Equal(0m, saved.TienDichVu ?? 0m); Assert.Equal(complete ? 0m : 50000m, saved.TienCoc);
     }
 
     [Theory]

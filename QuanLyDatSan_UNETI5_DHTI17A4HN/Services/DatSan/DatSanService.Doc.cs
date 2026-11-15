@@ -1,3 +1,4 @@
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp cọc, dịch vụ cá nhân và kiểm tra tiền trước nghiệm thu.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Tra cứu đơn theo chủ tài khoản và danh sách sân cho form đặt sân.
 
@@ -15,7 +16,15 @@ public partial class DatSanService
     public async Task<ChiTietDonDto?> LayChiTietCaNhanAsync(int maTaiKhoan, int id, CancellationToken cancellationToken)
     {
         var don = await repository.LayChiTietCaNhanAsync(maTaiKhoan, id, cancellationToken);
-        if (don is not null) don.TienSanDuKien = tinhTien.TinhTienSan(don.DonGia, don.GioBatDau, don.GioKetThuc);
+        if (don is not null)
+        {
+            don.TienSanDuKien = don.TrangThai == TrangThaiDatSan.HoanThanh && don.TienSan.HasValue
+                ? don.TienSan.Value : tinhTien.TinhTienSan(don.DonGia, don.GioBatDau, don.GioKetThuc);
+            don.DichVu = don.DichVu.Select(x => x with
+            {
+                ThanhTien = tinhTien.TinhTienDichVu([new(x.SoLuong, x.DonGia)])
+            }).ToArray();
+        }
         return don;
     }
     public Task<IReadOnlyList<SanChonDto>> LayLuaChonSanAsync(CancellationToken cancellationToken) =>
