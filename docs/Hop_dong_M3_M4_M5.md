@@ -1,6 +1,10 @@
 # Hợp đồng M3/M4/M5 — đặt sân, tiền cọc và chốt tiền
 
-**Phiên bản 1.1 — 12/11/2026. Điều phối: Trần Trọng Tùng — MSSV 23103100202 (M1).**
+**Phiên bản 1.2 — 15/11/2026. Điều phối: Trần Trọng Tùng — MSSV 23103100202 (M1).**
+
+**Tích hợp v1.2:** Đơn mới dùng chính sách cọc 1, cọc yêu cầu tính qua M5 và lưu ngay khi tạo; cấu hình nguồn giao dịch không thay đổi chính sách. Giao diện đối soát M4 đã có từ PR #75. Chi tiết khách hàng bổ sung `ChiTietDonDto.DichVu` (`IReadOnlyList<DongDichVuDaDatDto>`), gồm dòng hiệu lực và lịch sử hủy, thành tiền do M5 tính; chỉ đọc đúng chủ đơn. Menu nhận diện các action đối soát. Xem [hướng dẫn tích hợp](module-1/Phan-10-Tich-hop-coc-va-dich-vu-ca-nhan.md).
+
+**Tương thích với M5 sau PR #77:** Giữ triển khai lịch sử bằng bảng riêng `LichSuHuyDichVu` và xóa dòng hoạt động trong cùng transaction; không tạo thêm cột trạng thái/migration cạnh tranh trong đợt tích hợp. DTO khách dùng `DaHuy` suy ra từ nguồn dòng và không lộ người thao tác. API ghi dịch vụ hiện nhận phiên bản Base64 `string` và tự kiểm tra trong service. Các mô tả trạng thái dòng/`byte[]` bên dưới là thiết kế trước đó, cần đọc cùng ghi chú này. M4 chốt tiền qua `HoanThanhDonAsync` hiện có (đã tính phía server dưới khóa); không thêm entry point trùng chức năng. Tài liệu không thay thế review của M3/M4/M5.
 
 Nội dung thực hiện: chốt hợp đồng phương thức, dữ liệu, quyền, trạng thái, mã lỗi và nguồn tính tiền giữa M3/M4/M5.
 

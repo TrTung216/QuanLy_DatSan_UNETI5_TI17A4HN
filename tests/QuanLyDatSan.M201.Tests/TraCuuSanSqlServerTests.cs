@@ -108,8 +108,9 @@ public sealed class TraCuuSanSqlServerFixture : IAsyncLifetime
     {
         if (Environment.GetEnvironmentVariable("QLDS_M2_TEST_SQLSERVER") != "1") return;
         await using var db = TaoDb();
-        daTao = await db.Database.EnsureCreatedAsync();
-        if (!daTao) throw new InvalidOperationException("Database thử đã tồn tại; không dùng lại dữ liệu ngoài fixture.");
+        if (await db.Database.CanConnectAsync()) throw new InvalidOperationException("Database thử đã tồn tại; không dùng lại dữ liệu ngoài fixture.");
+        daTao = true;
+        await db.Database.MigrateAsync();
         for (var i = 1; i <= 15; i++)
         {
             var gia = i == 1 ? 9999999999999998m : i == 2 ? 9999999999999999m : i == 3 ? 80000m : (i - 2) * 50000m;

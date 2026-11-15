@@ -23,10 +23,10 @@ public sealed partial class QuanLyDonDatTests
         var don = await db.DatSans.Include(x => x.SanTheThao).SingleAsync(x => x.MaDatSan == order.MaDatSan);
         don.GioKetThuc = don.GioBatDau.AddMinutes(90);
         don.SanTheThao.DonGia = 900000m;
-        var dv = new DichVu { TenDichVu = "Nước", DonViTinh = "Chai", DonGia = 30000m };
+        var dv = new DichVu { TenDichVu = "Nước " + Guid.NewGuid().ToString("N"), DonViTinh = "Chai", DonGia = 30000m };
         db.Add(dv);
         await db.SaveChangesAsync();
-        Assert.True((await DichVuService(db).ThemAsync(don.MaDatSan, dv.MaDichVu, 2, default)).ThanhCong);
+        Assert.True((await DichVuService(db).ThemAsync(don.MaDatSan, dv.MaDichVu, 2, Convert.ToBase64String(don.RowVersion), default)).ThanhCong);
         dv.DonGia = 99000m;
         await db.SaveChangesAsync();
         var before = await f.Read(order.MaDatSan);

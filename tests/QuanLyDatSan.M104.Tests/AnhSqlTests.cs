@@ -225,8 +225,9 @@ public sealed class AnhSqlFixture : IAsyncLifetime
         if (await db.Database.CanConnectAsync()) throw new InvalidOperationException("Không dùng lại DB đã tồn tại.");
         daTao = true;
         var migrations = db.Database.GetMigrations().ToArray();
-        Assert.EndsWith("_ThemAnhDaiDienSanVaLoaiSan", migrations[^1]);
-        await db.GetService<IMigrator>().MigrateAsync(migrations[^2]);
+        var anhIndex = Array.FindIndex(migrations, x => x.EndsWith("_ThemAnhDaiDienSanVaLoaiSan", StringComparison.Ordinal));
+        Assert.True(anhIndex > 0);
+        await db.GetService<IMigrator>().MigrateAsync(migrations[anhIndex - 1]);
         await db.Database.ExecuteSqlRawAsync("UPDATE LoaiSan SET MoTa = N'Giữ nguyên dữ liệu trước migration ảnh' WHERE MaLoaiSan = 1");
         await db.GetService<IMigrator>().MigrateAsync();
     }

@@ -242,7 +242,7 @@ public sealed class DatSanTests(SqlFixture f) : IClassFixture<SqlFixture>
             if (service > 0)
                 don.ChiTietDatSans.Add(new ChiTietDatSan
                 {
-                    DichVu = new DichVu { TenDichVu = "Nước", DonViTinh = "Chai", DonGia = 99999 },
+                    DichVu = new DichVu { TenDichVu = "Nước " + Guid.NewGuid().ToString("N"), DonViTinh = "Chai", DonGia = 99999 },
                     SoLuong = 1, DonGia = service
                 });
             await seed.SaveChangesAsync();

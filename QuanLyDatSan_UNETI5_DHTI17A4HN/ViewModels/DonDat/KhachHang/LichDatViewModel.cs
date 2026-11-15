@@ -16,6 +16,7 @@ public class DonDatDongViewModel
 
 public class ChiTietDonViewModel
 {
+    public IReadOnlyList<DichVuCaNhanViewModel> DichVu { get; set; } = [];
     public int MaDatSan { get; set; }
     public string TenSan { get; set; } = string.Empty;
     public string TenLoai { get; set; } = string.Empty;
@@ -41,6 +42,10 @@ public class ChiTietDonViewModel
     public string? LyDoKhongTheHuy { get; set; }
     public string? NhanPhanConLai { get; set; }
 }
+
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Dòng dịch vụ chỉ đọc từ nguồn tiền M5.
+public sealed record DichVuCaNhanViewModel(string TenDichVu, string DonViTinh, int SoLuong,
+    decimal DonGia, decimal ThanhTien, bool DaHuy, DateTime? NgayHuy);
 
 public sealed class HuyDonCaNhanViewModel
 {

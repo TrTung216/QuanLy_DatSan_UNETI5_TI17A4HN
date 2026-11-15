@@ -119,8 +119,16 @@ public class DonDatDongDto
     public TrangThaiDatSan TrangThai { get; set; }
 }
 
+// M1: Trần Trọng Tùng; MSSV: 23103100202. DTO dịch vụ cá nhân, không lộ người hủy/danh mục quản trị.
+public sealed record DongDichVuDaDatDto(int MaChiTiet, string TenDichVu, string DonViTinh,
+    int SoLuong, decimal DonGia, bool DaHuy, DateTime? NgayHuy)
+{
+    public decimal ThanhTien { get; init; }
+}
+
 public class ChiTietDonDto
 {
+    public IReadOnlyList<DongDichVuDaDatDto> DichVu { get; set; } = [];
     public byte[] PhienBan { get; set; } = [];
     public int MaDatSan { get; set; }
     public string TenSan { get; set; } = string.Empty;

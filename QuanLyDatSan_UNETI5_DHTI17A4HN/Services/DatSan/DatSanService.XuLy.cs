@@ -1,3 +1,4 @@
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Tích hợp cọc, dịch vụ cá nhân và kiểm tra tiền trước nghiệm thu.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308. Chặn bỏ qua đối soát cọc và hủy đơn có tiền chờ xử lý.
 // M4: Phạm Thành Nghĩa; MSSV: 23103100308.
 // Xác nhận, từ chối, hủy, ghi cọc và hoàn thành đơn; kiểm tra trạng thái và RowVersion.
@@ -185,6 +186,10 @@ public partial class DatSanService
 
                 return KetQuaXuLyDon.ThanhCongResult();
             }, x => x.ThanhCong, System.Data.IsolationLevel.ReadCommitted, cancellationToken);
+        }
+        catch (LoiTienDonException)
+        {
+            return KetQuaXuLyDon.ThatBai(MaLoiDatSan.TienVuotGioiHan);
         }
         catch (LoiLuuTruException ex) when (ex.MaLoi == MaLoiLuuTru.XungDotPhienBan)
         {
