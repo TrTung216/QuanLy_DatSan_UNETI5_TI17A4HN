@@ -72,8 +72,9 @@
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table align-middle">
+        <p id="goi-y-dich-vu" class="ql-table-hint d-lg-none">Vuốt ngang bảng để xem đầy đủ dịch vụ, số tiền và trạng thái.</p>
+        <div class="table-responsive ql-table-scroll" role="region" aria-label="Dịch vụ trong đơn" aria-describedby="goi-y-dich-vu" tabindex="0">
+            <table class="table align-middle ql-table">
                 <caption>Chi tiết dịch vụ và lịch sử hủy của đơn</caption>
                 <thead><tr>
                     <th scope="col">Dịch vụ</th><th scope="col">Đơn vị</th>
@@ -85,7 +86,7 @@
                 @foreach (var dichVu in Model.DichVu)
                 {
                     <tr>
-                        <td>@dichVu.TenDichVu</td><td>@dichVu.DonViTinh</td>
+                        <td class="ql-table-name">@dichVu.TenDichVu</td><td>@dichVu.DonViTinh</td>
                         <td class="text-end">@dichVu.SoLuong</td>
                         <td class="text-end text-nowrap">@HienThiDatSan.Tien(dichVu.DonGia)</td>
                         <td class="text-end text-nowrap">@HienThiDatSan.Tien(dichVu.ThanhTien)</td>
@@ -124,6 +125,7 @@
         <button type="submit" class="btn btn-danger">Hủy đơn</button>
     </form>
 }
+<div class="ql-actions">
 @if (Model.Coc is { } cocLink && cocLink.TrangThaiCoc != TrangThaiCocHienThi.KhongApDung)
 {
     // Chỉ hiện nút "Đặt cọc" khi server cho phép chuyển cọc; số tiền lấy từ service, View không tự tính.
@@ -141,5 +143,6 @@
     }
 }
 <a asp-action="Index" class="btn btn-outline-secondary">Quay lại lịch của tôi</a>
+</div>
 
 </section>

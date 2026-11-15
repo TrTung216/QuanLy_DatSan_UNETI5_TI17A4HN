@@ -1,4 +1,5 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. giao diện lịch đặt cá nhân của khách hàng. *@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Sửa vùng cuộn bảng và khả năng đọc trên mobile. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.KhachHang.DanhSachDonViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Enums
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
@@ -34,8 +35,9 @@
 }
 else
 {
-    <div class="table-responsive" role="region" aria-label="Danh sách đơn đặt sân" tabindex="0">
-        <table class="table table-hover align-middle ql-table">
+    <p id="goi-y-lich-dat" class="ql-table-hint d-lg-none">Vuốt ngang bảng để xem đầy đủ thông tin và mở chi tiết đơn.</p>
+    <div class="table-responsive ql-table-scroll" role="region" aria-label="Danh sách đơn đặt sân" aria-describedby="goi-y-lich-dat" tabindex="0">
+        <table class="table table-hover align-middle ql-table ql-table-wide">
             <caption>Danh sách đơn đặt sân của bạn</caption>
             <thead>
                 <tr><th scope="col">Mã đơn</th><th scope="col">Sân</th><th scope="col">Ngày</th><th scope="col">Giờ</th><th scope="col">Đơn giá</th><th scope="col">Trạng thái</th><th scope="col"><span class="visually-hidden">Thao tác</span></th></tr>
@@ -45,10 +47,10 @@ else
                 {
                     <tr>
                         <td>@don.MaDatSan</td>
-                        <td>@don.TenSan <span class="text-muted">(@don.TenLoai)</span></td>
-                        <td>@don.GioBatDau.ToString("dd/MM/yyyy")</td>
-                        <td>@don.GioBatDau.ToString("HH:mm") - @don.GioKetThuc.ToString("HH:mm")</td>
-                        <td>@HienThiDatSan.Tien(don.DonGia)/giờ</td>
+                        <td class="ql-table-name">@don.TenSan <span class="text-muted">(@don.TenLoai)</span></td>
+                        <td class="text-nowrap">@don.GioBatDau.ToString("dd/MM/yyyy")</td>
+                        <td class="text-nowrap">@don.GioBatDau.ToString("HH:mm") - @don.GioKetThuc.ToString("HH:mm")</td>
+                        <td class="text-nowrap">@HienThiDatSan.Tien(don.DonGia)/giờ</td>
                         <td><span class="@HienThiDatSan.LopMau(don.TrangThai)">@HienThiDatSan.TenTrangThai(don.TrangThai)</span></td>
                         <td><a asp-action="ChiTiet" asp-route-id="@don.MaDatSan">Chi tiết</a></td>
                     </tr>

@@ -1,4 +1,5 @@
 @* M3: Nguyễn Văn Quý; MSSV: 23103100181. Trang thông tin đặt cọc của khách hàng (chỉ đọc, mô phỏng). *@
+@* M1: Trần Trọng Tùng; MSSV: 23103100202. Làm rõ hướng dẫn mô phỏng, bỏ ảnh không phải mã QR. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.KhachHang.CocDonViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.KhachHang
@@ -27,19 +28,16 @@
     {
         case TrangThaiCocHienThi.ChuaNhan when Model.CoTheChuyen:
             <div class="alert alert-info" role="status">
-                Tiền cọc: <strong>@HienThiDatSan.Tien(Model.TienCocYeuCau)</strong> (số tiền tối thiểu, bằng 50% tiền sân dự kiến).
+                Cọc yêu cầu: <strong>@HienThiDatSan.Tien(Model.TienCocYeuCau)</strong> (50% tiền sân dự kiến). Giao dịch mô phỏng cần đúng số tiền này.
             </div>
-            <h2 class="h5">Quét mã QR để chuyển khoản</h2>
-            <div class="text-center my-3">
-                <img src="~/images/qr-mo-phong.jpg" alt="Mã QR mô phỏng" class="border rounded" style="max-width:280px;width:100%" />
-                <p class="text-muted small mb-0">Mã QR mô phỏng, chưa phải mã ngân hàng thật.</p>
-            </div>
+            <h2 class="h5">Thông tin cọc mô phỏng</h2>
+            <p class="text-muted">Dùng thông tin bên dưới để nhân viên tạo giao dịch thử và đối soát. Trang này chưa cung cấp mã QR để quét.</p>
             <dl class="row">
                 <dt class="col-sm-3">Số tiền</dt><dd class="col-sm-9">@HienThiDatSan.Tien(Model.TienCocYeuCau)</dd>
                 <dt class="col-sm-3">Nội dung</dt><dd class="col-sm-9"><code>@Model.NoiDungChuyenKhoan</code></dd>
                 @if (!string.IsNullOrEmpty(Model.NoiDungQrMoPhong))
                 {
-                    <dt class="col-sm-3">Mã QR mô phỏng</dt><dd class="col-sm-9"><code>@Model.NoiDungQrMoPhong</code></dd>
+                    <dt class="col-sm-3">Mã mô phỏng</dt><dd class="col-sm-9"><code>@Model.NoiDungQrMoPhong</code></dd>
                 }
             </dl>
             <p class="text-muted small">Bấm "Đã chuyển" để xem đơn đặt sân. Việc này chưa xác nhận cọc: đơn chỉ được xác nhận sau khi nhân viên đối soát và ghi nhận cọc.</p>

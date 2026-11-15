@@ -1,4 +1,5 @@
 // M3: Nguyễn Văn Quý; MSSV: 23103100181. đăng ký tài khoản khách hàng kèm hồ sơ trong cùng giao dịch.
+// M1: Trần Trọng Tùng; MSSV: 23103100202. Bổ sung danh mục khám phá sân qua service trang chủ dùng chung.
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyKhachHang;
@@ -7,11 +8,14 @@ using QuanLyDatSan_UNETI5_DHTI17A4HN.Models;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.Services;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.KhachHang;
 using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.KhachHang;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.Services.TrangChu;
+using QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.TrangChu;
 namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize(Roles = nameof(VaiTro.KhachHang))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class KhachHangController(IDangKyKhachService service, ITaiKhoanHienTai taiKhoanHienTai) : Controller
+public class KhachHangController(IDangKyKhachService service, ITaiKhoanHienTai taiKhoanHienTai,
+    ITrangChuService trangChuService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> TrangChu(CancellationToken cancellationToken)
@@ -25,8 +29,12 @@ public class KhachHangController(IDangKyKhachService service, ITaiKhoanHienTai t
             return RedirectToAction("ThongTin", "TaiKhoan");
         }
 
+        var cacLoai = await trangChuService.LaySanTheoLoaiAsync(cancellationToken);
         var model = new TrangChuKhachViewModel
         {
+            CacLoaiSan = cacLoai.Select(loai => new NhomSanTrangChuViewModel(
+                loai.MaLoaiSan, loai.TenLoai, loai.San.Select(san => new TheSanTrangChuViewModel(
+                    san.MaSan, san.TenSan, san.DiaChi, san.DonGia, san.GioMoCua, san.GioDongCua, san.CoAnh)).ToList(), loai.CoAnh)).ToList(),
             HoTen = khachHang.HoTen,
             DiemTichLuy = khachHang.DiemTichLuy,
             HoSoBiKhoa = khachHang.HoSoBiKhoa,

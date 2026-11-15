@@ -18,6 +18,7 @@ Phụ trách: **Trần Trọng Tùng — M1, MSSV 23103100202**. Cập nhật t�
 | `Views/Shared/_AdminLayout.cshtml` | Khung quản trị độc lập: thanh bên, header tài khoản, nội dung, footer. |
 | `Services/MenuQuanTri.cs` | Nguồn menu theo quyền cho thanh bên và trang điều hành; chứa `MucMenu`, `NhomMenu`. |
 | `Views/Shared/_ThongBao.cshtml` | Thông báo TempData được Razor mã hóa, có nhãn và vai trò trợ năng. |
+| `Views/Shared/_KhamPhaSanTheoLoai.cshtml` | Danh mục sân theo loại dùng chung ở Home/Index và KhachHang/TrangChu; nhận danh sách ViewModel đã nạp, không truy vấn dữ liệu trong View. |
 | `wwwroot/css/layout.css` | Màu, cỡ chữ, focus, nút/form/bảng, trạng thái, nền và khoảng cách chung trong `.ql-app`. |
 | `wwwroot/css/thanh-phan.css` | Thành phần dùng chung như banner, thẻ, các bước hướng dẫn. |
 | `wwwroot/css/quan-tri.css` | Thanh bên, header và bố cục riêng của khu vực quản trị. |
@@ -29,6 +30,8 @@ Phụ trách: **Trần Trọng Tùng — M1, MSSV 23103100202**. Cập nhật t�
 Dùng Bootstrap 5.3.3, jQuery và validation sẵn trong `wwwroot/lib`; không nạp lại thư viện trong View hoặc thêm CDN. Hai layout hiện tại độc lập, đều hỗ trợ `Styles` và `Scripts` tùy chọn. Menu khách thu gọn dưới **1200px**, khớp CSS/JS; thanh bên quản trị chuyển sang offcanvas dưới **992px**.
 
 ## 2. Tạo View, tiêu đề và CSS/JS riêng
+
+Mục “Khám phá sân theo loại” được nạp qua `ITrangChuService` ở Controller, ánh xạ sang `NhomSanTrangChuViewModel` rồi truyền cho `_KhamPhaSanTheoLoai`. Trang dùng partial này nạp `css/trang-chu.css` trong section Styles. Giữ bộ lọc sân/loại đang hoạt động và giới hạn 6 sân mỗi loại của nguồn hiện có; liên kết “Xem tất cả” mở trang tra cứu M2. Ảnh loại và ảnh sân dùng `_AnhDaiDien` theo đúng nhóm, không lấy ảnh loại thay cho ảnh sân. Trang khách hiển thị danh mục sau lời chào và giữ thống kê/lịch cá nhân bên dưới.
 
 Tạo `Views/<Controller>/<Action>.cshtml` cho action đã tồn tại. Để `_ViewStart` chọn layout; không cần khai báo lại `Layout`, `<html>` hoặc `<head>`. View tự đặt một `h1`; tiêu đề tab lấy từ `ViewData["Title"]`.
 
@@ -96,6 +99,14 @@ Thêm `_ValidationScriptsPartial` trong section Scripts của View form. Dùng `
 ```
 
 Phân trang dùng `pagination ql-pagination`, mỗi mục có `page-item`, link có `page-link`, trang hiện tại thêm `active` và `aria-current="page"`. Mục không khả dụng dùng span thay link. Link trang giữ tìm kiếm/lọc/sắp xếp; truy vấn phân trang ở server bằng Skip/Take, mặc định 10 dòng theo quy ước nhóm. Ngày `dd/MM/yyyy`, giờ `HH:mm`, tiền theo `vi-VN` kèm đơn vị; không thêm dữ liệu hoặc thống kê giả.
+
+### Bảng nhiều cột trên mobile (M1, 15/11/2026)
+
+Thêm `ql-table-scroll` vào vùng `table-responsive`, giữ `role="region"`, nhãn rõ ràng và `tabindex="0"` để cuộn bằng bàn phím. Bảng dùng `ql-table`; thêm `ql-table-wide` nếu có nhiều cột. Ô tên dài dùng `ql-table-name`; ngày/giờ/tiền ngắn dùng `text-nowrap`. Thêm gợi ý vuốt ngang có `id` và liên kết bằng `aria-describedby` khi cần.
+
+Các lớp này chỉ áp dụng khi View chủ động sử dụng: bảng rộng tối thiểu 42rem (48rem với `ql-table-wide`), xuống dòng theo từ; vùng cuộn giữ cả nhãn `visually-hidden` bên trong. Không dùng `overflow:hidden` trên body để che lỗi và không ép mọi bảng của module sang cùng kích thước. Nhóm nút cuối trang dùng `ql-actions` để tự xuống hàng và giữ khoảng cách.
+
+Kiểm tra tại 320px, 390px và desktop: trang không cuộn ngang, bảng cuộn được tới cột cuối, tên không bị tách thành từng ký tự, focus nhìn rõ. Trang cọc mô phỏng chỉ hiển thị dữ liệu thử; không gắn ảnh minh họa dưới nhãn QR khi chưa có mã quét thực sự.
 
 ### TempData và trạng thái
 
