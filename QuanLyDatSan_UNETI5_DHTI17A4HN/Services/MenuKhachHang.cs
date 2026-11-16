@@ -18,7 +18,7 @@ public static class MenuKhachHang
         if (laKhachHang)
         {
             menu.Add(new("Đặt sân", "DonDat", "Tao"));
-            menu.Add(new("Lịch của tôi", "DonDat", "Index", ["ChiTiet"]));
+            menu.Add(new("Lịch của tôi", "DonDat", "Index", ["ChiTiet", "DichVu", "ThemDichVu"]));
             menu.Add(new("Hồ sơ", "HoSo", "Index", ["Sua"]));
         }
         return menu;

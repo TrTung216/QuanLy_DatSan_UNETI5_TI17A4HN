@@ -65,6 +65,10 @@
 @* M1: Trần Trọng Tùng; MSSV: 23103100202. Dịch vụ của chính đơn, tiền do service cung cấp. *@
 <section aria-labelledby="dich-vu-cua-don" class="mb-4">
     <h2 id="dich-vu-cua-don" class="h5">Dịch vụ trong đơn</h2>
+    @if (Model.TrangThai == QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.TrangThaiDatSan.DangXuLy)
+    {
+        <a asp-action="DichVu" asp-route-id="@Model.MaDatSan" class="btn btn-outline-primary mb-3">Thêm dịch vụ</a>
+    }
     <p class="text-muted small">Đơn giá được lưu khi thêm dịch vụ. Dòng đã hủy không được tính vào tổng tiền.</p>
     @if (Model.DichVu.Count == 0)
     {

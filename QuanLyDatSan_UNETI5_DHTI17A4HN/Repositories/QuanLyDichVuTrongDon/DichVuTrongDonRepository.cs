@@ -24,6 +24,21 @@ public sealed class LichSuHuyDichVuDoc
 
 public class DichVuTrongDonRepository(ApplicationDbContext db) : IDichVuTrongDonRepository
 {
+    // M1: Trần Trọng Tùng; MSSV 23103100202. Hoàn thiện hợp đồng chủ đơn M5 để tích hợp M3.
+    private IQueryable<DatSan> DonCuaKhach(int maDatSan, int maTaiKhoan) =>
+        db.DatSans.Where(x => x.MaDatSan == maDatSan
+            && x.KhachHang.MaTaiKhoan == maTaiKhoan
+            && x.KhachHang.TrangThai == TrangThaiKhachHang.HoatDong
+            && x.KhachHang.TaiKhoan.TrangThai == TrangThaiTaiKhoan.HoatDong
+            && x.KhachHang.TaiKhoan.VaiTro == VaiTro.KhachHang);
+
+    public Task<bool> LaChuDonAsync(int maDatSan, int maTaiKhoan, CancellationToken cancellationToken) =>
+        DonCuaKhach(maDatSan, maTaiKhoan).AnyAsync(cancellationToken);
+
+    public Task<DatSan?> LayDonKhachHangDeCapNhatAsync(int maDatSan, int maTaiKhoan, CancellationToken cancellationToken) =>
+        DonCuaKhach(maDatSan, maTaiKhoan).Include(x => x.ChiTietDatSans).ThenInclude(x => x.DichVu)
+            .SingleOrDefaultAsync(cancellationToken);
+
     public Task<TrangThaiDatSan?> LayTrangThaiAsync(int maDatSan, CancellationToken cancellationToken) =>
         db.DatSans.AsNoTracking().Where(x => x.MaDatSan == maDatSan).Select(x => (TrangThaiDatSan?)x.TrangThai).SingleOrDefaultAsync(cancellationToken);
     public Task<List<DongDichVuTrongDon>> LayDongAsync(int maDatSan, CancellationToken cancellationToken) =>

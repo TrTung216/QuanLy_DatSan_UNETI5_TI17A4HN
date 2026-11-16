@@ -17,6 +17,11 @@ public record ChiTietDichVuTrongDon(int MaDatSan, TrangThaiDatSan TrangThai, boo
 
 public interface IDichVuTrongDonService
 {
+    // M1 tích hợp M3/M5: danh tính lấy từ ITaiKhoanHienTai; không nhận mã chủ đơn từ client.
+    Task<ChiTietDichVuTrongDon?> LayChoKhachHangAsync(int maDatSan, CancellationToken cancellationToken);
+    Task<KetQuaNghiepVu> KhachHangThemAsync(int maDatSan, int maDichVu, int soLuong, string phienBan,
+        CancellationToken cancellationToken);
+
     Task<ChiTietDichVuTrongDon?> LayTheoDonAsync(int maDatSan, CancellationToken cancellationToken);
 
     Task<KetQuaNghiepVu> ThemAsync(int maDatSan, int maDichVu, int soLuong, string phienBan,

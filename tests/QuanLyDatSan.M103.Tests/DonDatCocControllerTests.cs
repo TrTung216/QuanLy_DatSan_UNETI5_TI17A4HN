@@ -58,7 +58,8 @@ public class DonDatCocControllerTests
             coTheChuyen, coTheChuyen ? "DEMO:ORDER:7" : null, bienNhan);
 
     private static DonDatController TaoController(DichVuGia dichVu, int? maTaiKhoan = 5) =>
-        new(new TaiKhoanGia(maTaiKhoan), dichVu, new DongGia())
+        // Các ca này chỉ gọi luồng cọc; dịch vụ trong đơn không được sử dụng.
+        new(new TaiKhoanGia(maTaiKhoan), dichVu, new DongGia(), null!)
         {
             TempData = new TempDataDictionary(new DefaultHttpContext(), new FakeTempDataProvider())
         };

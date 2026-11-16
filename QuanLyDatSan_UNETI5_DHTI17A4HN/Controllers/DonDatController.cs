@@ -14,8 +14,9 @@ namespace QuanLyDatSan_UNETI5_DHTI17A4HN.Controllers;
 
 [Authorize(Roles = nameof(VaiTro.KhachHang))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
-    IDatSanService datSanService, IDongHo dongHo) : Controller
+public partial class DonDatController(ITaiKhoanHienTai taiKhoanHienTai,
+    IDatSanService datSanService, IDongHo dongHo,
+    QuanLyDatSan_UNETI5_DHTI17A4HN.Services.QuanLyDichVuTrongDon.IDichVuTrongDonService dichVuTrongDonService) : Controller
 {
 
     [HttpGet]

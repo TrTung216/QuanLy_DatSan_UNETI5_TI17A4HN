@@ -1,0 +1,73 @@
+@* M1: Trần Trọng Tùng; MSSV 23103100202. Tích hợp giao diện thêm dịch vụ cho khách M3/M5. *@
+@model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DonDat.KhachHang.DichVuDonKhachHangViewModel
+@using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
+@{ ViewData["Title"] = "Dịch vụ đơn #" + Model.Form.MaDatSan; }
+<div class="ql-page-header">
+    <h1>Dịch vụ đơn #@Model.Form.MaDatSan</h1>
+    <a asp-action="ChiTiet" asp-route-id="@Model.Form.MaDatSan" class="btn btn-outline-secondary">Quay lại chi tiết đơn</a>
+</div>
+<section class="ql-panel mb-4" aria-labelledby="them-dich-vu">
+    <h2 id="them-dich-vu" class="h5">Thêm dịch vụ</h2>
+    <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+    @if (!Model.ChoPhepThem)
+    {
+        <p class="alert alert-info">Chỉ thêm dịch vụ khi đơn đã xác nhận và chưa hoàn thành.</p>
+    }
+    else if (Model.LuaChon.Count == 0)
+    {
+        <p class="text-muted">Hiện chưa có dịch vụ đang hoạt động để chọn.</p>
+    }
+    else
+    {
+        <form asp-action="ThemDichVu" method="post" asp-antiforgery="true">
+            <input asp-for="Form.MaDatSan" type="hidden" />
+            <input asp-for="Form.PhienBan" type="hidden" />
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label asp-for="Form.MaDichVu" class="form-label"></label>
+                    <select asp-for="Form.MaDichVu" class="form-select" required aria-describedby="huong-dan-gia">
+                        <option value="">Chọn dịch vụ</option>
+                        @foreach (var dichVu in Model.LuaChon)
+                        {
+                            <option value="@dichVu.MaDichVu">@dichVu.TenDichVu — @HienThiDatSan.Tien(dichVu.DonGia)/@dichVu.DonViTinh</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Form.MaDichVu" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Form.SoLuong" class="form-label"></label>
+                    <input asp-for="Form.SoLuong" class="form-control" min="1" max="100" required />
+                    <span asp-validation-for="Form.SoLuong" class="text-danger"></span>
+                </div>
+            </div>
+            <p id="huong-dan-gia" class="text-muted small mt-3">Thêm lại dịch vụ sẽ cộng số lượng và giữ đơn giá đã lưu trong đơn. Tiền cọc không thay đổi. Liên hệ nhân viên nếu cần sửa hoặc hủy dịch vụ.</p>
+            <button type="submit" class="btn btn-primary">Thêm dịch vụ</button>
+        </form>
+    }
+</section>
+<section class="ql-panel" aria-labelledby="dich-vu-da-them">
+    <h2 id="dich-vu-da-them" class="h5">Dịch vụ trong đơn</h2>
+    @if (Model.Dong.Count == 0)
+    {
+        <p class="text-muted">Đơn chưa có dịch vụ đi kèm.</p>
+    }
+    else
+    {
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Dịch vụ trong đơn">
+            <table class="table align-middle">
+                <caption>Dịch vụ và lịch sử hủy; dòng đã hủy không tính vào tổng tiền.</caption>
+                <thead><tr><th scope="col">Dịch vụ</th><th scope="col">Đơn vị</th><th scope="col">Số lượng</th><th scope="col">Đơn giá</th><th scope="col">Thành tiền</th><th scope="col">Trạng thái</th></tr></thead>
+                <tbody>
+                @foreach (var dong in Model.Dong)
+                {
+                    <tr><td>@dong.TenDichVu</td><td>@dong.DonViTinh</td><td>@dong.SoLuong</td>
+                        <td class="text-nowrap">@HienThiDatSan.Tien(dong.DonGia)</td><td class="text-nowrap">@HienThiDatSan.Tien(dong.ThanhTien)</td>
+                        <td><span class="badge @(dong.DaHuy ? "bg-secondary" : "bg-primary")">@(dong.DaHuy ? "Đã hủy" : "Có hiệu lực")</span></td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    <p class="mb-0">Tổng tiền dịch vụ: <strong>@HienThiDatSan.Tien(Model.TongTienDichVu)</strong></p>
+</section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
