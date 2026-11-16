@@ -27,7 +27,7 @@ public partial class LoaiSanTests
     {
         using var dir = new ThuMucAnhTest(); using var app = await TaoAppAsync(dir.Root);
         using var client = app.TaoClient(); await DangNhapAsync(app, client);
-        var token = await TokenAsync(client, "/LoaiSan/ChiTiet/2");
+        var token = await TokenAsync(client, "/LoaiSan/Sua/2");
         using var post = FormAnh(token, KhoAnhTests.TaoAnh());
         post.Add(new StringContent("Gia mao"), "TenLoai"); post.Add(new StringContent("1"), "DonGiaTheoGio");
         Assert.Equal(HttpStatusCode.Redirect, (await client.PostAsync("/LoaiSan/CapNhatAnh/2", post)).StatusCode);
@@ -80,7 +80,7 @@ public partial class LoaiSanTests
     {
         using var dir = new ThuMucAnhTest(); using var app = await TaoAppAsync(dir.Root);
         using var client = app.TaoClient(); await DangNhapAsync(app, client);
-        var token = await TokenAsync(client, "/LoaiSan/ChiTiet/2");
+        var token = await TokenAsync(client, "/LoaiSan/Sua/2");
         using var sai = FormAnh("sai", KhoAnhTests.TaoAnh());
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync("/LoaiSan/CapNhatAnh/2", sai)).StatusCode);
         using var nhieu = FormAnh(token, KhoAnhTests.TaoAnh()); nhieu.Add(new ByteArrayContent([1, 2]), "Tep", "b.jpg");
@@ -123,5 +123,6 @@ public partial class LoaiSanTests
         using var admin = app.TaoClient(); await DangNhapAsync(app, admin);
         Assert.Equal(HttpStatusCode.NotFound, (await admin.GetAsync("/Anh/LoaiSan/2")).StatusCode);
         Assert.Contains("data-anh-dai-dien", await admin.GetStringAsync("/LoaiSan/ChiTiet/2"));
+        Assert.Contains("data-anh-dai-dien", await admin.GetStringAsync("/LoaiSan/Sua/2"));
     }
 }

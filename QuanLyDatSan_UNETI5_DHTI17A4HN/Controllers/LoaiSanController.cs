@@ -53,12 +53,19 @@ public class LoaiSanController(ILoaiSanService service, IAnhService anhService) 
     {
         var chiTiet = await service.LayChiTietAsync(id, ct);
         if (chiTiet is null) return NotFound();
+        ViewData["MaLoaiSan"] = id;
+        var formModel = new LoaiSanFormViewModel
+        {
+            TenLoai = chiTiet.TenLoai, MoTa = chiTiet.MoTa, SoNguoiToiDa = chiTiet.SoNguoiToiDa,
+            DonGiaTheoGio = chiTiet.DonGiaTheoGio, TrangThai = chiTiet.TrangThai,
+            DuongDanAnh = chiTiet.DuongDanAnh
+        };
         if (!ModelState.IsValid || Request.Form.Files.Count > 1
             || (model.ThaoTac == ThaoTacAnh.ThayAnh && model.Tep is null)
             || (model.ThaoTac == ThaoTacAnh.GoAnh && Request.Form.Files.Count != 0))
         {
             ModelState.AddModelError(string.Empty, "Chọn đúng một ảnh để thay; khi gỡ ảnh không gửi kèm tệp.");
-            return View(nameof(ChiTiet), ThanhViewModel(chiTiet));
+            return View(nameof(Sua), formModel);
         }
         await using var stream = model.Tep?.OpenReadStream();
         var ketQua = await anhService.CapNhatLoaiSanAsync(id, new(model.ThaoTac!.Value, model.AnhCu,
@@ -69,7 +76,7 @@ public class LoaiSanController(ILoaiSanService service, IAnhService anhService) 
         {
             TempData["Success"] = model.ThaoTac == ThaoTacAnh.GoAnh ? "Đã gỡ ảnh minh họa." : "Đã cập nhật ảnh minh họa.";
             if (ketQua.CanDonTep) TempData["Warning"] = "Ảnh đã lưu. Tệp cũ sẽ được kiểm tra dọn sau.";
-            return RedirectToAction(nameof(ChiTiet), new { id });
+            return RedirectToAction(nameof(Sua), new { id });
         }
         ModelState.AddModelError(string.Empty, ketQua.MaLoi switch
         {
@@ -82,7 +89,7 @@ public class LoaiSanController(ILoaiSanService service, IAnhService anhService) 
             MaLoiAnh.LuuTruAnhChuaSanSang => "Kho ảnh chưa sẵn sàng. Vui lòng liên hệ quản trị viên.",
             _ => throw new InvalidOperationException("Mã lỗi ảnh chưa được ánh xạ.")
         });
-        return View(nameof(ChiTiet), ThanhViewModel(chiTiet));
+        return View(nameof(Sua), formModel);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -108,7 +115,8 @@ public class LoaiSanController(ILoaiSanService service, IAnhService anhService) 
         return View(new LoaiSanFormViewModel
         {
             TenLoai = loaiSan.TenLoai, MoTa = loaiSan.MoTa, SoNguoiToiDa = loaiSan.SoNguoiToiDa,
-            DonGiaTheoGio = loaiSan.DonGiaTheoGio, TrangThai = loaiSan.TrangThai
+            DonGiaTheoGio = loaiSan.DonGiaTheoGio, TrangThai = loaiSan.TrangThai,
+            DuongDanAnh = loaiSan.DuongDanAnh
         });
     }
 
@@ -116,14 +124,20 @@ public class LoaiSanController(ILoaiSanService service, IAnhService anhService) 
     public async Task<IActionResult> Sua(int id, LoaiSanFormViewModel model, CancellationToken cancellationToken)
     {
         // Giữ thứ tự: ID không tồn tại trả 404, kể cả khi form chưa hợp lệ.
-        if (await service.LayChiTietAsync(id, cancellationToken) is null) return NotFound();
+        var loaiSan = await service.LayChiTietAsync(id, cancellationToken);
+        if (loaiSan is null) return NotFound();
         ViewData["MaLoaiSan"] = id;
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            model.DuongDanAnh = loaiSan.DuongDanAnh;
+            return View(model);
+        }
         var ketQua = await service.SuaAsync(id, ThanhYeuCau(model), cancellationToken);
         if (ketQua.MaLoi == MaLoiLoaiSan.KhongTonTai) return NotFound();
         if (ketQua.MaLoi != MaLoiLoaiSan.ThanhCong)
         {
             ThemLoi(ketQua.MaLoi);
+            model.DuongDanAnh = loaiSan.DuongDanAnh;
             return View(model);
         }
         TempData["Success"] = "Đã cập nhật loại sân.";
