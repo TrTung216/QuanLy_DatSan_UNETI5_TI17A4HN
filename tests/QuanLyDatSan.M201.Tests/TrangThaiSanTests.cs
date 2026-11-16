@@ -223,7 +223,8 @@ public partial class TrangThaiSanTests
     }
 
     private static string[] TenSanTrongBang(string html)
-        => Regex.Matches(html, "<th scope=\"row\">([^<]*)</th>")
+        // M1: UI danh sách đã chuyển từ bảng sang thẻ; giữ các kiểm tra quyền/lọc/phân trang của M2.
+        => Regex.Matches(html, "<h3 id=\"san-title-[0-9]+\">([^<]*)</h3>")
             .Select(x => WebUtility.HtmlDecode(x.Groups[1].Value)).ToArray();
 
     [Theory]

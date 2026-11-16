@@ -41,197 +41,247 @@
         ["gioKetThuc"] = Model.GioKetThuc?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? ""
     };
 }
-<div class="ql-page-header">
-    <h1>Danh sách sân</h1>
-    <p class="ql-subtitle">Xem thông tin, giá thuê và giờ phục vụ của các sân thể thao.</p>
-    <p class="form-text">Giá cao điểm và cuối tuần là thông tin tham khảo. Đơn đặt hiện áp dụng giá giờ thường được lưu tại thời điểm đặt.</p>
-</div>
-<section class="ql-panel" aria-label="Danh sách sân thể thao">
-    @if (daTraCuuLich)
-    {
-        <p class="alert alert-info" role="status">Kết quả sân còn trống ngày @Model.NgaySuDung!.Value.ToString("dd/MM/yyyy")
-            từ @Model.GioBatDau!.Value.ToString("HH:mm") đến @Model.GioKetThuc!.Value.ToString("HH:mm").
-            Lịch được kiểm tra lại khi gửi yêu cầu đặt sân.</p>
-    }
-    <form asp-action="Index" method="get" class="row g-3 mb-4" aria-label="Tìm và lọc sân">
-        <div asp-validation-summary="All" class="text-danger col-12" role="alert"></div>
-        <div class="col-md-4">
-            <label asp-for="NgaySuDung" class="form-label"></label>
-            <input asp-for="NgaySuDung" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" aria-describedby="tra-cuu-gio" />
-            <span asp-validation-for="NgaySuDung" class="text-danger"></span>
-        </div>
-        <div class="col-md-4">
-            <label asp-for="GioBatDau" class="form-label"></label>
-            <input asp-for="GioBatDau" type="time" asp-format="{0:HH:mm}" step="60" class="form-control" />
-            <span asp-validation-for="GioBatDau" class="text-danger"></span>
-        </div>
-        <div class="col-md-4">
-            <label asp-for="GioKetThuc" class="form-label"></label>
-            <input asp-for="GioKetThuc" type="time" asp-format="{0:HH:mm}" step="60" class="form-control" />
-            <span asp-validation-for="GioKetThuc" class="text-danger"></span>
-        </div>
-        <p id="tra-cuu-gio" class="form-text col-12 mb-0">Nhập đủ ngày và giờ để tìm sân trống. Để trống cả ba ô để xem danh sách thông thường. Kết quả tìm kiếm không giữ chỗ; lịch sẽ được kiểm tra lại khi đặt sân.</p>
-        <div class="col-md-6 col-lg-4">
-            <label asp-for="TuKhoa" class="form-label"></label>
-            <input asp-for="TuKhoa" class="form-control" maxlength="100" placeholder="Tên sân, tên loại sân hoặc địa chỉ" />
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <label asp-for="MaLoaiSan" class="form-label"></label>
-            <select asp-for="MaLoaiSan" class="form-select">
-                <option value="">Tất cả loại sân</option>
-                @foreach (var loai in Model.CacLoaiSan)
-                {
-                    <option value="@loai.MaLoaiSan">@loai.TenLoai</option>
-                }
-            </select>
+@* M1: Trần Trọng Tùng - 23103100202. Bố cục khám phá sân; giữ hợp đồng form/route và dữ liệu M2. *@
+@section Styles {
+    <link rel="stylesheet" href="~/css/danh-sach-san.css" asp-append-version="true" />
+}
+<div class="san-explore">
+    <header class="san-explore-heading">
+        <div>
+            <p class="ql-eyebrow">Khám phá sân thể thao</p>
+            <h1>Chọn sân cho buổi chơi của bạn</h1>
+            <p>Tìm theo loại sân, mức giá và thời gian phù hợp.</p>
         </div>
         @if (laQuanLy)
         {
-            <div class="col-md-6 col-lg-4">
-                <label asp-for="TrangThai" class="form-label"></label>
-                <select asp-for="TrangThai" class="form-select">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="1">Hoạt động</option>
-                    <option value="2">Bảo trì</option>
-                    <option value="3">Ngừng hoạt động</option>
-                </select>
-            </div>
+            <a asp-action="Create" class="btn btn-primary">Thêm sân</a>
         }
-        <div class="col-md-6 col-lg-3">
-            <label asp-for="GiaTu" class="form-label"></label>
-            <input asp-for="GiaTu" type="number" asp-format="{0:0}" class="form-control" min="0" step="1" aria-describedby="gia-loc" />
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <label asp-for="GiaDen" class="form-label"></label>
-            <input asp-for="GiaDen" type="number" asp-format="{0:0}" class="form-control" min="0" step="1" aria-describedby="gia-loc" />
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <label asp-for="SapXep" class="form-label"></label>
-            <select asp-for="SapXep" class="form-select">
-                <option value="ten_tang">Tên sân A → Z</option>
-                <option value="ten_giam">Tên sân Z → A</option>
-                <option value="gia_tang">Giá tăng dần</option>
-                <option value="gia_giam">Giá giảm dần</option>
-                <option value="gio_tang">Giờ mở cửa tăng dần</option>
-                <option value="gio_giam">Giờ mở cửa giảm dần</option>
-            </select>
-        </div>
-        <div class="col-lg-2 d-flex flex-wrap align-items-end gap-2">
-            <button type="submit" class="btn btn-outline-primary">Tìm / Lọc</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Đặt lại</a>
-        </div>
-        <p id="gia-loc" class="form-text col-12 mb-0">Lọc và sắp xếp giá theo giá giờ thường T2–T6 (đồng/giờ). Nhập số nguyên, ví dụ 200000.</p>
-    </form>
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <h2 class="h5 mb-0">Sân thể thao <span class="badge text-bg-primary">@Model.TongSoSan</span></h2>
-        <div class="d-flex gap-2">
-            @if (laQuanLy)
-            {
-                <a asp-action="Create" class="btn btn-primary btn-sm">Thêm sân</a>
-            }
-            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm">Về trang chủ</a>
-        </div>
-    </div>
-    @if (!ViewData.ModelState.IsValid)
-    {
-        <p class="mb-0">Vui lòng sửa điều kiện tra cứu rồi bấm Tìm / Lọc.</p>
-    }
-    else if (Model.DanhSachSan.Count == 0)
-    {
-        <div class="ql-empty">
-            <h2 class="h5">@tieuDeTrong</h2>
-            <p class="mb-0">@moTaTrong</p>
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive" role="region" aria-label="Bảng sân" tabindex="0">
-            <table class="table table-hover align-middle ql-table">
-                <caption>Trang @Model.TrangHienTai / @Model.TongSoTrang</caption>
-                <thead><tr>
-                    <th scope="col">Ảnh sân</th><th scope="col">Tên sân</th><th scope="col">Loại sân</th>
-                    <th scope="col">Địa chỉ</th><th scope="col">Giá thuê (đồng/giờ)</th>
-                    <th scope="col">Giờ phục vụ</th><th scope="col">Trạng thái</th>
-                    <th scope="col">Thao tác</th>
-                </tr></thead>
-                <tbody>
-                    @foreach (var san in Model.DanhSachSan)
+    </header>
+
+    <form id="san-filter" asp-action="Index" method="get" class="san-search-layout" aria-label="Tìm và lọc sân">
+        <aside class="san-filter-panel" aria-label="Bộ lọc sân">
+            <details open>
+                <summary>Bộ lọc <span>Thu gọn / mở rộng</span></summary>
+                <div class="san-filter-content">
+                    <div>
+                        <label asp-for="TuKhoa" class="form-label">Tìm sân</label>
+                        <input asp-for="TuKhoa" class="form-control" maxlength="100" placeholder="Tên sân, loại sân, địa chỉ" />
+                        <span asp-validation-for="TuKhoa" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="MaLoaiSan" class="form-label"></label>
+                        <select asp-for="MaLoaiSan" class="form-select">
+                            <option value="">Tất cả loại sân</option>
+                            @foreach (var loai in Model.CacLoaiSan)
+                            {
+                                <option value="@loai.MaLoaiSan">@loai.TenLoai</option>
+                            }
+                        </select>
+                        <span asp-validation-for="MaLoaiSan" class="text-danger"></span>
+                    </div>
+                    @if (laQuanLy)
                     {
-                        var trangThai = san.TrangThai switch
+                        <div>
+                            <label asp-for="TrangThai" class="form-label"></label>
+                            <select asp-for="TrangThai" class="form-select">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="1">Hoạt động</option>
+                                <option value="2">Bảo trì</option>
+                                <option value="3">Ngừng hoạt động</option>
+                            </select>
+                        </div>
+                    }
+                    <fieldset class="san-price-filter">
+                        <legend>Khoảng giá <small>đồng/giờ</small></legend>
+                        <div>
+                            <label asp-for="GiaTu" class="form-label">Từ</label>
+                            <input asp-for="GiaTu" type="number" asp-format="{0:0}" class="form-control" min="0" step="1" placeholder="0" aria-describedby="gia-loc" />
+                            <span asp-validation-for="GiaTu" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label asp-for="GiaDen" class="form-label">Đến</label>
+                            <input asp-for="GiaDen" type="number" asp-format="{0:0}" class="form-control" min="0" step="1" placeholder="Không giới hạn" aria-describedby="gia-loc" />
+                            <span asp-validation-for="GiaDen" class="text-danger"></span>
+                        </div>
+                        <p id="gia-loc" class="form-text">Lọc theo giá giờ thường T2–T6. Nhập số nguyên, ví dụ 200000.</p>
+                    </fieldset>
+                    <div>
+                        <label asp-for="SapXep" class="form-label"></label>
+                        <select asp-for="SapXep" class="form-select">
+                            <option value="ten_tang">Tên sân A → Z</option>
+                            <option value="ten_giam">Tên sân Z → A</option>
+                            <option value="gia_tang">Giá tăng dần</option>
+                            <option value="gia_giam">Giá giảm dần</option>
+                            <option value="gio_tang">Giờ mở cửa tăng dần</option>
+                            <option value="gio_giam">Giờ mở cửa giảm dần</option>
+                        </select>
+                    </div>
+                    <div class="san-filter-actions">
+                        <button type="submit" class="btn btn-primary">Tìm / Lọc</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Đặt lại</a>
+                    </div>
+                </div>
+            </details>
+        </aside>
+
+        <div class="san-results">
+            <section class="san-time-panel" aria-labelledby="san-time-title">
+                <div class="san-section-heading">
+                    <h2 id="san-time-title">Bạn muốn chơi khi nào?</h2>
+                    <span class="san-label">Tra cứu sân trống</span>
+                </div>
+                <div class="san-time-fields">
+                    <div>
+                        <label asp-for="NgaySuDung" class="form-label"></label>
+                        <input asp-for="NgaySuDung" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" aria-describedby="tra-cuu-gio" />
+                        <span asp-validation-for="NgaySuDung" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="GioBatDau" class="form-label"></label>
+                        <input asp-for="GioBatDau" type="time" asp-format="{0:HH:mm}" step="60" class="form-control" />
+                        <span asp-validation-for="GioBatDau" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="GioKetThuc" class="form-label"></label>
+                        <input asp-for="GioKetThuc" type="time" asp-format="{0:HH:mm}" step="60" class="form-control" />
+                        <span asp-validation-for="GioKetThuc" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Tìm sân trống</button>
+                </div>
+                <p id="tra-cuu-gio" class="form-text">Nhập đủ ngày và giờ để tìm sân trống. Để trống cả ba ô để xem tất cả sân phù hợp bộ lọc. Kết quả không giữ chỗ; lịch được kiểm tra lại khi đặt sân.</p>
+            </section>
+
+            <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+            @if (daTraCuuLich)
+            {
+                <p class="alert alert-info" role="status">Kết quả sân còn trống ngày @Model.NgaySuDung!.Value.ToString("dd/MM/yyyy")
+                    từ @Model.GioBatDau!.Value.ToString("HH:mm") đến @Model.GioKetThuc!.Value.ToString("HH:mm").
+                    Lịch được kiểm tra lại khi gửi yêu cầu đặt sân.</p>
+            }
+            <section aria-labelledby="san-results-title">
+                <div class="san-results-heading">
+                    <h2 id="san-results-title">Danh sách sân <span>@Model.TongSoSan sân</span></h2>
+                    @if (ViewData.ModelState.IsValid && Model.DanhSachSan.Count > 0)
+                    {
+                        <span class="san-page-count">Trang @Model.TrangHienTai / @Model.TongSoTrang</span>
+                    }
+                </div>
+                <p class="san-price-note">Đơn đặt dùng giá giờ thường tại thời điểm đặt. Giá cao điểm và cuối tuần dưới đây là thông tin tham khảo.</p>
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="ql-empty">Vui lòng sửa điều kiện tra cứu rồi bấm Tìm / Lọc.</div>
+                }
+                else if (Model.DanhSachSan.Count == 0)
+                {
+                    <div class="ql-empty">
+                        <h3 class="h5">@tieuDeTrong</h3>
+                        <p>@moTaTrong</p>
+                        @if (coDieuKien)
                         {
-                            TrangThaiSan.HoatDong => "Hoạt động",
-                            TrangThaiSan.BaoTri => "Bảo trì",
-                            _ => "Ngừng hoạt động"
-                        };
-                        var mau = san.TrangThai switch
+                            <a asp-action="Index" class="btn btn-outline-primary">Đặt lại bộ lọc</a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="san-card-grid">
+                        @foreach (var san in Model.DanhSachSan)
                         {
-                            TrangThaiSan.HoatDong => "text-bg-success",
-                            TrangThaiSan.BaoTri => "text-bg-warning",
-                            _ => "text-bg-secondary"
-                        };
-                        <tr>
-                            <td>
-                                <div style="width: 10rem; max-width: 100%; font-weight: normal;">
-                                    <partial name="_AnhDaiDien" model="@(new AnhDaiDienViewModel(NhomAnh.San, san.MaSan, san.TenSan, san.DuongDanAnh is not null))" />
+                            var trangThai = san.TrangThai switch
+                            {
+                                TrangThaiSan.HoatDong => "Hoạt động",
+                                TrangThaiSan.BaoTri => "Bảo trì",
+                                _ => "Ngừng hoạt động"
+                            };
+                            var mau = san.TrangThai switch
+                            {
+                                TrangThaiSan.HoatDong => "text-bg-success",
+                                TrangThaiSan.BaoTri => "text-bg-warning",
+                                _ => "text-bg-secondary"
+                            };
+                            <article class="san-card" aria-labelledby="san-title-@san.MaSan">
+                                <div class="san-card-header">
+                                    <div class="san-card-photo">
+                                        <partial name="_AnhDaiDien" model="@(new AnhDaiDienViewModel(NhomAnh.San, san.MaSan, san.TenSan, san.DuongDanAnh is not null))" />
+                                    </div>
+                                    <div class="san-card-intro">
+                                        <span class="san-card-type">@san.TenLoai</span>
+                                        <h3 id="san-title-@san.MaSan">@san.TenSan</h3>
+                                        <p class="san-card-address">@san.DiaChi</p>
+                                    </div>
                                 </div>
-                            </td>
-                            <th scope="row">@san.TenSan</th>
-                            <td>@san.TenLoai</td><td>@san.DiaChi</td>
-                            <td class="text-nowrap">
-                                <div>T2–T6 thường: @san.DonGia.ToString("N0", vanHoa) ₫</div>
-                                <div>18h–21h: @((san.DonGiaCaoDiem ?? san.DonGia).ToString("N0", vanHoa)) ₫</div>
-                                <div>T7, CN cả ngày: @((san.DonGiaCuoiTuan ?? san.DonGia).ToString("N0", vanHoa)) ₫</div>
-                            </td>
-                            <td class="text-nowrap">@san.GioMoCua.ToString("HH:mm") – @san.GioDongCua.ToString("HH:mm")</td>
-                            <td><span class="badge @mau">@trangThai</span></td>
-                            <td>
-                                <div class="d-flex gap-2">
+                                <div class="san-card-status">
+                                    <span class="badge @mau">@trangThai</span>
+                                    @if (daTraCuuLich)
+                                    {
+                                        <span class="san-availability">Trống trong giờ đã chọn</span>
+                                    }
+                                </div>
+                                <div class="san-card-ticket">
+                                    <div class="san-card-hours">
+                                        <span>Giờ phục vụ</span>
+                                        <strong>@san.GioMoCua.ToString("HH:mm")</strong>
+                                        <span>đến</span>
+                                        <strong>@san.GioDongCua.ToString("HH:mm")</strong>
+                                    </div>
+                                    <div class="san-card-price">
+                                        <span>Giá giờ thường T2–T6</span>
+                                        <p><strong>@san.DonGia.ToString("N0", vanHoa) ₫</strong> / giờ</p>
+                                        <dl>
+                                            <div><dt>18h–21h</dt><dd>@((san.DonGiaCaoDiem ?? san.DonGia).ToString("N0", vanHoa)) ₫/giờ</dd></div>
+                                            <div><dt>T7, CN</dt><dd>@((san.DonGiaCuoiTuan ?? san.DonGia).ToString("N0", vanHoa)) ₫/giờ</dd></div>
+                                        </dl>
+                                    </div>
+                                </div>
+                                <div class="san-card-actions">
                                     <a asp-action="Details" asp-route-id="@san.MaSan" class="btn btn-outline-primary btn-sm"
                                        asp-route-ngay="@(Model.NgaySuDung?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))"
                                        asp-route-batDau="@(Model.GioBatDau?.ToString("HH:mm", CultureInfo.InvariantCulture))"
                                        asp-route-ketThuc="@(Model.GioKetThuc?.ToString("HH:mm", CultureInfo.InvariantCulture))"
-                                       aria-label="Chi tiết @san.TenSan">Xem</a>
+                                       aria-label="Chi tiết @san.TenSan">Xem chi tiết</a>
                                     @if (laQuanLy)
                                     {
-                                        <a asp-action="Edit" asp-route-id="@san.MaSan" class="btn btn-outline-secondary btn-sm"
-                                           aria-label="Sửa @san.TenSan">Sửa</a>
-                                        <a asp-action="Delete" asp-route-id="@san.MaSan" class="btn btn-outline-danger btn-sm"
-                                           aria-label="Xóa @san.TenSan">Xóa</a>
+                                        <a asp-action="Edit" asp-route-id="@san.MaSan" class="btn btn-outline-secondary btn-sm" aria-label="Sửa @san.TenSan">Sửa</a>
+                                        <a asp-action="Delete" asp-route-id="@san.MaSan" class="btn btn-outline-danger btn-sm" aria-label="Xóa @san.TenSan">Xóa</a>
                                     }
                                 </div>
-                            </td>
-                        </tr>
+                            </article>
+                        }
+                    </div>
+                    @if (Model.TongSoTrang > 1)
+                    {
+                        <nav aria-label="Phân trang danh sách sân">
+                            <ul class="pagination flex-wrap">
+                                @if (Model.TrangHienTai > 1)
+                                {
+                                    <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="1">Đầu</a></li>
+                                    <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@(Model.TrangHienTai - 1)">Trước</a></li>
+                                }
+                                @for (var trang = Math.Max(1, Model.TrangHienTai - 2); trang <= Math.Min(Model.TongSoTrang, Model.TrangHienTai + 2); trang++)
+                                {
+                                    if (trang == Model.TrangHienTai)
+                                    {
+                                        <li class="page-item active"><span class="page-link" aria-current="page">@trang</span></li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@trang">@trang</a></li>
+                                    }
+                                }
+                                @if (Model.TrangHienTai < Model.TongSoTrang)
+                                {
+                                    <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@(Model.TrangHienTai + 1)">Sau</a></li>
+                                    <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@Model.TongSoTrang">Cuối</a></li>
+                                }
+                            </ul>
+                        </nav>
                     }
-                </tbody>
-            </table>
+
+                }
+            </section>
         </div>
-        @if (Model.TongSoTrang > 1)
-        {
-            <nav aria-label="Phân trang danh sách sân">
-                <ul class="pagination flex-wrap">
-                    @if (Model.TrangHienTai > 1)
-                    {
-                        <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="1">Đầu</a></li>
-                        <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@(Model.TrangHienTai - 1)">Trước</a></li>
-                    }
-                    @for (var trang = Math.Max(1, Model.TrangHienTai - 2); trang <= Math.Min(Model.TongSoTrang, Model.TrangHienTai + 2); trang++)
-                    {
-                        if (trang == Model.TrangHienTai)
-                        {
-                            <li class="page-item active"><span class="page-link" aria-current="page">@trang</span></li>
-                        }
-                        else
-                        {
-                            <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@trang">@trang</a></li>
-                        }
-                    }
-                    @if (Model.TrangHienTai < Model.TongSoTrang)
-                    {
-                        <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@(Model.TrangHienTai + 1)">Sau</a></li>
-                        <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="thamSoTrang" asp-route-trang="@Model.TongSoTrang">Cuối</a></li>
-                    }
-                </ul>
-            </nav>
-        }
-    }
-</section>
+    </form>
+</div>
+@section Scripts {
+    <script src="~/js/danh-sach-san.js" asp-append-version="true"></script>
+}

@@ -15,4 +15,3 @@
 .ql-home-courts dt { color: var(--ql-muted); font-size: .875rem; font-weight: 400; }
 .ql-home-courts dd { margin-bottom: .75rem; }
 .ql-home-courts .ql-home-price { color: #174b90; font-size: 1.25rem; font-weight: 700; }
-.ql-home-booking-steps { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }

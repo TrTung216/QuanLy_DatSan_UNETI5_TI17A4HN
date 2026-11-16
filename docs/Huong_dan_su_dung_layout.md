@@ -22,6 +22,8 @@ Phụ trách: **Trần Trọng Tùng — M1, MSSV 23103100202**. Cập nhật t�
 | `wwwroot/css/layout.css` | Màu, cỡ chữ, focus, nút/form/bảng, trạng thái, nền và khoảng cách chung trong `.ql-app`. |
 | `wwwroot/css/thanh-phan.css` | Thành phần dùng chung như banner, thẻ, các bước hướng dẫn. |
 | `wwwroot/css/quan-tri.css` | Thanh bên, header và bố cục riêng của khu vực quản trị. |
+| `wwwroot/css/energetic-sport.css` | Phong cách Energetic Sport cho ba layout: xanh dương/navy, điểm nhấn lime, menu, nút và thẻ. Chỉ áp dụng trong `.ql-sport`; nạp sau CSS chung, trước Styles của View. |
+| `Views/Shared/_BieuTuongMenu.cshtml` | SVG trang trí bên cạnh nhãn menu; nhận tên Controller để chọn hình, không tạo liên kết hoặc quyết định quyền. |
 | `wwwroot/js/layout.js` | Escape đóng menu khách và trả focus; chống gửi lặp form đăng xuất, khôi phục khi quay lại lịch sử. |
 | `wwwroot/css/site.css`, `wwwroot/js/site.js` | Tài nguyên nền tảng hiện có. |
 | `Views/Shared/_ValidationScriptsPartial.cshtml` | jQuery Validation/Unobtrusive cho form của module. |
@@ -107,6 +109,26 @@ Thêm `ql-table-scroll` vào vùng `table-responsive`, giữ `role="region"`, nh
 Các lớp này chỉ áp dụng khi View chủ động sử dụng: bảng rộng tối thiểu 42rem (48rem với `ql-table-wide`), xuống dòng theo từ; vùng cuộn giữ cả nhãn `visually-hidden` bên trong. Không dùng `overflow:hidden` trên body để che lỗi và không ép mọi bảng của module sang cùng kích thước. Nhóm nút cuối trang dùng `ql-actions` để tự xuống hàng và giữ khoảng cách.
 
 Kiểm tra tại 320px, 390px và desktop: trang không cuộn ngang, bảng cuộn được tới cột cuối, tên không bị tách thành từng ký tự, focus nhìn rõ. Trang cọc mô phỏng chỉ hiển thị dữ liệu thử; không gắn ảnh minh họa dưới nhãn QR khi chưa có mã quét thực sự.
+
+### Giao diện danh sách sân (15/11/2026)
+
+`Views/SanTheThao/Index.cshtml` dùng bố cục bộ lọc bên trái, ngày/giờ bên trên và thẻ sân bên phải. M1 chỉnh trình bày trên View M2; giữ tác giả và hợp đồng backend của M2. `wwwroot/css/danh-sach-san.css` chỉ áp dụng trong `.san-explore`, được nạp qua section Styles. `wwwroot/js/danh-sach-san.js` thu gọn bộ lọc khi mở trang trên điện thoại; giữ mở nếu form có lỗi. Khi tắt JavaScript, bộ lọc và form GET vẫn hoạt động.
+
+Giữ nguyên trường tìm kiếm/lọc/sắp xếp, điều kiện phân trang, liên kết chi tiết có ngày/giờ và nút quản trị theo vai trò. Ảnh dùng `_AnhDaiDien` với nhóm `San`; sân chưa có ảnh hiển thị trạng thái trống. Chỉ hiển thị “Trống trong giờ đã chọn” khi backend đã trả kết quả tra cứu ngày/giờ hợp lệ. Không biến giờ phục vụ thành lịch trống, không tạo khoảng cách, lịch chơi hoặc số chỗ giả. Giá thường/cao điểm/cuối tuần giữ nguyên nguồn và chú thích hiện có. Không thay Controller, Service, Repository, ViewModel hay database.
+
+Hai chỗ chọn phần tử HTML trong test M2 được cập nhật từ tên trong bảng/link “Xem” sang tiêu đề thẻ/link “Xem chi tiết”; giữ nguyên các kiểm tra quyền, tìm kiếm, phân trang và chuyển tiếp sang đặt sân.
+
+Kiểm tra: build Release đạt (2 warning CS0219 cũ ở ThongKe/Index), 135/135 ca `TrangThaiSanTests` đạt. Chromium kiểm tra 4 vai trò × 5 chiều rộng 1920/1440/1024/390/320px; bộ lọc, ngày giờ, liên kết chi tiết, phân trang, lỗi form, trạng thái rỗng và form không JavaScript hoạt động. Kiểm tra dùng SQLite trong RAM, không thay database ứng dụng. Chưa nghiệm thu trên điện thoại thật/Safari/Firefox; ảnh chụp dùng dữ liệu kiểm thử, không phải dữ liệu đưa vào sản phẩm.
+
+### Energetic Sport — layout và menu (16/11/2026)
+
+Khung khách và quản trị dùng nền navy cho điều hướng, xanh dương cho thao tác chính, lime làm điểm nhấn thương hiệu/mục đang chọn. Lime không thay màu trạng thái nghiệp vụ. Chữ đậm ở tiêu đề, chữ nghiêng chỉ ở hero/tiêu đề khám phá; font hệ thống, không tải font hoặc framework ngoài. Dùng biến `--ql-primary`, `--ql-primary-dark`, `--ql-text`, `--ql-muted` trong tài nguyên module để đồng bộ.
+
+Giữ nguồn menu, route, active, điều kiện vai trò, form đăng xuất POST và antiforgery hiện có. Icon SVG có `aria-hidden` và luôn đi kèm tên mục. Bootstrap tiếp tục quản lý menu thu gọn/offcanvas; Escape trả focus về nút mở menu. Màu focus trên nền đậm là lime, trên nền sáng là xanh dương. Hỗ trợ giảm chuyển động qua `prefers-reduced-motion`.
+
+Trang chủ công khai bỏ bốn ô hướng dẫn ở cuối. Trang khách đăng nhập bỏ khối lời chào, giữ một h1 ẩn cho trình đọc màn hình; khám phá sân, cảnh báo hồ sơ khóa, số liệu cá nhân và đơn sắp tới vẫn dùng dữ liệu cũ. Không thay đổi backend hay database.
+
+Kiểm tra: build Release đạt; 21/21 `MenuVaiTroTests` đạt. Chromium kiểm tra 68 lượt trang ở 1440/1200/390/320px cho khách, khách hàng, nhân viên và Admin; không tràn ngang/lỗi JavaScript. Menu bàn phím và đăng xuất POST đã chạy thử. Dữ liệu kiểm thử nằm trong SQLite RAM, không sửa database ứng dụng. Chưa kiểm tra điện thoại thật/Safari/Firefox.
 
 ### TempData và trạng thái
 
