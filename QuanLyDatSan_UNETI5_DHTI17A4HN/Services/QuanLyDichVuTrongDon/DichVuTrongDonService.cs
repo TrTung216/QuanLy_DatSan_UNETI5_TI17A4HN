@@ -25,7 +25,20 @@ public class DichVuTrongDonService(
     public async Task<ChiTietDichVuTrongDon?> LayTheoDonAsync(int maDatSan, CancellationToken cancellationToken)
     {
         await KiemTraQuyenQuanLyAsync(cancellationToken);
+        return await LayDuLieuAsync(maDatSan, cancellationToken);
+    }
 
+    // M1: tích hợp khách hàng thêm dịch vụ theo hợp đồng M3/M5; giữ riêng quyền quản lý.
+    public async Task<ChiTietDichVuTrongDon?> LayChoKhachHangAsync(int maDatSan, CancellationToken cancellationToken)
+    {
+        if (taiKhoanHienTai.MaTaiKhoan is not { } maTaiKhoan
+            || !await repository.LaChuDonAsync(maDatSan, maTaiKhoan, cancellationToken)) return null;
+        var duLieu = await LayDuLieuAsync(maDatSan, cancellationToken);
+        return await repository.LaChuDonAsync(maDatSan, maTaiKhoan, cancellationToken) ? duLieu : null;
+    }
+
+    private async Task<ChiTietDichVuTrongDon?> LayDuLieuAsync(int maDatSan, CancellationToken cancellationToken)
+    {
         var trangThai = await repository.LayTrangThaiAsync(maDatSan, cancellationToken);
         if (trangThai is null) return null;
 
@@ -46,8 +59,14 @@ public class DichVuTrongDonService(
             Convert.ToBase64String(rowVersion), dong, coTheThem);
     }
 
-    public async Task<KetQuaNghiepVu> ThemAsync(int maDatSan, int maDichVu, int soLuong, string phienBan,
-        CancellationToken cancellationToken)
+    public Task<KetQuaNghiepVu> ThemAsync(int maDatSan, int maDichVu, int soLuong, string phienBan,
+        CancellationToken cancellationToken) => ThemNoiBoAsync(maDatSan, maDichVu, soLuong, phienBan, false, cancellationToken);
+
+    public Task<KetQuaNghiepVu> KhachHangThemAsync(int maDatSan, int maDichVu, int soLuong, string phienBan,
+        CancellationToken cancellationToken) => ThemNoiBoAsync(maDatSan, maDichVu, soLuong, phienBan, true, cancellationToken);
+
+    private async Task<KetQuaNghiepVu> ThemNoiBoAsync(int maDatSan, int maDichVu, int soLuong, string phienBan,
+        bool laKhachHang, CancellationToken cancellationToken)
     {
         if (soLuong < 1 || soLuong > SoLuongToiDa)
             return KetQuaNghiepVu.BaoLoi($"Số lượng phải từ 1 đến {SoLuongToiDa}.", "SoLuong");
@@ -77,7 +96,7 @@ public class DichVuTrongDonService(
             }
 
             return null;
-        }, "Đã thêm dịch vụ vào đơn.", cancellationToken);
+        }, "Đã thêm dịch vụ vào đơn.", cancellationToken, laKhachHang);
     }
 
     public async Task<KetQuaNghiepVu> SuaSoLuongAsync(int maDatSan, int maChiTiet, int soLuong, string phienBan,
@@ -109,9 +128,13 @@ public class DichVuTrongDonService(
 
     private async Task<KetQuaNghiepVu> ThayDoiAsync(int maDatSan, string phienBan,
         Func<DatSan, int, CancellationToken, Task<KetQuaNghiepVu?>> thayDoi, string thongBao,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, bool laKhachHang = false)
     {
-        var maTaiKhoan = await KiemTraQuyenQuanLyAsync(cancellationToken);
+        var maTaiKhoan = laKhachHang
+            ? taiKhoanHienTai.MaTaiKhoan ?? 0
+            : await KiemTraQuyenQuanLyAsync(cancellationToken);
+        if (laKhachHang && !await repository.LaChuDonAsync(maDatSan, maTaiKhoan, cancellationToken))
+            return KetQuaNghiepVu.KhongThay();
         if (!TryDocRowVersion(phienBan, out var rowVersion))
             return KetQuaNghiepVu.BaoLoi("Phiên bản đơn không hợp lệ. Vui lòng tải lại trang.", "PhienBan");
 
@@ -124,12 +147,17 @@ public class DichVuTrongDonService(
                     return new QuyetDinhLuu<KetQuaNghiepVu>(false, KetQuaNghiepVu.KhongThay());
 
                 await repository.KhoaSanAsync(maSan.Value, token);
-                if (!await repository.CoQuyenQuanLyAsync(maTaiKhoan, token))
+                if (!laKhachHang && !await repository.CoQuyenQuanLyAsync(maTaiKhoan, token))
                     throw new UnauthorizedAccessException(
                         "Tài khoản không còn quyền quản lý dịch vụ đơn.");
-                var don = await repository.LayDonDeCapNhatAsync(maDatSan, token);
+                var don = laKhachHang
+                    ? await repository.LayDonKhachHangDeCapNhatAsync(maDatSan, maTaiKhoan, token)
+                    : await repository.LayDonDeCapNhatAsync(maDatSan, token);
                 if (don is null)
                     return new QuyetDinhLuu<KetQuaNghiepVu>(false, KetQuaNghiepVu.KhongThay());
+                if (don.MaSan != maSan.Value)
+                    return new QuyetDinhLuu<KetQuaNghiepVu>(false,
+                        KetQuaNghiepVu.BaoLoi("Sân của đơn vừa thay đổi. Vui lòng tải lại trang."));
                 if (don.TrangThai != TrangThaiDatSan.DangXuLy)
                     return new QuyetDinhLuu<KetQuaNghiepVu>(false,
                         KetQuaNghiepVu.BaoLoi("Chỉ được thay đổi dịch vụ khi đơn đang xử lý."));

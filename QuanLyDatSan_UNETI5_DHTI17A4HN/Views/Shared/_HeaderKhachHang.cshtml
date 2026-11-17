@@ -42,7 +42,7 @@
                         <circle cx="16" cy="16" r="4" />
                     </svg>
                 </span>
-                <span>Quản lý đặt sân<small>Dành cho khách hàng</small></span>
+                <span>Quản lý đặt sân<small>Chọn sân. Vào trận.</small></span>
             </a>
             <button class="navbar-toggler ql-menu-toggle" type="button" data-bs-toggle="collapse"
                     data-bs-target="#menu-chinh" aria-controls="menu-chinh" aria-expanded="false" aria-label="Mở hoặc thu gọn menu">
@@ -63,7 +63,9 @@
                         }
                         <li class="nav-item">
                             <a class="nav-link @lopTrangHienTai" aria-current="@ariaTrangHienTai"
-                               asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">@muc.Ten</a>
+                               asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">
+                                <partial name="_BieuTuongMenu" model="muc.Controller" /><span>@muc.Ten</span>
+                            </a>
                         </li>
                     }
                 </ul>

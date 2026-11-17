@@ -1,16 +1,16 @@
-@* M3: Nguyễn Văn Quý; MSSV: 23103100181. trang điều hành của Admin và Nhân viên: số liệu thật và lối vào chức năng theo nhóm. *@
+@* M3: Nguyễn Văn Quý; MSSV: 23103100181. trang điều hành của Admin và Nhân viên: số liệu và biểu đồ thống kê trực tiếp. *@
 @model QuanLyDatSan_UNETI5_DHTI17A4HN.ViewModels.DieuHanh.TrangDieuHanhViewModel
 @using QuanLyDatSan_UNETI5_DHTI17A4HN.Services
 @inject ITaiKhoanHienTai TaiKhoanHienTai
 @{
     ViewData["Title"] = "Trang điều hành";
-    var nhomChucNang = MenuQuanTri.Lay(User).Skip(1).ToList();
 }
 <div class="ql-page-header">
     <p class="ql-eyebrow">Khu vực quản trị</p>
     <h1>Trang điều hành</h1>
-    <p class="ql-subtitle">Xin chào @TaiKhoanHienTai.HoTen. Số liệu bên dưới lấy trực tiếp từ hệ thống.</p>
+    <p class="ql-subtitle">Xin chào @TaiKhoanHienTai.HoTen. Số liệu và biểu đồ bên dưới lấy trực tiếp từ hệ thống.</p>
 </div>
+
 <section aria-labelledby="so-lieu-he-thong">
     <h2 id="so-lieu-he-thong" class="ql-section-title">Số liệu hiện tại</h2>
     <div class="ql-stat-grid">
@@ -27,21 +27,263 @@
             <p class="ql-stat-label">Sân đang hoạt động</p>
             <p class="ql-stat-value">@Model.SoSanHoatDong</p>
         </div>
+        @if (Model.ThongKe is not null)
+        {
+            <div class="ql-stat">
+                <p class="ql-stat-label">Doanh thu tháng này</p>
+                <p class="ql-stat-value">@HienThiDatSan.Tien(Model.ThongKe.TongDoanhThu)</p>
+                <p class="ql-stat-note">@Model.ThongKe.SoDonHoanThanh đơn hoàn thành</p>
+            </div>
+        }
     </div>
 </section>
-<section aria-labelledby="chuc-nang-quan-tri">
-    <h2 id="chuc-nang-quan-tri" class="ql-section-title">Chức năng</h2>
-    @foreach (var nhom in nhomChucNang)
+
+@if (User.IsInRole(nameof(QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.VaiTro.Admin)))
+{
+<section aria-labelledby="bieu-do-thong-ke" class="mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 id="bieu-do-thong-ke" class="ql-section-title mb-0">Biểu đồ thống kê tháng này</h2>
+        @if (User.IsInRole(nameof(QuanLyDatSan_UNETI5_DHTI17A4HN.Enums.VaiTro.Admin)))
+        {
+            <a asp-controller="ThongKe" asp-action="Index" class="btn btn-outline-primary btn-sm">Xem chi tiết báo cáo thống kê &rarr;</a>
+        }
+    </div>
+
+    @if (Model.ThongKe is null)
     {
-        <h3 class="ql-group-title">@nhom.Ten</h3>
-        <div class="ql-tile-grid mb-4">
-            @foreach (var muc in nhom.DanhSachMuc)
-            {
-                <a class="ql-tile" asp-controller="@muc.Controller" asp-action="@muc.Action">
-                    <p class="ql-tile-title">@muc.Ten</p>
-                    <p class="ql-tile-text">@muc.MoTa</p>
-                </a>
-            }
+        <div class="ql-panel text-muted" role="status">Chưa tải được số liệu thống kê. Vui lòng thử lại sau.</div>
+    }
+    else
+    {
+        var tk = Model.ThongKe;
+        <div class="row g-4 mb-4">
+            <div class="col-xl-8 col-lg-7">
+                <div class="ql-panel h-100">
+                    <h3 class="h5 mb-2">Doanh thu theo ngày trong tháng</h3>
+                    <p class="text-muted small mb-3">Gồm tiền thuê sân và tiền dịch vụ từ các đơn hoàn thành.</p>
+                    <div style="position: relative; height: 320px">
+                        <canvas id="bieuDoDoanhThu" role="img" aria-label="Biểu đồ cột doanh thu theo ngày"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-lg-5">
+                <div class="ql-panel h-100">
+                    <h3 class="h5 mb-2">Tỷ lệ đơn theo trạng thái</h3>
+                    <p class="text-muted small mb-3">Phân bổ trạng thái của toàn bộ đơn đặt trong tháng.</p>
+                    <div style="position: relative; height: 260px">
+                        <canvas id="bieuDoTrangThai" role="img" aria-label="Biểu đồ tròn trạng thái đơn đặt sân"></canvas>
+                    </div>
+                    <div class="mt-3 small d-flex flex-wrap gap-2 justify-content-center">
+                        @foreach (var dong in tk.SoDonTrangThai.Where(x => x.SoDon > 0))
+                        {
+                            <span class="@HienThiDatSan.LopMau(dong.TrangThai)">@HienThiDatSan.TenTrangThai(dong.TrangThai): @dong.SoDon</span>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="ql-panel h-100">
+                    <h3 class="h5 mb-2">Doanh thu theo sân</h3>
+                    <p class="text-muted small mb-3">Tổng doanh thu từ các sân thể thao có phát sinh giao dịch.</p>
+                    @if (tk.TheoSan.Count == 0)
+                    {
+                        <p class="text-muted mb-0">Chưa có sân nào phát sinh doanh thu trong tháng này.</p>
+                    }
+                    else
+                    {
+                        <div style="position: relative; height: 260px">
+                            <canvas id="bieuDoSan" role="img" aria-label="Biểu đồ doanh thu theo sân"></canvas>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="ql-panel h-100">
+                    <h3 class="h5 mb-2">Dịch vụ bán chạy nhất</h3>
+                    <p class="text-muted small mb-3">Top dịch vụ đem lại doanh thu cao nhất trong tháng.</p>
+                    @if (tk.TopDichVu.Count == 0)
+                    {
+                        <p class="text-muted mb-0">Chưa có dịch vụ nào được đặt trong tháng này.</p>
+                    }
+                    else
+                    {
+                        <div style="position: relative; height: 260px">
+                            <canvas id="bieuDoDichVu" role="img" aria-label="Biểu đồ dịch vụ bán chạy"></canvas>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <script type="application/json" id="duLieuDoanhThu">@Json.Serialize(tk.TheoKy.Select(x => new { x.Nhan, x.SoDon, x.TienSan, x.TienDichVu, x.TongTien }))</script>
+        <script type="application/json" id="duLieuTrangThai">@Json.Serialize(tk.SoDonTrangThai.Select(x => new { Nhan = HienThiDatSan.TenTrangThai(x.TrangThai), SoLuong = x.SoDon }))</script>
+        <script type="application/json" id="duLieuSan">@Json.Serialize(tk.TheoSan.Select(x => new { Nhan = x.TenSan, DoanhThu = x.TongTien, x.SoDon }))</script>
+        <script type="application/json" id="duLieuDichVu">@Json.Serialize(tk.TopDichVu.Select(x => new { Nhan = x.TenDichVu, DoanhThu = x.DoanhThu, x.SoLuong }))</script>
     }
 </section>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script>
+        (function () {
+            if (typeof Chart === 'undefined') return;
+
+            var tien = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
+            function gon(v) {
+                if (v >= 1e6) return (v / 1e6).toLocaleString('vi-VN') + ' tr';
+                if (v >= 1e3) return (v / 1e3).toLocaleString('vi-VN') + ' k';
+                return v;
+            }
+
+            // 1. Biểu đồ Doanh thu (Stacked Bar)
+            var elDoanhThu = document.getElementById('duLieuDoanhThu');
+            var cvDoanhThu = document.getElementById('bieuDoDoanhThu');
+            if (elDoanhThu && cvDoanhThu) {
+                var du = JSON.parse(elDoanhThu.textContent);
+                new Chart(cvDoanhThu, {
+                    type: 'bar',
+                    data: {
+                        labels: du.map(function (x) { return x.nhan; }),
+                        datasets: [
+                            { label: 'Tiền sân', data: du.map(function (x) { return x.tienSan; }), backgroundColor: '#2563eb', borderRadius: 4, stack: 'dt' },
+                            { label: 'Tiền dịch vụ', data: du.map(function (x) { return x.tienDichVu; }), backgroundColor: '#14b8a6', borderRadius: 4, stack: 'dt' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (ctx) { return ctx.dataset.label + ': ' + tien.format(ctx.parsed.y); },
+                                    footer: function (items) {
+                                        var tong = items.reduce(function (s, i) { return s + i.parsed.y; }, 0);
+                                        return 'Tổng: ' + tien.format(tong) + ' · ' + du[items[0].dataIndex].soDon + ' đơn';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { stacked: true, grid: { display: false } },
+                            y: { stacked: true, beginAtZero: true, ticks: { callback: gon } }
+                        }
+                    }
+                });
+            }
+
+            // 2. Biểu đồ Trạng thái đơn (Doughnut)
+            var elTrangThai = document.getElementById('duLieuTrangThai');
+            var cvTrangThai = document.getElementById('bieuDoTrangThai');
+            if (elTrangThai && cvTrangThai) {
+                var duTT = JSON.parse(elTrangThai.textContent);
+                var mauTrangThai = {
+                    'Chờ xác nhận': '#f59e0b',
+                    'Đã xác nhận': '#3b82f6',
+                    'Hoàn thành': '#10b981',
+                    'Đã hủy': '#64748b',
+                    'Từ chối': '#ef4444'
+                };
+                var labelsTT = duTT.map(function (x) { return x.nhan; });
+                var dataTT = duTT.map(function (x) { return x.soLuong; });
+                var colorsTT = labelsTT.map(function (l) { return mauTrangThai[l] || '#94a3b8'; });
+
+                new Chart(cvTrangThai, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labelsTT,
+                        datasets: [{
+                            data: dataTT,
+                            backgroundColor: colorsTT,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+
+            // 3. Biểu đồ Doanh thu theo Sân (Bar ngang)
+            var elSan = document.getElementById('duLieuSan');
+            var cvSan = document.getElementById('bieuDoSan');
+            if (elSan && cvSan) {
+                var duSan = JSON.parse(elSan.textContent);
+                new Chart(cvSan, {
+                    type: 'bar',
+                    data: {
+                        labels: duSan.map(function (x) { return x.nhan; }),
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: duSan.map(function (x) { return x.doanhThu; }),
+                            backgroundColor: '#6366f1',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (ctx) { return 'Doanh thu: ' + tien.format(ctx.parsed.x) + ' (' + duSan[ctx.dataIndex].soDon + ' đơn)'; }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { beginAtZero: true, ticks: { callback: gon } },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // 4. Biểu đồ Dịch vụ bán chạy (Bar ngang)
+            var elDichVu = document.getElementById('duLieuDichVu');
+            var cvDichVu = document.getElementById('bieuDoDichVu');
+            if (elDichVu && cvDichVu) {
+                var duDV = JSON.parse(elDichVu.textContent);
+                new Chart(cvDichVu, {
+                    type: 'bar',
+                    data: {
+                        labels: duDV.map(function (x) { return x.nhan; }),
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: duDV.map(function (x) { return x.doanhThu; }),
+                            backgroundColor: '#0ea5e9',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (ctx) { return 'Doanh thu: ' + tien.format(ctx.parsed.x) + ' (' + duDV[ctx.dataIndex].soLuong + ' lượt)'; }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { beginAtZero: true, ticks: { callback: gon } },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+}

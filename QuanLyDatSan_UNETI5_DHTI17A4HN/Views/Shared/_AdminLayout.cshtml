@@ -27,9 +27,10 @@
     <link rel="stylesheet" href="~/css/anh.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/thanh-phan.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/quan-tri.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/energetic-sport.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="ql-app ql-admin">
+<body class="ql-app ql-admin ql-sport">
     <a class="ql-skip-link" href="#noi-dung-chinh">Chuyển đến nội dung chính</a>
     <div class="ql-admin-shell">
         <div class="ql-sidebar-col">
@@ -66,7 +67,9 @@
                                     }
                                     <li>
                                         <a class="ql-side-link @lopTrangHienTai" aria-current="@ariaTrangHienTai"
-                                           asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">@muc.Ten</a>
+                                            asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">
+                                            <partial name="_BieuTuongMenu" model="muc.Controller" /><span>@muc.Ten</span>
+                                        </a>
                                     </li>
                                 }
                             </ul>

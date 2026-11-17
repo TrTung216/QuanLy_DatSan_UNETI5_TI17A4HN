@@ -79,7 +79,9 @@
                         }
                         <li class="nav-item">
                             <a class="nav-link @lopTrangHienTai" aria-current="@ariaTrangHienTai"
-                               asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">@muc.Ten</a>
+                               asp-area="" asp-controller="@muc.Controller" asp-action="@muc.Action">
+                                <partial name="_BieuTuongMenu" model="muc.Controller" /><span>@muc.Ten</span>
+                            </a>
                         </li>
                     }
                 </ul>

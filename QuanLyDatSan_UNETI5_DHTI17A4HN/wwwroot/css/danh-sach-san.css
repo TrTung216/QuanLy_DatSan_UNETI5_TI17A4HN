@@ -1,0 +1,84 @@
+/* M1: Trần Trọng Tùng - 23103100202. Giao diện danh sách sân M2, chỉ áp dụng trong .san-explore. */
+.san-explore { --san-border: #dce4ee; --san-muted: #52647a; }
+.san-explore-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+.san-explore-heading h1 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 750; margin-bottom: .5rem; }
+.san-explore-heading p { margin-bottom: 0; color: var(--san-muted); }
+.san-explore-heading .ql-eyebrow { color: var(--ql-primary); margin-bottom: .4rem; }
+.san-explore-heading > .btn { flex-shrink: 0; }
+.san-search-layout { display: grid; grid-template-columns: 17rem minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.san-filter-panel, .san-time-panel { border: 1px solid var(--san-border); border-radius: 1rem; background: #fff; }
+.san-filter-panel { padding: 1.15rem; }
+.san-filter-panel summary { cursor: pointer; font-weight: 700; padding: .15rem 0; }
+.san-filter-panel summary span { display: block; color: var(--san-muted); font-size: .75rem; font-weight: 400; margin-top: .25rem; }
+.san-filter-content { display: grid; gap: 1.25rem; border-top: 1px solid var(--san-border); margin-top: 1rem; padding-top: 1.25rem; }
+.san-explore .form-label { font-size: .875rem; }
+.san-explore .form-control, .san-explore .form-select { font-size: .875rem; min-width: 0; width: 100%; }
+.san-price-filter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .75rem; }
+.san-price-filter legend { float: none; font-size: .875rem; font-weight: 650; margin-bottom: .25rem; }
+.san-price-filter legend small { color: var(--san-muted); font-weight: 400; }
+.san-price-filter .form-label { font-weight: 400; }
+.san-price-filter .form-text { grid-column: 1 / -1; margin: 0; }
+.san-filter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.san-explore .form-text { font-size: .8rem; color: var(--san-muted); }
+.san-results { min-width: 0; }
+.san-time-panel { padding: 1.25rem; margin-bottom: 1.5rem; }
+.san-section-heading, .san-results-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+.san-section-heading { margin-bottom: 1rem; }
+.san-section-heading h2, .san-results-heading h2 { font-size: 1rem; font-weight: 700; margin: 0; }
+.san-label { border-radius: .5rem; padding: .25rem .6rem; background: #eaf2ff; color: #103f80; font-size: .75rem; font-weight: 600; }
+.san-time-fields { display: grid; grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 1fr)); gap: .75rem; align-items: start; }
+.san-time-fields > .btn { grid-column: 1 / -1; justify-self: end; }
+.san-time-panel .form-text { margin: .85rem 0 0; }
+.san-results-heading h2 span { display: inline-block; font-size: .85rem; color: var(--ql-primary); margin-left: .4rem; }
+.san-page-count { color: var(--san-muted); font-size: .8rem; }
+.san-price-note { font-size: .8rem; color: var(--san-muted); margin: .6rem 0 1rem; }
+.san-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.san-card { min-width: 0; display: flex; flex-direction: column; padding: 1rem; border: 1px solid var(--san-border); border-radius: 1rem; background: #fff; box-shadow: 0 3px 10px #203e6708; }
+.san-card-header { display: flex; gap: .8rem; align-items: start; }
+.san-card-photo { width: 4.5rem; flex: 0 0 4.5rem; }
+.san-card-photo .ql-photo { margin: 0; }
+.san-card-photo .ql-photo-frame { aspect-ratio: 1; border-radius: .75rem; }
+.san-card-photo [data-anh-trong] { padding: .35rem; font-size: .7rem; line-height: 1.4; }
+.san-card-intro { min-width: 0; }
+.san-card-type { font-size: .75rem; font-weight: 600; color: var(--ql-primary); }
+.san-card h3 { font-size: 1rem; line-height: 1.45; font-weight: 700; margin: .15rem 0 .25rem; }
+.san-card-address { font-size: .8rem; color: var(--san-muted); margin: 0; }
+.san-card-status { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0; }
+.san-card-status .badge { font-size: .75rem; font-weight: 600; line-height: 1.4; white-space: normal; }
+.san-availability { color: #12643c; font-size: .75rem; }
+.san-card-ticket { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); border: 1px solid #c5d8f2; border-radius: .75rem; background: #f8fbff; margin-top: auto; }
+.san-card-hours { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: .85rem .35rem; background: #eaf2ff; border-right: 1px dashed #9ab9e3; border-radius: .7rem 0 0 .7rem; color: #103f80; }
+.san-card-hours span { font-size: .75rem; }
+.san-card-hours strong { font-size: 1rem; }
+.san-card-price { padding: .85rem .65rem; }
+.san-card-price > span { font-size: .8rem; color: var(--san-muted); }
+.san-card-price p { font-size: .8rem; margin: .25rem 0 .65rem; }
+.san-card-price p strong { font-size: 1.1rem; color: var(--ql-primary-dark); }
+.san-card-price dl { margin: 0; font-size: .8rem; color: var(--san-muted); }
+.san-card-price dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .15rem .4rem; }
+.san-card-price dt { font-weight: 400; }
+.san-card-price dd { margin: 0; }
+.san-card-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.san-card-actions .btn { font-size: .8rem; padding: .55rem .75rem; }
+.san-card-actions .btn:first-child { margin-right: auto; }
+.san-explore .pagination { gap: .25rem; margin: 1.5rem 0 0; }
+@media (min-width: 1600px) {
+    .san-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1199.98px) {
+    .san-search-layout { grid-template-columns: 15rem minmax(0, 1fr); gap: 1rem; }
+    .san-card-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767.98px) {
+    .san-explore-heading { align-items: start; flex-direction: column; }
+    .san-search-layout { grid-template-columns: minmax(0, 1fr); }
+    .san-filter-content { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .san-price-filter, .san-filter-actions { grid-column: 1 / -1; }
+    .san-time-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .san-time-fields > div:first-child { grid-column: 1 / -1; }
+    .san-time-fields > .btn { justify-self: stretch; }
+}
+@media (max-width: 399.98px) {
+    .san-filter-content { grid-template-columns: minmax(0, 1fr); }
+    .san-time-panel, .san-filter-panel, .san-card { padding: 1rem; }
+}

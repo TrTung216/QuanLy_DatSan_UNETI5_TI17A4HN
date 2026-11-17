@@ -24,7 +24,7 @@ public partial class TrangThaiSanTests
         using var app = await TaoAppKhaDungAsync();
         using var client = app.TaoClient();
         var danhSach = await client.GetStringAsync("/SanTheThao?tuKhoa=Alpha&" + GioTraCuu);
-        var chiTiet = await client.GetStringAsync(LienKet(danhSach, "Xem"));
+        var chiTiet = await client.GetStringAsync(LienKet(danhSach, "Xem chi tiết"));
         var datSan = LienKet(chiTiet, "Đặt sân");
         Assert.Contains("maSan=3", datSan);
         Assert.Contains("ngaySuDung=2100-01-04", datSan);

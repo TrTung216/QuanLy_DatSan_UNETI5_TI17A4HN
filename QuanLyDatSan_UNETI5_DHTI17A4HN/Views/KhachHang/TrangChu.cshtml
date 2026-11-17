@@ -7,11 +7,7 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/trang-chu.css" asp-append-version="true" />
 }
-<div class="ql-page-header">
-    <p class="ql-eyebrow">Khách hàng</p>
-    <h1>Xin chào, @Model.HoTen</h1>
-    <p class="ql-subtitle">Đặt sân mới hoặc theo dõi các đơn của bạn tại đây.</p>
-</div>
+<h1 class="visually-hidden">Trang của tôi</h1>
 @if (Model.HoSoBiKhoa)
 {
     <div class="alert alert-warning ql-notice" role="status">

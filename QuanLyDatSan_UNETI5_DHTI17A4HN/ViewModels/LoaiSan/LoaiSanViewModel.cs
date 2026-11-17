@@ -30,6 +30,8 @@ public class LoaiSanFormViewModel : IValidatableObject
     [Display(Name = "Trạng thái")]
     public TrangThaiLoaiSan? TrangThai { get; set; }
 
+    public string? DuongDanAnh { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (DonGiaTheoGio is { } gia && gia != decimal.Truncate(gia))
